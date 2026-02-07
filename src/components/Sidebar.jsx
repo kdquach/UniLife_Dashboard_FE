@@ -21,9 +21,25 @@ export default function Sidebar({ collapsed }) {
       label: "Lịch làm việc",
     },
     {
-      key: "/ingredient-categories",
+      key: "/products",
+      icon: <GIcon name="inventory_2" />,
+      label: "Sản phẩm",
+    },
+    {
+      key: "/categories",
       icon: <GIcon name="category" />,
-      label: "Nhóm nguyên liệu",
+      label: "Danh mục",
+      children: [
+        {
+          key: "/product-categories",
+          label: "Danh mục sản phẩm",
+        },
+      ],
+    },
+    {
+      key: "/orders",
+      icon: <GIcon name="shopping_cart" />,
+      label: "Đơn hàng",
     },
   ];
 
@@ -47,6 +63,16 @@ export default function Sidebar({ collapsed }) {
       key: "/categories",
       icon: <GIcon name="category" />,
       label: "Danh mục",
+      children: [
+        {
+          key: "/ingredient-categories",
+          label: "Nhóm nguyên liệu",
+        },
+        {
+          key: "/product-categories",
+          label: "Danh mục sản phẩm",
+        },
+      ],
     },
     {
       key: "/orders",
@@ -77,9 +103,19 @@ export default function Sidebar({ collapsed }) {
       label: "Tổng quan",
     },
     {
-      key: "/ingredient-categories",
+      key: "/categories",
       icon: <GIcon name="category" />,
-      label: "Nhóm nguyên liệu",
+      label: "Danh mục",
+      children: [
+        {
+          key: "/ingredient-categories",
+          label: "Nhóm nguyên liệu",
+        },
+        {
+          key: "/product-categories",
+          label: "Danh mục sản phẩm",
+        },
+      ],
     },
     {
       key: "/orders",
@@ -137,18 +173,10 @@ export default function Sidebar({ collapsed }) {
         }}
       >
         {!collapsed && (
-          <img
-            src={logoLg}
-            alt="UniLife Logo"
-            style={{ height: 36 }}
-          />
+          <img src={logoLg} alt="UniLife Logo" style={{ height: 36 }} />
         )}
         {collapsed && (
-          <img
-            src={logoMd}
-            alt="UniLife Logo"
-            style={{ height: 36 }}
-          />
+          <img src={logoMd} alt="UniLife Logo" style={{ height: 36 }} />
         )}
       </div>
       <Menu
