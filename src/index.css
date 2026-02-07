@@ -1,0 +1,258 @@
+:root {
+  /* COLORS - Match UniLife Client FE */
+  --background: #fdfdfd;
+  --app-bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-muted: #f5f5f5;
+
+  /* TEXT */
+  --text: #0f232e;
+  --text-muted: #5f6b73;
+  --text-inverse: #ffffff;
+
+  /* ACCENT */
+  --primary: #ff5532;
+  --primary-hover: #ff6a4a;
+  --primary-active: #e64a2b;
+
+  /* 👉 PRIMARY SOFT */
+  --primary-soft: #fff1ed;
+  --primary-soft-hover: #ffe4dd;
+  --primary-soft-active: #ffd6cc;
+
+  /* SEMANTIC */
+  --success: #2e7d32;
+  --warning: #ffb80e;
+  --danger: #872822;
+  --info: #1976d2;
+
+  /* 👉 SEMANTIC SOFT */
+  --success-soft: #e8f5e9;
+  --warning-soft: #fff8e1;
+  --danger-soft: #fdecea;
+  --info-soft: #e3f2fd;
+
+  /* BORDER & DIVIDER */
+  --border: #d9d9d9;
+  --border-hover: #c4c4c4;
+  --border-strong: #c4c4c4;
+  --divider: #ececec;
+
+  /* 👉 NEUTRAL SOFT */
+  --surface-soft: #fafafa;
+  --surface-soft-hover: #f3f4f6;
+  --input-soft: #f7f8fa;
+
+  /* RADIUS & SHADOW */
+  --radius-surface: 20px;
+  --radius-card: 16px;
+  --radius-input: 14px;
+  --shadow-panel: 0 12px 40px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.03);
+  --shadow-surface: 0 8px 30px rgba(0, 0, 0, 0.04);
+
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: var(--text);
+  background-color: var(--app-bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Google Material Symbols (Rounded) */
+.material-symbols-rounded {
+  font-variation-settings: "FILL"0, "wght"500, "GRAD"0, "opsz"24;
+  display: inline-block;
+  line-height: 1;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.material-symbols-rounded.fill {
+  font-variation-settings: "FILL"1, "wght"600, "GRAD"0, "opsz"24;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--app-bg);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App shell (reference dashboard look) */
+.dashboard-root {
+  height: 100vh;
+  padding: 24px;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+.dashboard-shell {
+  height: 100%;
+  min-height: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.dashboard-content {
+  padding: 24px;
+  background: transparent;
+  overflow: auto;
+  min-height: 0;
+}
+
+.surface-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* Ant overrides (lightweight) */
+.ant-layout {
+  background: transparent;
+  min-height: 0;
+}
+
+.ant-layout-header {
+  height: 72px;
+  line-height: 72px;
+}
+
+.ant-card {
+  border-radius: var(--radius-card);
+}
+
+.ant-card .ant-card-body {
+  padding: 18px;
+}
+
+.ant-menu {
+  border-inline-end: none !important;
+}
+
+.ant-menu-item .material-symbols-rounded,
+.ant-menu-submenu-title .material-symbols-rounded {
+  font-size: 22px;
+}
+
+/* Sidebar menu sizing + states */
+.ant-layout-sider {
+  overflow: hidden;
+}
+
+.ant-menu .ant-menu-item {
+  height: 46px;
+  line-height: 46px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Hover keeps the old "active" look (light bg + primary text) */
+.ant-menu .ant-menu-item:hover {
+  background: #fff1ef;
+  color: var(--primary);
+}
+
+.ant-menu .ant-menu-item:hover .material-symbols-rounded {
+  color: var(--primary);
+}
+
+/* Active selected: bg primary + text/icon white */
+.ant-menu .ant-menu-item-selected {
+  background: var(--primary) !important;
+  color: var(--text-inverse) !important;
+}
+
+.ant-menu .ant-menu-item-selected .material-symbols-rounded {
+  color: var(--text-inverse) !important;
+}
+
+/* Collapsed: make items centered; selected item becomes square 1:1 */
+.ant-layout-sider-collapsed .ant-menu .ant-menu-item {
+  padding-inline: 0 !important;
+  margin-inline: auto !important;
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-layout-sider-collapsed .ant-menu .ant-menu-item .ant-menu-title-content {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-root {
+    padding: 14px;
+  }
+
+  .dashboard-shell {
+    border-radius: 18px;
+  }
+}
+
+/* Auth (login) */
+.auth-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--app-bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  box-shadow: var(--shadow-panel);
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c4c4c4;
+}
