@@ -35,12 +35,32 @@ export default function ProductCategoriesPage() {
   const [formMode, setFormMode] = useState("create");
   const [form] = Form.useForm();
 
+  // State cho phân trang
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
   // Fetch danh sách product categories
-  const fetchList = async () => {
+  const fetchList = async (
+    page = pagination.current,
+    pageSize = pagination.pageSize,
+  ) => {
     setLoading(true);
     try {
-      const response = await getAllProductCategories();
-      setItems(response?.data?.categories || []);
+      const response = await getAllProductCategories({
+        page,
+        limit: pageSize,
+      });
+
+      // Xử lý response có phân trang từ backend
+      setItems(response?.data || []);
+      setPagination({
+        current: response?.pagination?.page || 1,
+        pageSize: response?.pagination?.limit || 10,
+        total: response?.pagination?.total || 0,
+      });
     } catch (error) {
       messageApi.error(
         error?.response?.data?.message ||
@@ -55,6 +75,12 @@ export default function ProductCategoriesPage() {
   useEffect(() => {
     fetchList();
   }, []);
+
+  // Xử lý thay đổi trang
+  // Table onChange trả về (pagination, filters, sorter, extra)
+  const handleTableChange = (newPagination) => {
+    fetchList(newPagination.current, newPagination.pageSize);
+  };
 
   // Xử lý xem chi tiết
   const handleViewDetail = async (record) => {
@@ -141,7 +167,6 @@ export default function ProductCategoriesPage() {
         title: "Tên danh mục",
         dataIndex: "name",
         key: "name",
-        sorter: (a, b) => a.name.localeCompare(b.name),
       },
       {
         title: "Mô tả",
@@ -160,11 +185,6 @@ export default function ProductCategoriesPage() {
             {isActive ? "Hoạt động" : "Không hoạt động"}
           </Tag>
         ),
-        filters: [
-          { text: "Hoạt động", value: true },
-          { text: "Không hoạt động", value: false },
-        ],
-        onFilter: (value, record) => record.isActive === value,
       },
       {
         title: "Ngày tạo",
@@ -172,7 +192,6 @@ export default function ProductCategoriesPage() {
         key: "createdAt",
         width: 160,
         render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
-        sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
       },
       {
         title: "Hành động",
@@ -249,9 +268,12 @@ export default function ProductCategoriesPage() {
             columns={columns}
             rowKey="_id"
             pagination={{
+              ...pagination,
               showSizeChanger: true,
               showTotal: (total) => `Tổng ${total} danh mục`,
+              pageSizeOptions: [5, 10, 20, 50, 100],
             }}
+            onChange={handleTableChange}
           />
         </Card>
       </Space>

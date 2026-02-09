@@ -34,6 +34,10 @@ export default function Sidebar({ collapsed }) {
           key: "/product-categories",
           label: "Danh mục sản phẩm",
         },
+        {
+          key: "/ingredient-categories",
+          label: "Danh mục nguyên liệu",
+        },
       ],
     },
     {
