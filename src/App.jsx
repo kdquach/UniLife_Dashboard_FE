@@ -10,7 +10,7 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 // Pages
 import LoginPage from "@/pages/Login";
 import DashboardPage from "@/pages/Dashboard";
-import WorkSchedulePage from "@/pages/staff/WorkSchedule";
+import StaffSchedulePage from "@/pages/staff/StaffSchedule";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -43,7 +43,7 @@ export default function App() {
                 index
                 element={<Navigate to="/staff/schedule" replace />}
               />
-              <Route path="schedule" element={<WorkSchedulePage />} />
+              <Route path="schedule" element={<StaffSchedulePage />} />
             </Route>
 
             <Route path="profile" element={<ProfilePage />} />
