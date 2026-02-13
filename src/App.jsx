@@ -11,6 +11,8 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import LoginPage from "@/pages/Login";
 import DashboardPage from "@/pages/Dashboard";
 import StaffSchedulePage from "@/pages/staff/StaffSchedule";
+import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
+import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -44,6 +46,18 @@ export default function App() {
                 element={<Navigate to="/staff/schedule" replace />}
               />
               <Route path="schedule" element={<StaffSchedulePage />} />
+            </Route>
+
+            <Route path="manager">
+              <Route
+                index
+                element={<Navigate to="/manager/shifts" replace />}
+              />
+              <Route path="shifts" element={<ManagerSchedulePage />} />
+              <Route
+                path="shift-requests"
+                element={<ShiftRequestsManagementPage />}
+              />
             </Route>
 
             <Route path="profile" element={<ProfilePage />} />
