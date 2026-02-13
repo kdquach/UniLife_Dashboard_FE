@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
-    "@fullcalendar/react": "^6.1.20",
-    "@fullcalendar/scrollgrid": "^6.1.20",
-    "@fullcalendar/timegrid": "^6.1.20",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "antd": "^6.2.2",
