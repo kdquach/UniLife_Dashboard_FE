@@ -36,13 +36,3 @@ export async function getMyStaffShifts(params = {}) {
   const assignments = Array.isArray(response?.data?.data) ? response.data.data : [];
   return assignments.map(normalizeAssignment);
 }
-
-export async function checkInShiftAssignment(assignmentId) {
-  const response = await api.post(`/shifts/assignments/${assignmentId}/check-in`);
-  return response?.data?.data?.assignment;
-}
-
-export async function checkOutShiftAssignment(assignmentId) {
-  const response = await api.post(`/shifts/assignments/${assignmentId}/check-out`);
-  return response?.data?.data?.assignment;
-}

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
-  App,
   Descriptions,
   Modal,
   Tag,
   Button,
   Space,
   Input,
+  message as antdMessage,
 } from "antd";
 import dayjs from "dayjs";
 import ScheduleHeader from "@/components/schedule/ScheduleHeader";
@@ -17,6 +18,7 @@ import {
 } from "@/services/staffShift.service";
 import {
   createShiftChangeRequest,
+  getMyShiftChangeRequests,
 } from "@/services/shiftManagement.service";
 import { isUpcomingShift, isShiftOngoing } from "@/utils/staffShiftUtils";
 import "@/styles/schedule-shared.css";
@@ -27,16 +29,18 @@ function toMinutes(value) {
 }
 
 export default function StaffSchedulePage() {
-  const { message } = App.useApp();
   const { user } = useAuthStore();
+  const location = useLocation();
   const currentUserId = user?._id || user?.id || null;
 
   const [currentWeek, setCurrentWeek] = useState(dayjs().startOf("week"));
   const [shifts, setShifts] = useState(null);
   const [selectedShift, setSelectedShift] = useState(null);
   const [openDetails, setOpenDetails] = useState(false);
+  const [openRequestModal, setOpenRequestModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [requestReason, setRequestReason] = useState("");
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   const weekStart = useMemo(() => currentWeek.startOf("day"), [currentWeek]);
   const weekEnd = useMemo(() => weekStart.add(6, "day"), [weekStart]);
@@ -47,19 +51,31 @@ export default function StaffSchedulePage() {
 
   const loadShifts = useCallback(async () => {
     try {
-      const data = await getMyStaffShifts();
-      setShifts(data);
-      return data;
+      const [shiftsData, requestsData] = await Promise.all([
+        getMyStaffShifts(),
+        getMyShiftChangeRequests({ status: "pending" }),
+      ]);
+      setShifts(shiftsData);
+      setPendingRequests(requestsData || []);
+      return shiftsData;
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không tải được lịch làm việc");
+      antdMessage.error(error?.response?.data?.message || "Không tải được lịch làm việc");
       setShifts([]);
+      setPendingRequests([]);
       return [];
     }
-  }, [message]);
+  }, []);
 
   useEffect(() => {
     void loadShifts();
   }, [loadShifts]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const refreshToken = params.get("refresh");
+    if (!refreshToken) return;
+    void loadShifts();
+  }, [location.search, loadShifts]);
 
   const loading = shifts === null;
 
@@ -68,11 +84,12 @@ export default function StaffSchedulePage() {
     const end = weekEnd.endOf("day");
 
     return (shifts ?? []).filter((item) => {
-      if (item.status === "draft") return false;
+      if (["draft", "cancelled"].includes(item.status)) return false;
+      if (currentUserId && String(item.staffId) !== String(currentUserId)) return false;
       const date = dayjs(item.start);
       return date.isAfter(start.subtract(1, "minute")) && date.isBefore(end.add(1, "minute"));
     });
-  }, [shifts, weekStart, weekEnd]);
+  }, [shifts, weekStart, weekEnd, currentUserId]);
 
   const shiftRows = useMemo(() => {
     const byShift = new Map();
@@ -112,6 +129,7 @@ export default function StaffSchedulePage() {
         name: item.title,
         shiftColor: "var(--primary)",
         assignmentId: item.assignmentId,
+        status: item.status === "scheduled" ? "assigned" : item.status,
         badgeId: `readonly:${item.assignmentId}`,
       });
     }
@@ -126,26 +144,20 @@ export default function StaffSchedulePage() {
     return <Tag color="default">Đã qua</Tag>;
   };
 
+  const hasPendingRequest = useMemo(() => {
+    if (!selectedShift?.assignmentId) return false;
+    return pendingRequests.some(
+      (req) => String(req.staffShiftId?._id || req.staffShiftId) === String(selectedShift.assignmentId),
+    );
+  }, [selectedShift?.assignmentId, pendingRequests]);
+
   const canRequestChange = Boolean(
     selectedShift &&
-      selectedShift.staffId === currentUserId &&
-      selectedShift.status === "assigned" &&
-      dayjs(selectedShift.start).isAfter(dayjs()),
+      String(selectedShift.staffId) === String(currentUserId) &&
+      ["assigned", "scheduled"].includes(selectedShift.status) &&
+      dayjs(selectedShift.start).isAfter(dayjs()) &&
+      !hasPendingRequest,
   );
-
-  useEffect(() => {
-    if (!openDetails || !canRequestChange) return;
-
-    (async () => {
-      try {
-        const data = await getAvailableShiftsForChangeRequest();
-        setAvailableShifts(data);
-      } catch (error) {
-        message.error(error?.response?.data?.message || "Không tải được danh sách ca");
-        setAvailableShifts([]);
-      }
-    })();
-  }, [openDetails, canRequestChange, message]);
 
   const handleCardClick = (card) => {
     const shift = filteredWeekShifts.find((item) => item.assignmentId === card.assignmentId) || null;
@@ -156,7 +168,7 @@ export default function StaffSchedulePage() {
   const handleRequestChange = async () => {
     if (!selectedShift?.assignmentId) return;
     if (!requestReason.trim()) {
-      message.error("Vui lòng nhập lý do đổi ca");
+      antdMessage.error("Vui lòng nhập lý do đổi ca");
       return;
     }
 
@@ -166,11 +178,12 @@ export default function StaffSchedulePage() {
         staffShiftId: selectedShift.assignmentId,
         reason: requestReason.trim(),
       });
-      message.success("Đã gửi yêu cầu đổi ca");
+      antdMessage.success("Đã gửi yêu cầu đổi ca");
       setRequestReason("");
-      setOpenDetails(false);
+      setOpenRequestModal(false);
+      await loadShifts();
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể gửi yêu cầu đổi ca");
+      antdMessage.error(error?.response?.data?.message || "Không thể gửi yêu cầu đổi ca");
     } finally {
       setSubmitting(false);
     }
@@ -209,15 +222,21 @@ export default function StaffSchedulePage() {
         open={openDetails}
         onCancel={() => {
           setOpenDetails(false);
-          setRequestReason("");
         }}
         footer={
           <Space>
             <Button onClick={() => setOpenDetails(false)}>Đóng</Button>
 
-            {canRequestChange && (
-              <Button loading={submitting} onClick={handleRequestChange}>
-                Request Change Shift
+            {(canRequestChange || hasPendingRequest) && (
+              <Button
+                type="primary"
+                disabled={hasPendingRequest}
+                onClick={() => {
+                  setRequestReason("");
+                  setOpenRequestModal(true);
+                }}
+              >
+                {hasPendingRequest ? "Đã gửi yêu cầu đổi ca" : "Yêu cầu đổi ca"}
               </Button>
             )}
           </Space>
@@ -244,20 +263,37 @@ export default function StaffSchedulePage() {
           <Descriptions.Item label="Công thực tế (giờ)">
             {selectedShift?.actualWorkHours ? selectedShift.actualWorkHours.toFixed(2) : "0.00"}
           </Descriptions.Item>
-
         </Descriptions>
 
-        {canRequestChange && (
-          <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-            <div style={{ fontWeight: 600 }}>Lý do đổi ca</div>
-            <Input.TextArea
-              value={requestReason}
-              onChange={(event) => setRequestReason(event.target.value)}
-              placeholder="Nhập lý do đổi ca"
-              rows={3}
-            />
+      </Modal>
+
+      <Modal
+        title="Yêu cầu đổi ca"
+        open={openRequestModal}
+        onCancel={() => {
+          setOpenRequestModal(false);
+          setRequestReason("");
+        }}
+        onOk={handleRequestChange}
+        okText="Gửi yêu cầu"
+        cancelText="Hủy"
+        okButtonProps={{ loading: submitting }}
+        destroyOnHidden
+      >
+        <div style={{ display: "grid", gap: 10 }}>
+          <div style={{ fontWeight: 600 }}>Ca hiện tại</div>
+          <div style={{ color: "var(--text-muted)" }}>
+            {selectedShift?.title || "—"} ({selectedShift?.shiftStartTime || "--:--"} - {selectedShift?.shiftEndTime || "--:--"})
           </div>
-        )}
+
+          <div style={{ fontWeight: 600 }}>Lý do đổi ca</div>
+          <Input.TextArea
+            value={requestReason}
+            onChange={(event) => setRequestReason(event.target.value)}
+            placeholder="Nhập lý do đổi ca"
+            rows={4}
+          />
+        </div>
       </Modal>
     </div>
   );

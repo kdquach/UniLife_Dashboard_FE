@@ -30,8 +30,8 @@ export default function StaffCard({
       ? `${CSS.Translate.toString(transform)} scale(1.08)` 
       : CSS.Translate.toString(transform),
     opacity: isDragging ? 0.95 : 1,
-    boxShadow: isDragging ? "0 8px 24px rgba(255, 85, 50, 0.3)" : "0 1px 2px rgba(15, 23, 42, 0.06)",
-    backgroundColor: isDragging ? "var(--primary-soft)" : "var(--surface)",
+    boxShadow: isDragging ? "0 8px 20px rgba(79, 70, 229, 0.16)" : "0 1px 2px rgba(15, 23, 42, 0.04)",
+    backgroundColor: isDragging ? "#eef2ff" : "var(--surface)",
     zIndex: isDragging ? 1000 : 10,
   };
 
@@ -41,6 +41,9 @@ export default function StaffCard({
     .slice(0, 2)
     .map((chunk) => chunk[0]?.toUpperCase())
     .join("");
+
+  const normalizedStatus = String(staff?.status || "").toLowerCase();
+  const showStatusBadge = Boolean(normalizedStatus);
 
   return (
     <Tooltip title={staff.name}>
@@ -61,20 +64,32 @@ export default function StaffCard({
           />
         )}
         {showAvatar && <span className="staff-card-avatar">{initials || "S"}</span>}
-        <span className="staff-card-name">{staff.name}</span>
+        <div className="staff-card-content">
+          <div className="staff-card-top">
+            <span className="staff-card-name">{staff.name}</span>
 
-        {removable && (
-          <button
-            type="button"
-            className="staff-card-remove"
-            onClick={(event) => {
-              event.stopPropagation();
-              onRemove?.();
-            }}
-          >
-            ×
-          </button>
-        )}
+            {removable && (
+              <button
+                type="button"
+                className="staff-card-remove"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRemove?.();
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className="staff-card-bottom">
+            {showStatusBadge && (
+              <span className={`staff-status-badge status-${normalizedStatus}`}>
+                {normalizedStatus}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </Tooltip>
   );

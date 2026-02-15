@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
+import { useNavigate } from "react-router-dom";
+import { notification } from "antd";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import {
-  deleteNotification,
   getActiveSystemNotifications,
   getNotificationById,
   getMyNotifications,
@@ -43,6 +44,8 @@ function normalizeUserNotification(item) {
 }
 
 export default function NotificationCenter() {
+  const navigate = useNavigate();
+  const [api, contextHolder] = notification.useNotification();
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -51,6 +54,8 @@ export default function NotificationCenter() {
   const [expandedId, setExpandedId] = useState(null);
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isFirstLoadRef = useRef(true);
+  const knownNotificationIdsRef = useRef(new Set());
   const limit = 10;
 
   const loadInitial = useCallback(async () => {
@@ -67,6 +72,33 @@ export default function NotificationCenter() {
         ...myNotifications,
         ...systemNotifications.map(normalizeSystemNotification),
       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      const currentKnownIds = knownNotificationIdsRef.current;
+      const newIncoming = merged.filter(
+        (item) =>
+          !String(item.id).startsWith("sys-") &&
+          !item.isRead &&
+          !currentKnownIds.has(String(item.id)),
+      );
+
+      if (!isFirstLoadRef.current && newIncoming.length > 0) {
+        newIncoming.slice(0, 3).forEach((item) => {
+          api.info({
+            key: `notif-${item.id}`,
+            message: item.title || "Thông báo mới",
+            description: item.content || "Bạn có một thông báo mới",
+            placement: "bottomRight",
+            duration: 4.5,
+          });
+        });
+      }
+
+      knownNotificationIdsRef.current = new Set(
+        merged
+          .filter((item) => !String(item.id).startsWith("sys-"))
+          .map((item) => String(item.id)),
+      );
+      isFirstLoadRef.current = false;
 
       setItems(merged);
       setUnreadCount(unread);
@@ -85,7 +117,7 @@ export default function NotificationCenter() {
 
     const timer = setInterval(() => {
       loadInitial();
-    }, 20000);
+    }, 8000);
 
     return () => clearInterval(timer);
   }, [loadInitial]);
@@ -95,13 +127,6 @@ export default function NotificationCenter() {
     await markNotificationAsRead(item.id);
     await loadInitial();
   };
-
-  const handleDelete = async (item) => {
-    if (String(item.id).startsWith("sys-")) return;
-    await deleteNotification(item.id);
-    await loadInitial();
-  };
-
   const handleReadAll = async () => {
     await markAllNotificationsAsRead();
     await loadInitial();
@@ -114,9 +139,12 @@ export default function NotificationCenter() {
       await handleMarkRead(notification);
     }
 
-    if (notification.type === "order" && !notification.metadata?.orderId) {
+    let resolvedMetadata = notification.metadata || null;
+
+    if (!resolvedMetadata && !String(notification.id).startsWith("sys-")) {
       const full = await getNotificationById(notification.id);
       if (full?.metadata) {
+        resolvedMetadata = full.metadata;
         setItems((prev) =>
           prev.map((item) =>
             item.id === notification.id
@@ -131,6 +159,26 @@ export default function NotificationCenter() {
     }
 
     setExpandedId((prev) => (prev === notification.id ? null : notification.id));
+
+    const refreshToken = Date.now();
+    const kind = resolvedMetadata?.kind;
+
+    if (kind === "schedule_published") {
+      setOpen(false);
+      navigate(`/staff/schedule?refresh=${refreshToken}`);
+      return;
+    }
+
+    if (kind === "shift_change_request") {
+      setOpen(false);
+      navigate(`/manager/shift-requests?refresh=${refreshToken}`);
+      return;
+    }
+
+    if (notification.type === "order" && resolvedMetadata?.orderId) {
+      setOpen(false);
+      navigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
+    }
   };
 
   const handleLoadMore = async () => {
@@ -153,36 +201,42 @@ export default function NotificationCenter() {
     if (loadingAll) return;
     try {
       setLoadingAll(true);
-      const result = await getMyNotifications({ limit: 200, page: 1 });
-      const mapped = (result?.data || []).map(normalizeUserNotification);
-      const systemNotifications = await getActiveSystemNotifications();
+      const [result, systemNotifications] = await Promise.all([
+        getMyNotifications({ page: 1, limit: 200 }),
+        getActiveSystemNotifications(),
+      ]);
 
-      setItems(
-        [...mapped, ...systemNotifications.map(normalizeSystemNotification)].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        ),
-      );
-      setPage(1);
+      const myNotifications = (result?.data || []).map(normalizeUserNotification);
+      const merged = [
+        ...myNotifications,
+        ...systemNotifications.map(normalizeSystemNotification),
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      setItems(merged);
       setHasNextPage(false);
+      setPage(1);
     } finally {
       setLoadingAll(false);
     }
   };
 
   return (
-    <NotificationDropdown
-      notifications={items}
-      badge={unreadCount}
-      onItemClick={handleOpenNotification}
-      onMarkAllRead={handleReadAll}
-      onLoadMore={handleLoadMore}
-      hasMore={hasNextPage}
-      loadingMore={loadingMore}
-      onViewAll={handleViewAll}
-      open={open}
-      onOpenChange={setOpen}
-      expandedId={expandedId}
-      loadingAll={loadingAll}
-    />
+    <>
+      {contextHolder}
+      <NotificationDropdown
+        notifications={items}
+        badge={unreadCount}
+        onItemClick={handleOpenNotification}
+        onMarkAllRead={handleReadAll}
+        onLoadMore={handleLoadMore}
+        hasMore={hasNextPage}
+        loadingMore={loadingMore}
+        onViewAll={handleViewAll}
+        open={open}
+        onOpenChange={setOpen}
+        expandedId={expandedId}
+        loadingAll={loadingAll}
+      />
+    </>
   );
 }

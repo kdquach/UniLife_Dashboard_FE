@@ -103,6 +103,21 @@ export default function Sidebar({ collapsed }) {
       label: "Tổng quan",
     },
     {
+      key: "/manager",
+      icon: <GIcon name="calendar_month" />,
+      label: "Quản lý ca làm việc",
+      children: [
+        {
+          key: "/manager/schedule",
+          label: "Lịch làm việc",
+        },
+        {
+          key: "/manager/shift-requests",
+          label: "Yêu cầu đổi ca",
+        },
+      ],
+    },
+    {
       key: "/categories",
       icon: <GIcon name="category" />,
       label: "Danh mục",

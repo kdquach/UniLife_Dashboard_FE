@@ -74,23 +74,13 @@ function DragOverlayContent({ activeData }) {
   if (!activeData?.staff) return null;
 
   return (
-    <div
-      style={{
-        backgroundColor: "var(--primary-soft)",
-        opacity: 0.95,
-        boxShadow: "0 8px 24px rgba(255, 85, 50, 0.4)",
-        transform: "scale(1.08)",
-        transformOrigin: "0 0",
-      }}
-    >
-      <StaffCard
-        cardId={activeData.id}
-        staff={activeData.staff}
-        draggable={false}
-        hideAccent={false}
-        onClick={() => {}}
-      />
-    </div>
+    <StaffCard
+      cardId={activeData.id}
+      staff={activeData.staff}
+      draggable={false}
+      hideAccent={false}
+      onClick={() => {}}
+    />
   );
 }
 

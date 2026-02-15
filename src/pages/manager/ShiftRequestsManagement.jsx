@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Select, Space, Table, Tag, message } from "antd";
 import dayjs from "dayjs";
+import { useLocation } from "react-router-dom";
 import {
   getShiftChangeRequests,
   reviewShiftChangeRequest,
 } from "@/services/shiftManagement.service";
 
 export default function ShiftRequestsManagementPage() {
+  const location = useLocation();
   const [requests, setRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,14 @@ export default function ShiftRequestsManagementPage() {
     loadRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const refreshToken = params.get("refresh");
+    if (!refreshToken) return;
+    void loadRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const handleReview = async (id, status) => {
     try {
