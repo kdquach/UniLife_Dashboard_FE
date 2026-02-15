@@ -39,6 +39,11 @@ export async function getShiftChangeRequests(params = {}) {
   return response.data?.data || [];
 }
 
+export async function getMyShiftChangeRequests(params = {}) {
+  const response = await api.get("/shifts/my-change-requests", { params });
+  return response.data?.data || [];
+}
+
 export async function reviewShiftChangeRequest(requestId, status) {
   const response = await api.patch(`/shifts/change-request/${requestId}`, {
     status,

@@ -1,7 +1,8 @@
-import { Layout, Button, Dropdown, Avatar, Space, Badge, Input, message } from "antd";
+import { Layout, Button, Dropdown, Avatar, Space, Input, message } from "antd";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import GIcon from "@/components/GIcon";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const { Header: AntHeader } = Layout;
 
@@ -82,13 +83,7 @@ export default function Header({ collapsed, onToggle }) {
       </Space>
 
       <Space size="middle">
-        <Badge count={5} offset={[-5, 5]}>
-          <Button
-            type="text"
-            icon={<GIcon name="notifications" />}
-            style={{ width: 44, height: 44, borderRadius: 12 }}
-          />
-        </Badge>
+        <NotificationCenter />
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Space style={{ cursor: "pointer" }}>

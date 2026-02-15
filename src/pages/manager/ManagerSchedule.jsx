@@ -13,6 +13,7 @@ import {
   getShiftChangeRequests,
   getShiftStaffList,
   publishShiftAssignments,
+  reviewShiftChangeRequest,
   removeAssignment,
 } from "@/services/shiftManagement.service";
 import "@/styles/schedule-shared.css";
@@ -35,7 +36,7 @@ function mapAssignmentsToGrid(assignments, shiftRows) {
   const mapped = {};
 
   for (const assignment of assignments) {
-    if (!["assigned", "draft"].includes(assignment?.status)) continue;
+    if (!["assigned", "draft", "scheduled"].includes(assignment?.status)) continue;
 
     const dateKey = dayjs(assignment.date).format("YYYY-MM-DD");
     const shift = assignment.shiftId || {};
@@ -48,12 +49,15 @@ function mapAssignmentsToGrid(assignments, shiftRows) {
     mapped[dateKey] = mapped[dateKey] || {};
     mapped[dateKey][shiftId] = mapped[dateKey][shiftId] || [];
 
+    const existed = mapped[dateKey][shiftId].some((item) => item.id === staffId);
+    if (existed) continue;
+
     mapped[dateKey][shiftId].push({
       id: staffId,
       name: staff.fullName || "Staff",
       shiftColor: staff.shiftColor || "var(--primary)",
       assignmentId: assignment._id,
-      status: assignment.status,
+      status: assignment.status === "scheduled" ? "assigned" : assignment.status,
       badgeId: buildBadgeId(dateKey, shiftId, staffId),
     });
   }
@@ -300,6 +304,16 @@ export default function ManagerSchedulePage() {
     }
   };
 
+  const handleReviewRequest = async (requestId, status) => {
+    try {
+      await reviewShiftChangeRequest(requestId, status);
+      message.success(status === "approved" ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu");
+      await refreshAll();
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Không thể xử lý yêu cầu");
+    }
+  };
+
   return (
     <div className="schedule-page">
       <Space direction="vertical" size={14} style={{ width: "100%" }}>
@@ -307,7 +321,7 @@ export default function ManagerSchedulePage() {
           title="Manager Schedule"
           weekLabel={weekLabel}
           onPrevWeek={() => setCurrentWeek((prev) => prev.subtract(7, "day"))}
-        onToday={() => setCurrentWeek(dayjs().startOf("week"))}
+          onToday={() => setCurrentWeek(dayjs().startOf("week"))}
           onNextWeek={() => setCurrentWeek((prev) => prev.add(7, "day"))}
         />
 
@@ -335,6 +349,8 @@ export default function ManagerSchedulePage() {
                 requests={requests}
                 requestPendingCount={requestPendingCount}
                 onGoToRequests={() => navigate("/manager/shift-requests")}
+                onApproveRequest={(requestId) => handleReviewRequest(requestId, "approved")}
+                onRejectRequest={(requestId) => handleReviewRequest(requestId, "rejected")}
               />
             )}
           />

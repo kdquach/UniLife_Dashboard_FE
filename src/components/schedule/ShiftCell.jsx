@@ -24,23 +24,27 @@ export default function ShiftCell({
   return (
     <div ref={setNodeRef} className={`shift-cell ${isToday ? "today-cell" : ""} ${isOver ? "drag-over" : ""}`}>
 
-      {items.map((item) => (
-        <StaffCard
-          key={item.badgeId}
-          cardId={item.badgeId}
-          staff={item}
-          draggable={editable}
-          dragData={{
-            type: "cell-badge",
-            staff: item,
-            dateKey,
-            shiftId: shift.id,
-          }}
-          removable={editable}
-          onRemove={() => onRemove?.(item, dateKey, shift.id)}
-          onClick={() => onCardClick?.(item)}
-        />
-      ))}
+      {items.map((item) => {
+        const canEditItem = editable && ["draft", "assigned", "scheduled"].includes(item.status);
+
+        return (
+          <StaffCard
+            key={item.badgeId}
+            cardId={item.badgeId}
+            staff={item}
+            draggable={canEditItem}
+            dragData={{
+              type: "cell-badge",
+              staff: item,
+              dateKey,
+              shiftId: shift.id,
+            }}
+            removable={canEditItem}
+            onRemove={() => onRemove?.(item, dateKey, shift.id)}
+            onClick={() => onCardClick?.(item)}
+          />
+        );
+      })}
     </div>
   );
 }
