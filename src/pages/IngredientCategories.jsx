@@ -15,12 +15,12 @@ import {
 import dayjs from "dayjs";
 import GIcon from "@/components/GIcon";
 import {
-  listIngredientCategories,
+  getAllIngredientCategories,
   getIngredientCategoryById,
   createIngredientCategory,
   updateIngredientCategory,
   deleteIngredientCategory,
-} from "@/services/ingredientCategory.mock.service";
+} from "@/services/ingredientCategory.service";
 
 const { Title, Text } = Typography;
 
@@ -28,31 +28,38 @@ export default function IngredientCategoriesPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
-  const [total, setTotal] = useState(0);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [form] = Form.useForm();
 
-  const fetchList = async (nextPage = page, nextPageSize = pageSize) => {
+  const fetchList = async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
-      const result = await listIngredientCategories({ page: nextPage, pageSize: nextPageSize });
-      const data = result?.items || [];
-      setItems(data);
-      setTotal(result?.total || 0);
-      setPage(result?.page || nextPage);
-      setPageSize(result?.pageSize || nextPageSize);
-
-      if (data.length === 0 && (result?.page || nextPage) > 1) {
-        const fallbackPage = (result?.page || nextPage) - 1;
-        await fetchList(fallbackPage, nextPageSize);
+      const response = await getAllIngredientCategories({
+        page,
+        limit: pageSize,
+      });
+      setItems(response?.data || []);
+      if (response?.pagination) {
+        setPagination({
+          current: response.pagination.page,
+          pageSize: response.pagination.limit,
+          total: response.pagination.total,
+        });
       }
-    } catch {
-      messageApi.error("Không tải được danh sách nhóm nguyên liệu");
+    } catch (error) {
+      messageApi.error(
+        error?.response?.data?.message ||
+          "Không thể tải danh sách nhóm nguyên liệu",
+      );
+      console.error("Lỗi khi tải nhóm nguyên liệu:", error);
     } finally {
       setLoading(false);
     }
@@ -104,9 +111,13 @@ export default function IngredientCategoriesPage() {
                 </span>
               ),
               onClick: async () => {
-                const detail = await getIngredientCategoryById(record._id);
-                setSelected(detail);
-                setDetailOpen(true);
+                try {
+                  const response = await getIngredientCategoryById(record._id);
+                  setSelected(response?.data);
+                  setDetailOpen(true);
+                } catch (error) {
+                  messageApi.error("Không thể tải chi tiết nhóm nguyên liệu");
+                }
               },
             },
             {
@@ -144,9 +155,16 @@ export default function IngredientCategoriesPage() {
                   okButtonProps: { danger: true },
                   cancelText: "Hủy",
                   onOk: async () => {
-                    await deleteIngredientCategory(record._id);
-                    messageApi.success("Đã xóa nhóm nguyên liệu");
-                    fetchList();
+                    try {
+                      await deleteIngredientCategory(record._id);
+                      messageApi.success("Đã xóa nhóm nguyên liệu");
+                      fetchList();
+                    } catch (error) {
+                      messageApi.error(
+                        error?.response?.data?.message ||
+                          "Không thể xóa nhóm nguyên liệu",
+                      );
+                    }
                   },
                 });
               },
@@ -166,7 +184,11 @@ export default function IngredientCategoriesPage() {
                   })),
                 }}
               >
-                <Button type="text" style={{ color: "var(--text-muted)" }} icon={<GIcon name="more_horiz" />} />
+                <Button
+                  type="text"
+                  style={{ color: "var(--text-muted)" }}
+                  icon={<GIcon name="more_horiz" />}
+                />
               </Dropdown>
             );
           }
@@ -179,8 +201,14 @@ export default function IngredientCategoriesPage() {
                   type="text"
                   danger={action.danger}
                   onClick={action.onClick}
-                  style={{ color: action.danger ? undefined : "var(--text-muted)" }}
-                  icon={<GIcon name={action.key === "view" ? "visibility" : "edit"} />}
+                  style={{
+                    color: action.danger ? undefined : "var(--text-muted)",
+                  }}
+                  icon={
+                    <GIcon
+                      name={action.key === "view" ? "visibility" : "edit"}
+                    />
+                  }
                 />
               ))}
             </Space>
@@ -188,7 +216,7 @@ export default function IngredientCategoriesPage() {
         },
       },
     ],
-    [form, messageApi]
+    [form, messageApi],
   );
 
   const openCreateForm = () => {
@@ -220,14 +248,24 @@ export default function IngredientCategoriesPage() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       {contextHolder}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>
             Nhóm nguyên liệu
           </Title>
           <Text type="secondary">Quản lý danh sách nhóm nguyên liệu</Text>
         </div>
-        <Button type="primary" icon={<GIcon name="add" />} onClick={openCreateForm}>
+        <Button
+          type="primary"
+          icon={<GIcon name="add" />}
+          onClick={openCreateForm}
+        >
           Tạo mới
         </Button>
       </div>
@@ -239,13 +277,13 @@ export default function IngredientCategoriesPage() {
           dataSource={items}
           loading={loading}
           pagination={{
-            current: page,
-            pageSize,
-            total,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
-            pageSizeOptions: [8, 12, 20, 50],
-            onChange: (nextPage, nextSize) => {
-              fetchList(nextPage, nextSize);
+            showTotal: (total) => `Tổng ${total} nhóm nguyên liệu`,
+            onChange: (page, pageSize) => {
+              fetchList(page, pageSize);
             },
           }}
         />
@@ -274,11 +312,19 @@ export default function IngredientCategoriesPage() {
           </div>
           <div>
             <Text type="secondary">Tạo lúc</Text>
-            <div>{selected?.createdAt ? dayjs(selected.createdAt).format("DD/MM/YYYY HH:mm") : "—"}</div>
+            <div>
+              {selected?.createdAt
+                ? dayjs(selected.createdAt).format("DD/MM/YYYY HH:mm")
+                : "—"}
+            </div>
           </div>
           <div>
             <Text type="secondary">Cập nhật</Text>
-            <div>{selected?.updatedAt ? dayjs(selected.updatedAt).format("DD/MM/YYYY HH:mm") : "—"}</div>
+            <div>
+              {selected?.updatedAt
+                ? dayjs(selected.updatedAt).format("DD/MM/YYYY HH:mm")
+                : "—"}
+            </div>
           </div>
           <div>
             <Text type="secondary">Trạng thái</Text>
@@ -290,7 +336,11 @@ export default function IngredientCategoriesPage() {
       </Modal>
 
       <Modal
-        title={formMode === "create" ? "Tạo nhóm nguyên liệu" : "Cập nhật nhóm nguyên liệu"}
+        title={
+          formMode === "create"
+            ? "Tạo nhóm nguyên liệu"
+            : "Cập nhật nhóm nguyên liệu"
+        }
         open={formOpen}
         onCancel={() => setFormOpen(false)}
         onOk={handleSubmit}
@@ -306,7 +356,11 @@ export default function IngredientCategoriesPage() {
           >
             <Input placeholder="Ví dụ: Gia vị" />
           </Form.Item>
-          <Form.Item label="Mô tả" name="description" style={{ marginBottom: 0 }}>
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            style={{ marginBottom: 0 }}
+          >
             <Input.TextArea placeholder="Mô tả ngắn" rows={3} />
           </Form.Item>
         </Form>
