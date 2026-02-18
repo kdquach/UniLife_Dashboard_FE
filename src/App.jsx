@@ -52,6 +52,21 @@ export default function App() {
               <Route
                 path="attendance-history"
                 element={<AttendanceHistoryPage />}
+              <Route
+                path="ingredient-categories"
+                element={<IngredientCategoriesPage />}
+              />
+              <Route
+                path="product-categories"
+                element={<ProductCategoriesPage />}
+              />
+              <Route
+                path="products"
+                element={<div>Products Page - Coming Soon</div>}
+              />
+              <Route
+                path="orders"
+                element={<div>Orders Page - Coming Soon</div>}
               />
             </Route>
 

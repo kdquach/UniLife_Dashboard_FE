@@ -35,18 +35,22 @@ export default function Sidebar({ collapsed }) {
       label: "Sản phẩm",
     },
     {
-      key: "/categories",
+      key: "/staff/categories",
       icon: <GIcon name="category" />,
       label: "Danh mục",
       children: [
         {
-          key: "/product-categories",
+          key: "/staff/product-categories",
           label: "Danh mục sản phẩm",
+        },
+        {
+          key: "/staff/ingredient-categories",
+          label: "Danh mục nguyên liệu",
         },
       ],
     },
     {
-      key: "/orders",
+      key: "/staff/orders",
       icon: <GIcon name="shopping_cart" />,
       label: "Đơn hàng",
     },
