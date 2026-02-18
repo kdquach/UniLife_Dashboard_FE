@@ -46,6 +46,14 @@ export default function App() {
                 element={<Navigate to="/staff/schedule" replace />}
               />
               <Route path="schedule" element={<StaffSchedulePage />} />
+              <Route
+                path="ingredient-categories"
+                element={<IngredientCategoriesPage />}
+              />
+              <Route
+                path="product-categories"
+                element={<ProductCategoriesPage />}
+              />
             </Route>
 
             <Route path="manager">
