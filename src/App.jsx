@@ -11,6 +11,8 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import LoginPage from "@/pages/Login";
 import DashboardPage from "@/pages/Dashboard";
 import StaffSchedulePage from "@/pages/staff/StaffSchedule";
+import StaffAttendancePage from "@/pages/staff/StaffAttendance";
+import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
 import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
 import ProfilePage from "@/pages/Profile";
@@ -46,6 +48,11 @@ export default function App() {
                 element={<Navigate to="/staff/schedule" replace />}
               />
               <Route path="schedule" element={<StaffSchedulePage />} />
+              <Route path="attendance" element={<StaffAttendancePage />} />
+              <Route
+                path="attendance-history"
+                element={<AttendanceHistoryPage />}
+              />
             </Route>
 
             <Route path="manager">
