@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Button,
   Card,
@@ -29,70 +29,65 @@ export default function ProductCategoriesPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [form] = Form.useForm();
 
-  // State cho phân trang
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
-
   // Fetch danh sách product categories
-  const fetchList = async (
-    page = pagination.current,
-    pageSize = pagination.pageSize,
-  ) => {
-    setLoading(true);
-    try {
-      const response = await getAllProductCategories({
-        page,
-        limit: pageSize,
-      });
-
-      // Xử lý response có phân trang từ backend
-      setItems(response?.data || []);
-      setPagination({
-        current: response?.pagination?.page || 1,
-        pageSize: response?.pagination?.limit || 10,
-        total: response?.pagination?.total || 0,
-      });
-    } catch (error) {
-      messageApi.error(
-        error?.response?.data?.message ||
-          "Không thể tải danh sách danh mục sản phẩm",
-      );
-      console.error("Lỗi khi tải danh mục sản phẩm:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchList = useCallback(
+    async (page = 1, pageSize = 10) => {
+      setLoading(true);
+      try {
+        const response = await getAllProductCategories({
+          page,
+          limit: pageSize,
+        });
+        setItems(response?.data || []);
+        if (response?.pagination) {
+          setPagination({
+            current: response.pagination.page,
+            pageSize: response.pagination.limit,
+            total: response.pagination.total,
+          });
+        }
+      } catch (error) {
+        messageApi.error(
+          error?.response?.data?.message ||
+            "Không thể tải danh sách danh mục sản phẩm",
+        );
+        console.error("Lỗi khi tải danh mục sản phẩm:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [messageApi],
+  );
 
   useEffect(() => {
     fetchList();
-  }, []);
-
-  // Xử lý thay đổi trang
-  // Table onChange trả về (pagination, filters, sorter, extra)
-  const handleTableChange = (newPagination) => {
-    fetchList(newPagination.current, newPagination.pageSize);
-  };
+  }, [fetchList]);
 
   // Xử lý xem chi tiết
-  const handleViewDetail = async (record) => {
-    try {
-      const response = await getProductCategoryById(record._id);
-      setSelected(response?.data?.category);
-      setDetailOpen(true);
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-      messageApi.error("Không thể tải chi tiết danh mục");
-    }
-  };
+  const handleViewDetail = useCallback(
+    async (record) => {
+      try {
+        const response = await getProductCategoryById(record._id);
+        setSelected(response?.data);
+        setDetailOpen(true);
+        // eslint-disable-next-line no-unused-vars
+      } catch (error) {
+        messageApi.error("Không thể tải chi tiết danh mục");
+      }
+    },
+    [messageApi],
+  );
 
   // Xử lý mở form tạo mới
   const handleCreate = () => {
@@ -102,38 +97,44 @@ export default function ProductCategoriesPage() {
   };
 
   // Xử lý mở form chỉnh sửa
-  const handleEdit = (record) => {
-    setFormMode("edit");
-    form.setFieldsValue({
-      name: record.name,
-      description: record.description,
-      isActive: record.isActive,
-    });
-    setSelected(record);
-    setFormOpen(true);
-  };
+  const handleEdit = useCallback(
+    (record) => {
+      setFormMode("edit");
+      form.setFieldsValue({
+        name: record.name,
+        description: record.description,
+        isActive: record.isActive,
+      });
+      setSelected(record);
+      setFormOpen(true);
+    },
+    [form],
+  );
 
   // Xử lý xóa
-  const handleDelete = (record) => {
-    Modal.confirm({
-      title: "Xác nhận xóa",
-      content: `Bạn có chắc chắn muốn xóa danh mục "${record.name}"?`,
-      okText: "Xóa",
-      cancelText: "Hủy",
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await deleteProductCategory(record._id);
-          messageApi.success("Xóa danh mục thành công");
-          fetchList();
-        } catch (error) {
-          messageApi.error(
-            error?.response?.data?.message || "Không thể xóa danh mục",
-          );
-        }
-      },
-    });
-  };
+  const handleDelete = useCallback(
+    (record) => {
+      Modal.confirm({
+        title: "Xác nhận xóa",
+        content: `Bạn có chắc chắn muốn xóa danh mục "${record.name}"?`,
+        okText: "Xóa",
+        cancelText: "Hủy",
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          try {
+            await deleteProductCategory(record._id);
+            messageApi.success("Xóa danh mục thành công");
+            fetchList();
+          } catch (error) {
+            messageApi.error(
+              error?.response?.data?.message || "Không thể xóa danh mục",
+            );
+          }
+        },
+      });
+    },
+    [messageApi, fetchList],
+  );
 
   // Xử lý submit form
   const handleFormSubmit = async () => {
@@ -167,6 +168,7 @@ export default function ProductCategoriesPage() {
         title: "Tên danh mục",
         dataIndex: "name",
         key: "name",
+        sorter: (a, b) => a.name.localeCompare(b.name),
       },
       {
         title: "Mô tả",
@@ -185,6 +187,11 @@ export default function ProductCategoriesPage() {
             {isActive ? "Hoạt động" : "Không hoạt động"}
           </Tag>
         ),
+        filters: [
+          { text: "Hoạt động", value: true },
+          { text: "Không hoạt động", value: false },
+        ],
+        onFilter: (value, record) => record.isActive === value,
       },
       {
         title: "Ngày tạo",
@@ -192,6 +199,7 @@ export default function ProductCategoriesPage() {
         key: "createdAt",
         width: 160,
         render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
+        sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
       },
       {
         title: "Hành động",
@@ -233,7 +241,7 @@ export default function ProductCategoriesPage() {
         ),
       },
     ],
-    [],
+    [handleViewDetail, handleEdit, handleDelete],
   );
 
   return (
@@ -268,12 +276,15 @@ export default function ProductCategoriesPage() {
             columns={columns}
             rowKey="_id"
             pagination={{
-              ...pagination,
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
               showSizeChanger: true,
               showTotal: (total) => `Tổng ${total} danh mục`,
-              pageSizeOptions: [5, 10, 20, 50, 100],
+              onChange: (page, pageSize) => {
+                fetchList(page, pageSize);
+              },
             }}
-            onChange={handleTableChange}
           />
         </Card>
       </Space>
