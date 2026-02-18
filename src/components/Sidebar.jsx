@@ -21,7 +21,16 @@ export default function Sidebar({ collapsed }) {
       label: "Lịch làm việc",
     },
     {
-      key: "/staff/products",
+      key: "/staff/attendance-group",
+      icon: <GIcon name="fingerprint" />,
+      label: "Chấm công",
+      children: [
+        { key: "/staff/attendance", label: "Chấm công hôm nay" },
+        { key: "/staff/attendance-history", label: "Lịch sử chấm công" },
+      ],
+    },
+    {
+      key: "/products",
       icon: <GIcon name="inventory_2" />,
       label: "Sản phẩm",
     },
