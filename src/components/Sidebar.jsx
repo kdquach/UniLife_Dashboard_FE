@@ -1,9 +1,9 @@
-import { Layout, Menu } from "antd";
-import { useNavigate, useLocation } from "react-router-dom";
-import logoLg from "@/assets/images/logo-lg.png";
-import logoMd from "@/assets/images/logo-md.png";
-import GIcon from "@/components/GIcon";
-import { useAuthStore } from "@/store/useAuthStore";
+import { Layout, Menu } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom';
+import logoLg from '@/assets/images/logo-lg.png';
+import logoMd from '@/assets/images/logo-md.png';
+import GIcon from '@/components/GIcon';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const { Sider } = Layout;
 
@@ -16,121 +16,121 @@ export default function Sidebar({ collapsed }) {
 
   const staffMenuItems = [
     {
-      key: "/staff/schedule",
+      key: '/staff/schedule',
       icon: <GIcon name="calendar_month" />,
-      label: "Lịch làm việc",
+      label: 'Lịch làm việc',
     },
     {
-      key: "/products",
+      key: '/staff/product',
       icon: <GIcon name="inventory_2" />,
-      label: "Sản phẩm",
+      label: 'Sản phẩm',
     },
     {
-      key: "/categories",
+      key: '/categories',
       icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Danh mục',
       children: [
         {
-          key: "/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/product-categories',
+          label: 'Danh mục sản phẩm',
         },
       ],
     },
     {
-      key: "/orders",
+      key: '/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
   ];
 
   const adminMenuItems = [
     {
-      key: "/",
+      key: '/',
       icon: <GIcon name="space_dashboard" />,
-      label: "Tổng quan",
+      label: 'Tổng quan',
     },
     {
-      key: "/users",
+      key: '/users',
       icon: <GIcon name="group" />,
-      label: "Người dùng",
+      label: 'Người dùng',
     },
     {
-      key: "/products",
+      key: '/products',
       icon: <GIcon name="inventory_2" />,
-      label: "Sản phẩm",
+      label: 'Sản phẩm',
     },
     {
-      key: "/categories",
+      key: '/categories',
       icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Danh mục',
       children: [
         {
-          key: "/ingredient-categories",
-          label: "Nhóm nguyên liệu",
+          key: '/ingredient-categories',
+          label: 'Nhóm nguyên liệu',
         },
         {
-          key: "/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/product-categories',
+          label: 'Danh mục sản phẩm',
         },
       ],
     },
     {
-      key: "/orders",
+      key: '/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
     {
-      key: "/canteens",
+      key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: "Canteen",
+      label: 'Canteen',
     },
     {
-      key: "/reports",
+      key: '/reports',
       icon: <GIcon name="bar_chart" />,
-      label: "Báo cáo",
+      label: 'Báo cáo',
     },
     {
-      key: "/settings",
+      key: '/settings',
       icon: <GIcon name="settings" />,
-      label: "Cài đặt",
+      label: 'Cài đặt',
     },
   ];
 
   const managerMenuItems = [
     {
-      key: "/",
+      key: '/',
       icon: <GIcon name="space_dashboard" />,
-      label: "Tổng quan",
+      label: 'Tổng quan',
     },
     {
-      key: "/categories",
+      key: '/categories',
       icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Danh mục',
       children: [
         {
-          key: "/ingredient-categories",
-          label: "Nhóm nguyên liệu",
+          key: '/ingredient-categories',
+          label: 'Nhóm nguyên liệu',
         },
         {
-          key: "/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/product-categories',
+          label: 'Danh mục sản phẩm',
         },
       ],
     },
     {
-      key: "/orders",
+      key: '/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
     {
-      key: "/reports",
+      key: '/reports',
       icon: <GIcon name="bar_chart" />,
-      label: "Báo cáo",
+      label: 'Báo cáo',
     },
     {
-      key: "/canteens",
+      key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: "Canteen",
+      label: 'Canteen',
     },
   ];
 
@@ -144,9 +144,10 @@ export default function Sidebar({ collapsed }) {
 
   const selectedKey = (() => {
     const path = location.pathname;
-    if (path === "/staff") return "/staff/schedule";
-    if (path.startsWith("/staff/")) {
-      const parts = path.split("/");
+    if (path === '/staff') return '/staff/schedule';
+    if (path.startsWith('/staff/product')) return '/staff/product';
+    if (path.startsWith('/staff/')) {
+      const parts = path.split('/');
       return `/${parts[1]}/${parts[2]}`;
     }
     return path;
@@ -160,16 +161,16 @@ export default function Sidebar({ collapsed }) {
       width={260}
       collapsedWidth={84}
       style={{
-        background: "transparent",
+        background: 'transparent',
       }}
     >
       <div
         style={{
           height: 72,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 16px",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 16px',
         }}
       >
         {!collapsed && (
@@ -187,7 +188,7 @@ export default function Sidebar({ collapsed }) {
         style={{
           borderRight: 0,
           marginTop: 16,
-          padding: "0 10px",
+          padding: '0 10px',
         }}
       />
     </Sider>

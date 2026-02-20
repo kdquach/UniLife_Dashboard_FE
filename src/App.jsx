@@ -1,19 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ConfigProvider } from "antd";
-import viVN from "antd/locale/vi_VN";
-import { theme } from "@/config/theme";
-import { useAuthStore } from "@/store/useAuthStore";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
+import { theme } from '@/config/theme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Layouts
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 // Pages
-import LoginPage from "@/pages/Login";
-import DashboardPage from "@/pages/Dashboard";
-import WorkSchedulePage from "@/pages/staff/WorkSchedule";
-import ProfilePage from "@/pages/Profile";
-import IngredientCategoriesPage from "@/pages/IngredientCategories";
-import ProductCategoriesPage from "@/pages/ProductCategories";
+import LoginPage from '@/pages/Login';
+import DashboardPage from '@/pages/Dashboard';
+import WorkSchedulePage from '@/pages/staff/WorkSchedule';
+import ProductPage from '@/pages/staff/product/Product';
+import ProductCreatePage from '@/pages/staff/product/ProductCreate';
+import ProfilePage from '@/pages/Profile';
+import IngredientCategoriesPage from '@/pages/IngredientCategories';
+import ProductCategoriesPage from '@/pages/ProductCategories';
+import ProductsPage from '@/pages/Products';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -44,6 +47,8 @@ export default function App() {
                 element={<Navigate to="/staff/schedule" replace />}
               />
               <Route path="schedule" element={<WorkSchedulePage />} />
+              <Route path="product" element={<ProductPage />} />
+              <Route path="product/create" element={<ProductCreatePage />} />
             </Route>
 
             <Route path="profile" element={<ProfilePage />} />
@@ -57,10 +62,7 @@ export default function App() {
             />
 
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />
-            <Route
-              path="products"
-              element={<div>Products Page - Coming Soon</div>}
-            />
+            <Route path="products" element={<ProductsPage />} />
             <Route
               path="categories"
               element={<div>Categories Page - Coming Soon</div>}
