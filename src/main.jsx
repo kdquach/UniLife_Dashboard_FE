@@ -5,10 +5,17 @@ import { AuthProvider } from "@/store/AuthProvider";
 import "antd/dist/reset.css";
 import "./index.css";
 
+import axios from "axios";
+
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+
+// Thêm dòng này để đi xuyên qua trang cảnh báo của Localtunnel
+axios.defaults.headers.common["Bypass-Tunnel-Reminder"] = "true";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
