@@ -10,13 +10,21 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 // Pages
 import LoginPage from "@/pages/Login";
 import DashboardPage from "@/pages/Dashboard";
+
+// Staff pages
 import StaffSchedulePage from "@/pages/staff/StaffSchedule";
 import StaffAttendancePage from "@/pages/staff/StaffAttendance";
 import PendingPickupOrdersPage from "@/pages/staff/PendingPickupOrders";
 import QRScanScreenPage from "@/pages/staff/QRScanScreen";
 import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
+
+// Manager pages
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
 import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
+import ProductManagementPage from "@/pages/manager/ProductManagement";
+import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
+import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
+
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -44,6 +52,7 @@ export default function App() {
           >
             <Route index element={<DashboardPage />} />
 
+            {/* STAFF ROUTES */}
             <Route path="staff">
               <Route
                 index
@@ -63,14 +72,12 @@ export default function App() {
                 path="product-categories"
                 element={<ProductCategoriesPage />}
               />
-              <Route
-                path="products"
-                element={<div>Products Page - Coming Soon</div>}
-              />
+              <Route path="products" element={<div>Products Page - Coming Soon</div>} />
               <Route path="orders" element={<PendingPickupOrdersPage />} />
               <Route path="qr-scan" element={<QRScanScreenPage />} />
             </Route>
 
+            {/* MANAGER ROUTES */}
             <Route path="manager">
               <Route
                 index
@@ -81,8 +88,15 @@ export default function App() {
                 path="shift-requests"
                 element={<ShiftRequestsManagementPage />}
               />
+              <Route path="products" element={<ProductManagementPage />} />
+              <Route path="inventory" element={<InventoryDashboardPage />} />
+              <Route
+                path="assign-food-menu"
+                element={<AssignFoodToMenuPage />}
+              />
             </Route>
 
+            {/* COMMON ROUTES */}
             <Route path="profile" element={<ProfilePage />} />
             <Route
               path="ingredient-categories"
@@ -92,12 +106,10 @@ export default function App() {
               path="product-categories"
               element={<ProductCategoriesPage />}
             />
+            <Route path="products" element={<ProductManagementPage />} />
 
+            {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />
-            <Route
-              path="products"
-              element={<div>Products Page - Coming Soon</div>}
-            />
             <Route
               path="categories"
               element={<div>Categories Page - Coming Soon</div>}
