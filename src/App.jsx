@@ -28,6 +28,7 @@ import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
+import NotificationPage from "@/pages/notification/NotificationPage";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -107,6 +108,9 @@ export default function App() {
               element={<ProductCategoriesPage />}
             />
             <Route path="products" element={<ProductManagementPage />} />
+            <Route path="staff-shifts" element={<ManagerSchedulePage />} />
+            <Route path="notifications" element={<NotificationPage />} />
+            <Route path="notifications/:id" element={<NotificationPage />} />
 
             {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />

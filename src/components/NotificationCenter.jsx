@@ -47,7 +47,7 @@ export default function NotificationCenter() {
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(1);
+  const [nextCursor, setNextCursor] = useState(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingAll, setLoadingAll] = useState(false);
@@ -61,7 +61,7 @@ export default function NotificationCenter() {
   const loadInitial = useCallback(async () => {
     try {
       const [result, systemNotifications, unread] = await Promise.all([
-        getMyNotifications({ page: 1, limit: 20 }),
+        getMyNotifications({ limit: 20 }),
         getActiveSystemNotifications(),
         getUnreadNotificationCount(),
       ]);
@@ -102,15 +102,15 @@ export default function NotificationCenter() {
 
       setItems(merged);
       setUnreadCount(unread);
-      setPage(1);
+      setNextCursor(result?.pagination?.nextCursor || null);
       setHasNextPage(Boolean(result?.pagination?.hasNextPage));
     } catch {
       setItems([]);
       setUnreadCount(0);
-      setPage(1);
+      setNextCursor(null);
       setHasNextPage(false);
     }
-  }, []);
+  }, [api]);
 
   useEffect(() => {
     loadInitial();
@@ -178,19 +178,40 @@ export default function NotificationCenter() {
     if (notification.type === "order" && resolvedMetadata?.orderId) {
       setOpen(false);
       navigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
+      return;
     }
+
+    if (notification.type === "order") {
+      setOpen(false);
+      navigate("/orders");
+      return;
+    }
+
+    if (notification.type === "shift") {
+      setOpen(false);
+      navigate("/staff-shifts");
+      return;
+    }
+
+    if (["system", "promotion"].includes(notification.type)) {
+      setOpen(false);
+      navigate(`/notifications/${notification.id}`);
+      return;
+    }
+
+    setOpen(false);
+    navigate(`/notifications/${notification.id}`);
   };
 
   const handleLoadMore = async () => {
-    if (loadingMore || !hasNextPage) return;
+    if (loadingMore || !hasNextPage || !nextCursor) return;
 
     try {
       setLoadingMore(true);
-      const nextPage = page + 1;
-      const result = await getMyNotifications({ limit, page: nextPage });
+      const result = await getMyNotifications({ limit, cursor: nextCursor });
       const mapped = (result?.data || []).map(normalizeUserNotification);
       setItems((prev) => [...prev, ...mapped]);
-      setPage(nextPage);
+      setNextCursor(result?.pagination?.nextCursor || null);
       setHasNextPage(Boolean(result?.pagination?.hasNextPage));
     } finally {
       setLoadingMore(false);
@@ -214,7 +235,7 @@ export default function NotificationCenter() {
 
       setItems(merged);
       setHasNextPage(false);
-      setPage(1);
+      setNextCursor(null);
     } finally {
       setLoadingAll(false);
     }

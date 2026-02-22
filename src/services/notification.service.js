@@ -9,7 +9,7 @@ export async function getNotifications(params = {}) {
 }
 
 export async function getMyNotifications(params = {}) {
-  const response = await api.get("/notifications/my", { params });
+  const response = await api.get("/notifications/feed", { params });
   return {
     data: Array.isArray(response.data?.data) ? response.data.data : [],
     pagination: response.data?.pagination || null,

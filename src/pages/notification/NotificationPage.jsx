@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { App, Button, Card, Form, Input, Select, Space, Tag } from "antd";
 import dayjs from "dayjs";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   createSystemNotification,
@@ -15,12 +15,14 @@ export default function NotificationPage() {
   const { message } = App.useApp();
   const { user } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { id: routeId } = useParams();
   const [form] = Form.useForm();
 
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [items, setItems] = useState([]);
-  const [selectedId, setSelectedId] = useState(location.state?.notificationId || null);
+  const [selectedId, setSelectedId] = useState(routeId || location.state?.notificationId || null);
   const [staffOptions, setStaffOptions] = useState([]);
 
   const role = String(user?.role || "").toLowerCase();
@@ -59,9 +61,16 @@ export default function NotificationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (routeId) {
+      setSelectedId(routeId);
+    }
+  }, [routeId]);
+
   const handleSelect = async (notification) => {
     const id = notification.id || notification._id;
     setSelectedId(id);
+    navigate(`/notifications/${id}`);
 
     if (!notification.read) {
       try {
@@ -179,12 +188,13 @@ export default function NotificationPage() {
           </Card>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 14 }}>
           <Card
             bordered={false}
             loading={loading}
             style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 2px rgba(15,23,42,0.05)" }}
             title="Inbox"
+            extra={<Tag color="blue">{items.filter((it) => !it.read).length} chưa đọc</Tag>}
           >
             <div style={{ display: "grid", gap: 8, maxHeight: 520, overflowY: "auto" }}>
               {items.map((item) => {
@@ -203,6 +213,13 @@ export default function NotificationPage() {
                       borderRadius: 10,
                       padding: 10,
                       cursor: "pointer",
+                      transition: "all 160ms ease",
+                    }}
+                    onMouseEnter={(event) => {
+                      if (!active) event.currentTarget.style.background = "#f8fafc";
+                    }}
+                    onMouseLeave={(event) => {
+                      if (!active) event.currentTarget.style.background = "#fff";
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
