@@ -45,9 +45,13 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: '/staff/orders',
+      key: "/staff/orders-group",
       icon: <GIcon name="shopping_cart" />,
-      label: 'Đơn hàng',
+      label: "Đơn hàng",
+      children: [
+        { key: "/staff/orders", label: "Đơn chờ nhận" },
+        { key: "/staff/qr-scan", label: "Quét QR trả hàng" },
+      ],
     },
   ];
 
