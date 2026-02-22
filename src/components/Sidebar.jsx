@@ -1,9 +1,9 @@
-import { Layout, Menu } from "antd";
-import { useNavigate, useLocation } from "react-router-dom";
-import logoLg from "@/assets/images/logo-lg.png";
-import logoMd from "@/assets/images/logo-md.png";
-import GIcon from "@/components/GIcon";
-import { useAuthStore } from "@/store/useAuthStore";
+import { Layout, Menu } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom';
+import logoLg from '@/assets/images/logo-lg.png';
+import logoMd from '@/assets/images/logo-md.png';
+import GIcon from '@/components/GIcon';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const { Sider } = Layout;
 
@@ -16,149 +16,177 @@ export default function Sidebar({ collapsed }) {
 
   const staffMenuItems = [
     {
-      key: "/staff/schedule",
+      key: '/staff/schedule',
       icon: <GIcon name="calendar_month" />,
-      label: "Lịch làm việc",
+      label: 'Lịch làm việc',
     },
     {
-      key: "/staff/attendance-group",
+      key: '/staff/attendance-group',
       icon: <GIcon name="fingerprint" />,
-      label: "Chấm công",
+      label: 'Chấm công',
       children: [
-        { key: "/staff/attendance", label: "Chấm công hôm nay" },
-        { key: "/staff/attendance-history", label: "Lịch sử chấm công" },
+        { key: '/staff/attendance', label: 'Chấm công hôm nay' },
+        { key: '/staff/attendance-history', label: 'Lịch sử chấm công' },
       ],
     },
     {
-      key: "/products",
-      icon: <GIcon name="inventory_2" />,
-      label: "Sản phẩm",
-    },
-    {
-      key: "/staff/categories",
+      key: '/staff/categories',
       icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Danh mục',
       children: [
         {
-          key: "/staff/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/staff/product-categories',
+          label: 'Danh mục sản phẩm',
         },
         {
-          key: "/staff/ingredient-categories",
-          label: "Danh mục nguyên liệu",
+          key: '/staff/ingredient-categories',
+          label: 'Danh mục nguyên liệu',
         },
       ],
     },
     {
-      key: "/staff/orders",
+      key: '/staff/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
   ];
 
   const adminMenuItems = [
     {
-      key: "/",
+      key: '/',
       icon: <GIcon name="space_dashboard" />,
-      label: "Tổng quan",
+      label: 'Tổng quan',
     },
     {
-      key: "/users",
+      key: '/users',
       icon: <GIcon name="group" />,
-      label: "Người dùng",
+      label: 'Người dùng',
     },
     {
-      key: "/products",
+      key: '/manager/products-group',
       icon: <GIcon name="inventory_2" />,
-      label: "Sản phẩm",
-    },
-    {
-      key: "/categories",
-      icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Quản lý sản phẩm',
       children: [
         {
-          key: "/ingredient-categories",
-          label: "Nhóm nguyên liệu",
+          key: '/manager/products',
+          label: 'Danh sách sản phẩm',
         },
         {
-          key: "/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/manager/inventory',
+          label: 'Bảng điều khiển tồn kho',
+        },
+        {
+          key: '/manager/assign-food-menu',
+          label: 'Phân bổ vào thực đơn',
         },
       ],
     },
     {
-      key: "/orders",
+      key: '/categories',
+      icon: <GIcon name="category" />,
+      label: 'Danh mục',
+      children: [
+        {
+          key: '/ingredient-categories',
+          label: 'Nhóm nguyên liệu',
+        },
+        {
+          key: '/product-categories',
+          label: 'Danh mục sản phẩm',
+        },
+      ],
+    },
+    {
+      key: '/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
     {
-      key: "/canteens",
+      key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: "Canteen",
+      label: 'Canteen',
     },
     {
-      key: "/reports",
+      key: '/reports',
       icon: <GIcon name="bar_chart" />,
-      label: "Báo cáo",
+      label: 'Báo cáo',
     },
     {
-      key: "/settings",
+      key: '/settings',
       icon: <GIcon name="settings" />,
-      label: "Cài đặt",
+      label: 'Cài đặt',
     },
   ];
 
   const managerMenuItems = [
     {
-      key: "/",
+      key: '/',
       icon: <GIcon name="space_dashboard" />,
-      label: "Tổng quan",
+      label: 'Tổng quan',
     },
     {
-      key: "/manager",
+      key: '/manager',
       icon: <GIcon name="calendar_month" />,
-      label: "Quản lý ca làm việc",
+      label: 'Quản lý ca làm việc',
       children: [
         {
-          key: "/manager/schedule",
-          label: "Lịch làm việc",
+          key: '/manager/schedule',
+          label: 'Lịch làm việc',
         },
         {
-          key: "/manager/shift-requests",
-          label: "Yêu cầu đổi ca",
+          key: '/manager/shift-requests',
+          label: 'Yêu cầu đổi ca',
         },
       ],
     },
     {
-      key: "/categories",
+      key: '/manager/products-group',
+      icon: <GIcon name="inventory_2" />,
+      label: 'Quản lý sản phẩm',
+      children: [
+        {
+          key: '/manager/products',
+          label: 'Danh sách sản phẩm',
+        },
+        {
+          key: '/manager/inventory',
+          label: 'Bảng điều khiển tồn kho',
+        },
+        {
+          key: '/manager/assign-food-menu',
+          label: 'Phân bổ vào thực đơn',
+        },
+      ],
+    },
+    {
+      key: '/categories',
       icon: <GIcon name="category" />,
-      label: "Danh mục",
+      label: 'Danh mục',
       children: [
         {
-          key: "/ingredient-categories",
-          label: "Nhóm nguyên liệu",
+          key: '/ingredient-categories',
+          label: 'Nhóm nguyên liệu',
         },
         {
-          key: "/product-categories",
-          label: "Danh mục sản phẩm",
+          key: '/product-categories',
+          label: 'Danh mục sản phẩm',
         },
       ],
     },
     {
-      key: "/orders",
+      key: '/orders',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
     },
     {
-      key: "/reports",
+      key: '/reports',
       icon: <GIcon name="bar_chart" />,
-      label: "Báo cáo",
+      label: 'Báo cáo',
     },
     {
-      key: "/canteens",
+      key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: "Canteen",
+      label: 'Canteen',
     },
   ];
 
@@ -170,11 +198,25 @@ export default function Sidebar({ collapsed }) {
 
   const menuItems = menuByRole[role] || adminMenuItems;
 
+  // Hàm tìm menu item theo key (support nested children)
+  const findMenuItemByKey = (items, targetKey) => {
+    for (const item of items) {
+      if (item.key === targetKey) {
+        return item;
+      }
+      if (item.children) {
+        const found = findMenuItemByKey(item.children, targetKey);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   const selectedKey = (() => {
     const path = location.pathname;
-    if (path === "/staff") return "/staff/schedule";
-    if (path.startsWith("/staff/")) {
-      const parts = path.split("/");
+    if (path === '/staff') return '/staff/schedule';
+    if (path.startsWith('/staff/')) {
+      const parts = path.split('/');
       return `/${parts[1]}/${parts[2]}`;
     }
     return path;
@@ -188,16 +230,16 @@ export default function Sidebar({ collapsed }) {
       width={260}
       collapsedWidth={84}
       style={{
-        background: "transparent",
+        background: 'transparent',
       }}
     >
       <div
         style={{
           height: 72,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 16px",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 16px',
         }}
       >
         {!collapsed && (
@@ -211,11 +253,17 @@ export default function Sidebar({ collapsed }) {
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}
-        onClick={({ key }) => navigate(key)}
+        onClick={({ key }) => {
+          // Kiểm tra nếu item có children thì không navigate (chỉ toggle expand/collapse)
+          const item = findMenuItemByKey(menuItems, key);
+          if (!item?.children) {
+            navigate(key);
+          }
+        }}
         style={{
           borderRight: 0,
           marginTop: 16,
-          padding: "0 10px",
+          padding: '0 10px',
         }}
       />
     </Sider>

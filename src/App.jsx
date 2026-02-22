@@ -1,23 +1,26 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ConfigProvider } from "antd";
-import viVN from "antd/locale/vi_VN";
-import { theme } from "@/config/theme";
-import { useAuthStore } from "@/store/useAuthStore";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
+import { theme } from '@/config/theme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Layouts
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 // Pages
-import LoginPage from "@/pages/Login";
-import DashboardPage from "@/pages/Dashboard";
-import StaffSchedulePage from "@/pages/staff/StaffSchedule";
-import StaffAttendancePage from "@/pages/staff/StaffAttendance";
-import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
-import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
-import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
-import ProfilePage from "@/pages/Profile";
-import IngredientCategoriesPage from "@/pages/IngredientCategories";
-import ProductCategoriesPage from "@/pages/ProductCategories";
+import LoginPage from '@/pages/Login';
+import DashboardPage from '@/pages/Dashboard';
+import StaffSchedulePage from '@/pages/staff/StaffSchedule';
+import StaffAttendancePage from '@/pages/staff/StaffAttendance';
+import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
+import ManagerSchedulePage from '@/pages/manager/ManagerSchedule';
+import ShiftRequestsManagementPage from '@/pages/manager/ShiftRequestsManagement';
+import ProductManagementPage from '@/pages/manager/ProductManagement';
+import InventoryDashboardPage from '@/pages/manager/InventoryDashboard';
+import AssignFoodToMenuPage from '@/pages/manager/AssignFoodToMenu';
+import ProfilePage from '@/pages/Profile';
+import IngredientCategoriesPage from '@/pages/IngredientCategories';
+import ProductCategoriesPage from '@/pages/ProductCategories';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -52,6 +55,7 @@ export default function App() {
               <Route
                 path="attendance-history"
                 element={<AttendanceHistoryPage />}
+              />
               <Route
                 path="ingredient-categories"
                 element={<IngredientCategoriesPage />}
@@ -59,10 +63,6 @@ export default function App() {
               <Route
                 path="product-categories"
                 element={<ProductCategoriesPage />}
-              />
-              <Route
-                path="products"
-                element={<div>Products Page - Coming Soon</div>}
               />
               <Route
                 path="orders"
@@ -80,6 +80,12 @@ export default function App() {
                 path="shift-requests"
                 element={<ShiftRequestsManagementPage />}
               />
+              <Route path="products" element={<ProductManagementPage />} />
+              <Route path="inventory" element={<InventoryDashboardPage />} />
+              <Route
+                path="assign-food-menu"
+                element={<AssignFoodToMenuPage />}
+              />
             </Route>
 
             <Route path="profile" element={<ProfilePage />} />
@@ -91,12 +97,9 @@ export default function App() {
               path="product-categories"
               element={<ProductCategoriesPage />}
             />
+            <Route path="products" element={<ProductManagementPage />} />
 
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />
-            <Route
-              path="products"
-              element={<div>Products Page - Coming Soon</div>}
-            />
             <Route
               path="categories"
               element={<div>Categories Page - Coming Soon</div>}
