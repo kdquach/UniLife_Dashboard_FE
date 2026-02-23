@@ -7,6 +7,7 @@ import {
   Button,
   Space,
   Input,
+  Empty,
   message as antdMessage,
 } from "antd";
 import dayjs from "dayjs";
@@ -26,6 +27,22 @@ import "@/styles/schedule-shared.css";
 function toMinutes(value) {
   const [hours = "0", minutes = "0"] = String(value || "").split(":");
   return Number(hours) * 60 + Number(minutes);
+}
+
+const SHIFT_TIME_SLOTS = [
+  { id: "slot-morning", key: "morning", label: "Ca sáng", startTime: "06:00", endTime: "12:00" },
+  { id: "slot-afternoon", key: "afternoon", label: "Ca chiều", startTime: "12:00", endTime: "18:00" },
+];
+
+function resolveSlotKeyByTime(startTime, endTime) {
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  const noon = 12 * 60;
+
+  if (start === 6 * 60 && end === noon) return "morning";
+  if (start === noon && end === 18 * 60) return "afternoon";
+  if (start >= noon) return "afternoon";
+  return "morning";
 }
 
 export default function StaffSchedulePage() {
@@ -55,6 +72,7 @@ export default function StaffSchedulePage() {
         getMyStaffShifts(),
         getMyShiftChangeRequests({ status: "pending" }),
       ]);
+
       setShifts(shiftsData);
       setPendingRequests(requestsData || []);
       return shiftsData;
@@ -92,41 +110,34 @@ export default function StaffSchedulePage() {
   }, [shifts, weekStart, weekEnd, currentUserId]);
 
   const shiftRows = useMemo(() => {
-    const byShift = new Map();
+    return SHIFT_TIME_SLOTS.map((slot) => ({
+      id: slot.id,
+      slotKey: slot.key,
+      label: slot.label,
+      timeRange: `${slot.startTime} - ${slot.endTime}`,
+    }));
+  }, []);
 
-    for (const item of filteredWeekShifts) {
-      if (!item.shiftId || byShift.has(item.shiftId)) continue;
-      byShift.set(item.shiftId, {
-        id: item.shiftId,
-        shiftStartTime: item.shiftStartTime,
-        shiftEndTime: item.shiftEndTime,
-        label: item.title,
-      });
-    }
-
-    return [...byShift.values()]
-      .sort((left, right) => toMinutes(left.shiftStartTime) - toMinutes(right.shiftStartTime))
-      .slice(0, 2)
-      .map((row, index) => ({
-        id: row.id,
-        label: index === 0 ? "Ca sáng" : "Ca chiều",
-        timeRange: `${row.shiftStartTime} - ${row.shiftEndTime}`,
-      }));
-  }, [filteredWeekShifts]);
+  const shiftTimeRangeById = useMemo(() => {
+    return shiftRows.reduce((acc, row) => {
+      acc[row.slotKey] = row.timeRange;
+      return acc;
+    }, {});
+  }, [shiftRows]);
 
   const assignments = useMemo(() => {
     const map = {};
-    const allowedShiftIds = new Set(shiftRows.map((item) => item.id));
 
     for (const item of filteredWeekShifts) {
-      if (!allowedShiftIds.has(item.shiftId)) continue;
+      const slotKey = resolveSlotKeyByTime(item.shiftStartTime, item.shiftEndTime);
+      const slotId = slotKey === "afternoon" ? "slot-afternoon" : "slot-morning";
 
       const dateKey = dayjs(item.start).format("YYYY-MM-DD");
       map[dateKey] = map[dateKey] || {};
-      map[dateKey][item.shiftId] = map[dateKey][item.shiftId] || [];
-      map[dateKey][item.shiftId].push({
+      map[dateKey][slotId] = map[dateKey][slotId] || [];
+      map[dateKey][slotId].push({
         id: item.assignmentId,
-        name: item.title,
+        name: slotKey === "afternoon" ? "Ca chiều" : "Ca sáng",
         shiftColor: "var(--primary)",
         assignmentId: item.assignmentId,
         status: item.status === "scheduled" ? "assigned" : item.status,
@@ -135,7 +146,7 @@ export default function StaffSchedulePage() {
     }
 
     return map;
-  }, [filteredWeekShifts, shiftRows]);
+  }, [filteredWeekShifts]);
 
   const statusTag = (shift) => {
     if (!shift) return null;
@@ -151,11 +162,17 @@ export default function StaffSchedulePage() {
     );
   }, [selectedShift?.assignmentId, pendingRequests]);
 
+  const isWeekendRequestWindow = useMemo(() => {
+    const day = dayjs().day();
+    return day === 0 || day === 6;
+  }, []);
+
   const canRequestChange = Boolean(
     selectedShift &&
       String(selectedShift.staffId) === String(currentUserId) &&
       ["assigned", "scheduled"].includes(selectedShift.status) &&
       dayjs(selectedShift.start).isAfter(dayjs()) &&
+      isWeekendRequestWindow &&
       !hasPendingRequest,
   );
 
@@ -203,12 +220,18 @@ export default function StaffSchedulePage() {
         />
 
         <div className="surface-card" aria-busy={loading}>
-          <ReadonlyScheduleView
-            weekDates={weekDates}
-            shifts={shiftRows}
-            assignments={assignments}
-            onCardClick={handleCardClick}
-          />
+          {filteredWeekShifts.length === 0 ? (
+            <div style={{ minHeight: 280, display: "grid", placeItems: "center" }}>
+              <Empty description="Tuần này chưa có lịch làm việc" />
+            </div>
+          ) : (
+            <ReadonlyScheduleView
+              weekDates={weekDates}
+              shifts={shiftRows}
+              assignments={assignments}
+              onCardClick={handleCardClick}
+            />
+          )}
         </div>
       </Space>
 
@@ -230,7 +253,7 @@ export default function StaffSchedulePage() {
             {(canRequestChange || hasPendingRequest) && (
               <Button
                 type="primary"
-                disabled={hasPendingRequest}
+                disabled={hasPendingRequest || !isWeekendRequestWindow}
                 onClick={() => {
                   setRequestReason("");
                   setOpenRequestModal(true);
@@ -251,7 +274,7 @@ export default function StaffSchedulePage() {
           <Descriptions.Item label="Canteen">{selectedShift?.canteenName || "—"}</Descriptions.Item>
           <Descriptions.Item label="Địa điểm">{selectedShift?.location || "—"}</Descriptions.Item>
           <Descriptions.Item label="Giờ ca">
-            {selectedShift ? `${selectedShift.shiftStartTime} - ${selectedShift.shiftEndTime}` : "—"}
+            {selectedShift ? shiftTimeRangeById[resolveSlotKeyByTime(selectedShift.shiftStartTime, selectedShift.shiftEndTime)] || `${selectedShift.shiftStartTime} - ${selectedShift.shiftEndTime}` : "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Bắt đầu">
             {selectedShift ? dayjs(selectedShift.start).format("DD/MM/YYYY HH:mm") : "—"}
@@ -280,10 +303,15 @@ export default function StaffSchedulePage() {
         okButtonProps={{ loading: submitting }}
         destroyOnHidden
       >
+        {!isWeekendRequestWindow && (
+          <div style={{ marginBottom: 10, color: "var(--text-muted)", fontSize: 12 }}>
+            Chỉ được gửi yêu cầu đổi ca vào Thứ 7 hoặc Chủ nhật.
+          </div>
+        )}
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ fontWeight: 600 }}>Ca hiện tại</div>
           <div style={{ color: "var(--text-muted)" }}>
-            {selectedShift?.title || "—"} ({selectedShift?.shiftStartTime || "--:--"} - {selectedShift?.shiftEndTime || "--:--"})
+            {selectedShift?.title || "—"} ({selectedShift ? shiftTimeRangeById[resolveSlotKeyByTime(selectedShift.shiftStartTime, selectedShift.shiftEndTime)] || `${selectedShift?.shiftStartTime || "--:--"} - ${selectedShift?.shiftEndTime || "--:--"}` : "--:-- - --:--"})
           </div>
 
           <div style={{ fontWeight: 600 }}>Lý do đổi ca</div>

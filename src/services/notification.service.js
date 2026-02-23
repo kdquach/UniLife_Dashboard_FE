@@ -9,7 +9,7 @@ export async function getNotifications(params = {}) {
 }
 
 export async function getMyNotifications(params = {}) {
-  const response = await api.get("/notifications/my", { params });
+  const response = await api.get("/notifications/feed", { params });
   return {
     data: Array.isArray(response.data?.data) ? response.data.data : [],
     pagination: response.data?.pagination || null,
@@ -58,14 +58,6 @@ export async function getNotificationById(notificationId) {
 export async function sendNotification(payload) {
   const response = await api.post("/notifications", payload);
   return response.data?.data?.notification || null;
-}
-
-export async function getSystemNotifications(params = {}) {
-  const response = await api.get("/notifications/system", { params });
-  return {
-    items: Array.isArray(response.data?.data) ? response.data.data : [],
-    pagination: response.data?.pagination || null,
-  };
 }
 
 export async function getActiveSystemNotifications(params = {}) {

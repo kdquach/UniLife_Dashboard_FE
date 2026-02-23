@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { App, Space } from "antd";
+import { message, Space } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore";
 import ScheduleGrid from "@/components/schedule/ScheduleGrid";
 import ScheduleHeader from "@/components/schedule/ScheduleHeader";
 import DraftControls from "@/components/schedule/DraftControls";
@@ -31,8 +32,75 @@ function buildBadgeId(dateKey, shiftId, staffId) {
   return `cell:${dateKey}:${shiftId}:${staffId}`;
 }
 
+const SHIFT_TIME_SLOTS = {
+  morning: { key: "morning", label: "Ca sáng", startTime: "06:00", endTime: "12:00" },
+  afternoon: { key: "afternoon", label: "Ca chiều", startTime: "12:00", endTime: "18:00" },
+};
+
+function resolveSlotKey(startTime, endTime) {
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  const noon = 12 * 60;
+
+  if (start === 6 * 60 && end === noon) return "morning";
+  if (start === noon && end === 18 * 60) return "afternoon";
+  if (start >= noon) return "afternoon";
+  return "morning";
+}
+
+function pickSlotShift(shifts, slotKey, usedIds = new Set()) {
+  const slot = SHIFT_TIME_SLOTS[slotKey];
+  const exact = shifts.find(
+    (item) =>
+      !usedIds.has(String(item._id)) &&
+      String(item.startTime) === slot.startTime &&
+      String(item.endTime) === slot.endTime,
+  );
+  if (exact) return exact;
+
+  return shifts.find(
+    (item) => !usedIds.has(String(item._id)) && resolveSlotKey(item.startTime, item.endTime) === slotKey,
+  ) || null;
+}
+
+function buildSlotRows(shifts = []) {
+  const sorted = [...shifts].sort((left, right) => {
+    return toMinutes(left.startTime) - toMinutes(right.startTime);
+  });
+
+  const usedIds = new Set();
+  const morningShift = pickSlotShift(sorted, "morning", usedIds);
+  if (morningShift?._id) usedIds.add(String(morningShift._id));
+  const afternoonShift = pickSlotShift(sorted, "afternoon", usedIds);
+
+  const rows = [];
+  if (morningShift?._id) {
+    rows.push({
+      id: String(morningShift._id),
+      slotKey: "morning",
+      label: SHIFT_TIME_SLOTS.morning.label,
+      timeRange: `${SHIFT_TIME_SLOTS.morning.startTime} - ${SHIFT_TIME_SLOTS.morning.endTime}`,
+    });
+  }
+
+  if (afternoonShift?._id) {
+    rows.push({
+      id: String(afternoonShift._id),
+      slotKey: "afternoon",
+      label: SHIFT_TIME_SLOTS.afternoon.label,
+      timeRange: `${SHIFT_TIME_SLOTS.afternoon.startTime} - ${SHIFT_TIME_SLOTS.afternoon.endTime}`,
+    });
+  }
+
+  return rows;
+}
+
 function mapAssignmentsToGrid(assignments, shiftRows) {
   const rowIds = new Set(shiftRows.map((item) => item.id));
+  const rowBySlot = shiftRows.reduce((acc, item) => {
+    acc[item.slotKey] = item;
+    return acc;
+  }, {});
   const mapped = {};
 
   for (const assignment of assignments) {
@@ -44,15 +112,23 @@ function mapAssignmentsToGrid(assignments, shiftRows) {
     const shiftId = String(shift._id || shift);
     const staffId = String(staff._id || staff.id || assignment.staffId);
 
-    if (!rowIds.has(shiftId) || !staffId || !dateKey) continue;
+    if (!staffId || !dateKey) continue;
+
+    let targetShiftId = shiftId;
+    if (!rowIds.has(targetShiftId)) {
+      const slotKey = resolveSlotKey(shift.startTime, shift.endTime);
+      const targetRow = rowBySlot[slotKey];
+      if (!targetRow) continue;
+      targetShiftId = targetRow.id;
+    }
 
     mapped[dateKey] = mapped[dateKey] || {};
-    mapped[dateKey][shiftId] = mapped[dateKey][shiftId] || [];
+    mapped[dateKey][targetShiftId] = mapped[dateKey][targetShiftId] || [];
 
-    const existed = mapped[dateKey][shiftId].some((item) => item.id === staffId);
+    const existed = mapped[dateKey][targetShiftId].some((item) => item.id === staffId);
     if (existed) continue;
 
-    mapped[dateKey][shiftId].push({
+    mapped[dateKey][targetShiftId].push({
       id: staffId,
       name: staff.fullName || "Staff",
       shiftColor: staff.shiftColor || "var(--primary)",
@@ -86,7 +162,8 @@ function flattenAssignments(assignments) {
 
 export default function ManagerSchedulePage() {
   const navigate = useNavigate();
-  const { message } = App.useApp();
+  const { user } = useAuthStore();
+  const canteenId = user?.canteenId?._id || user?.canteenId || null;
 
   const [currentWeek, setCurrentWeek] = useState(dayjs().startOf("week"));
   const [loading, setLoading] = useState(false);
@@ -111,15 +188,7 @@ export default function ManagerSchedulePage() {
   );
 
   const shiftRows = useMemo(() => {
-    const sorted = [...shiftsRaw].sort((left, right) => {
-      return toMinutes(left.startTime) - toMinutes(right.startTime);
-    });
-
-    return sorted.slice(0, 2).map((shift, index) => ({
-      id: String(shift._id),
-      label: index === 0 ? "Ca sáng" : "Ca chiều",
-      timeRange: `${shift.startTime} - ${shift.endTime}`,
-    }));
+    return buildSlotRows(shiftsRaw);
   }, [shiftsRaw]);
 
   const weekLabel = `${weekStart.format("D MMM")} - ${weekEnd.format("D MMM, YYYY")}`;
@@ -136,19 +205,23 @@ export default function ManagerSchedulePage() {
   );
 
   const loadWeekData = async () => {
+    if (!canteenId) {
+      throw new Error("Tài khoản manager chưa được gán canteen. Vui lòng liên hệ admin.");
+    }
+
     const [shiftData, assignmentData, requestData] = await Promise.all([
-      getManagerShifts({ status: "active", limit: 200, page: 1 }),
+      getManagerShifts({ status: "active", limit: 200, page: 1, canteenId }),
       getManagerAssignments({
         startDate: formatDateISO(weekStart),
         endDate: formatDateISO(weekEnd),
+        limit: 500,
+        page: 1,
+        canteenId,
       }),
       getShiftChangeRequests({ status: "pending" }),
     ]);
 
-    const rows = [...shiftData]
-      .sort((left, right) => toMinutes(left.startTime) - toMinutes(right.startTime))
-      .slice(0, 2)
-      .map((shift) => ({ id: String(shift._id) }));
+    const rows = buildSlotRows(shiftData);
 
     setShiftsRaw(shiftData);
     setAssignments(mapAssignmentsToGrid(assignmentData, rows));
@@ -157,7 +230,11 @@ export default function ManagerSchedulePage() {
   };
 
   const loadStaff = async (search = "") => {
-    const data = await getShiftStaffList({ search });
+    if (!canteenId) {
+      setStaffList([]);
+      return;
+    }
+    const data = await getShiftStaffList({ search, canteenId });
     setStaffList(data);
   };
 
@@ -177,7 +254,7 @@ export default function ManagerSchedulePage() {
   useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekStart.valueOf()]);
+  }, [weekStart.valueOf(), canteenId]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {

@@ -55,8 +55,3 @@ export async function createShiftChangeRequest(payload) {
   const response = await api.post("/shifts/change-request", payload);
   return response.data?.data?.request;
 }
-
-export async function getAvailableShiftsForChangeRequest() {
-  const response = await api.get("/shifts/change-request/shifts");
-  return response.data?.data || [];
-}

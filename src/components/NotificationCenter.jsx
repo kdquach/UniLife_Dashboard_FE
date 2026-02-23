@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import {
-  getActiveSystemNotifications,
   getNotificationById,
   getMyNotifications,
   getUnreadNotificationCount,
@@ -16,19 +15,6 @@ import {
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
-
-function normalizeSystemNotification(item) {
-  return {
-    id: `sys-${item._id}`,
-    type: "system",
-    title: item.title,
-    content: item.content,
-    time: dayjs(item.createdAt).fromNow(),
-    createdAt: item.createdAt,
-    isRead: true,
-    metadata: item.metadata || null,
-  };
-}
 
 function normalizeUserNotification(item) {
   return {
@@ -47,7 +33,7 @@ export default function NotificationCenter() {
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(1);
+  const [nextCursor, setNextCursor] = useState(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingAll, setLoadingAll] = useState(false);
@@ -60,23 +46,16 @@ export default function NotificationCenter() {
 
   const loadInitial = useCallback(async () => {
     try {
-      const [result, systemNotifications, unread] = await Promise.all([
-        getMyNotifications({ page: 1, limit: 20 }),
-        getActiveSystemNotifications(),
+      const [result, unread] = await Promise.all([
+        getMyNotifications({ limit: 20 }),
         getUnreadNotificationCount(),
       ]);
 
-      const myNotifications = (result?.data || []).map(normalizeUserNotification);
-
-      const merged = [
-        ...myNotifications,
-        ...systemNotifications.map(normalizeSystemNotification),
-      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const merged = (result?.data || []).map(normalizeUserNotification);
 
       const currentKnownIds = knownNotificationIdsRef.current;
       const newIncoming = merged.filter(
         (item) =>
-          !String(item.id).startsWith("sys-") &&
           !item.isRead &&
           !currentKnownIds.has(String(item.id)),
       );
@@ -94,23 +73,21 @@ export default function NotificationCenter() {
       }
 
       knownNotificationIdsRef.current = new Set(
-        merged
-          .filter((item) => !String(item.id).startsWith("sys-"))
-          .map((item) => String(item.id)),
+        merged.map((item) => String(item.id)),
       );
       isFirstLoadRef.current = false;
 
       setItems(merged);
       setUnreadCount(unread);
-      setPage(1);
+      setNextCursor(result?.pagination?.nextCursor || null);
       setHasNextPage(Boolean(result?.pagination?.hasNextPage));
     } catch {
       setItems([]);
       setUnreadCount(0);
-      setPage(1);
+      setNextCursor(null);
       setHasNextPage(false);
     }
-  }, []);
+  }, [api]);
 
   useEffect(() => {
     loadInitial();
@@ -123,7 +100,7 @@ export default function NotificationCenter() {
   }, [loadInitial]);
 
   const handleMarkRead = async (item) => {
-    if (String(item.id).startsWith("sys-") || item.isRead) return;
+    if (item.isRead) return;
     await markNotificationAsRead(item.id);
     await loadInitial();
   };
@@ -178,19 +155,40 @@ export default function NotificationCenter() {
     if (notification.type === "order" && resolvedMetadata?.orderId) {
       setOpen(false);
       navigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
+      return;
     }
+
+    if (notification.type === "order") {
+      setOpen(false);
+      navigate("/orders");
+      return;
+    }
+
+    if (notification.type === "shift") {
+      setOpen(false);
+      navigate("/staff-shifts");
+      return;
+    }
+
+    if (["system", "promotion"].includes(notification.type)) {
+      setOpen(false);
+      navigate(`/notifications/${notification.id}`);
+      return;
+    }
+
+    setOpen(false);
+    navigate(`/notifications/${notification.id}`);
   };
 
   const handleLoadMore = async () => {
-    if (loadingMore || !hasNextPage) return;
+    if (loadingMore || !hasNextPage || !nextCursor) return;
 
     try {
       setLoadingMore(true);
-      const nextPage = page + 1;
-      const result = await getMyNotifications({ limit, page: nextPage });
+      const result = await getMyNotifications({ limit, cursor: nextCursor });
       const mapped = (result?.data || []).map(normalizeUserNotification);
       setItems((prev) => [...prev, ...mapped]);
-      setPage(nextPage);
+      setNextCursor(result?.pagination?.nextCursor || null);
       setHasNextPage(Boolean(result?.pagination?.hasNextPage));
     } finally {
       setLoadingMore(false);
@@ -201,20 +199,12 @@ export default function NotificationCenter() {
     if (loadingAll) return;
     try {
       setLoadingAll(true);
-      const [result, systemNotifications] = await Promise.all([
-        getMyNotifications({ page: 1, limit: 200 }),
-        getActiveSystemNotifications(),
-      ]);
-
-      const myNotifications = (result?.data || []).map(normalizeUserNotification);
-      const merged = [
-        ...myNotifications,
-        ...systemNotifications.map(normalizeSystemNotification),
-      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const result = await getMyNotifications({ page: 1, limit: 200 });
+      const merged = (result?.data || []).map(normalizeUserNotification);
 
       setItems(merged);
       setHasNextPage(false);
-      setPage(1);
+      setNextCursor(null);
     } finally {
       setLoadingAll(false);
     }

@@ -55,23 +55,6 @@ export async function logout() {
 }
 
 /**
- * Get current user from localStorage
- * @returns {Object|null}
- */
-export function getCurrentUser() {
-  const user = localStorage.getItem(USER_KEY);
-  return user ? JSON.parse(user) : null;
-}
-
-/**
- * Check if user is authenticated
- * @returns {boolean}
- */
-export function isAuthenticated() {
-  return !!localStorage.getItem("unilife_access_token");
-}
-
-/**
  * Doi mat khau nguoi dung
  * @param {Object} payload - { currentPassword, newPassword, confirmPassword }
  * @returns {Promise<Object>} - { message }
