@@ -60,14 +60,6 @@ export async function sendNotification(payload) {
   return response.data?.data?.notification || null;
 }
 
-export async function getSystemNotifications(params = {}) {
-  const response = await api.get("/notifications/system", { params });
-  return {
-    items: Array.isArray(response.data?.data) ? response.data.data : [],
-    pagination: response.data?.pagination || null,
-  };
-}
-
 export async function getActiveSystemNotifications(params = {}) {
   const response = await api.get("/notifications/system/active", { params });
   const items = response.data?.data?.notifications;
