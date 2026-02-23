@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import {
-  getActiveSystemNotifications,
   getNotificationById,
   getMyNotifications,
   getUnreadNotificationCount,
@@ -16,19 +15,6 @@ import {
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
-
-function normalizeSystemNotification(item) {
-  return {
-    id: `sys-${item._id}`,
-    type: "system",
-    title: item.title,
-    content: item.content,
-    time: dayjs(item.createdAt).fromNow(),
-    createdAt: item.createdAt,
-    isRead: true,
-    metadata: item.metadata || null,
-  };
-}
 
 function normalizeUserNotification(item) {
   return {
@@ -60,23 +46,16 @@ export default function NotificationCenter() {
 
   const loadInitial = useCallback(async () => {
     try {
-      const [result, systemNotifications, unread] = await Promise.all([
+      const [result, unread] = await Promise.all([
         getMyNotifications({ limit: 20 }),
-        getActiveSystemNotifications(),
         getUnreadNotificationCount(),
       ]);
 
-      const myNotifications = (result?.data || []).map(normalizeUserNotification);
-
-      const merged = [
-        ...myNotifications,
-        ...systemNotifications.map(normalizeSystemNotification),
-      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const merged = (result?.data || []).map(normalizeUserNotification);
 
       const currentKnownIds = knownNotificationIdsRef.current;
       const newIncoming = merged.filter(
         (item) =>
-          !String(item.id).startsWith("sys-") &&
           !item.isRead &&
           !currentKnownIds.has(String(item.id)),
       );
@@ -94,9 +73,7 @@ export default function NotificationCenter() {
       }
 
       knownNotificationIdsRef.current = new Set(
-        merged
-          .filter((item) => !String(item.id).startsWith("sys-"))
-          .map((item) => String(item.id)),
+        merged.map((item) => String(item.id)),
       );
       isFirstLoadRef.current = false;
 
@@ -123,7 +100,7 @@ export default function NotificationCenter() {
   }, [loadInitial]);
 
   const handleMarkRead = async (item) => {
-    if (String(item.id).startsWith("sys-") || item.isRead) return;
+    if (item.isRead) return;
     await markNotificationAsRead(item.id);
     await loadInitial();
   };
@@ -222,16 +199,8 @@ export default function NotificationCenter() {
     if (loadingAll) return;
     try {
       setLoadingAll(true);
-      const [result, systemNotifications] = await Promise.all([
-        getMyNotifications({ page: 1, limit: 200 }),
-        getActiveSystemNotifications(),
-      ]);
-
-      const myNotifications = (result?.data || []).map(normalizeUserNotification);
-      const merged = [
-        ...myNotifications,
-        ...systemNotifications.map(normalizeSystemNotification),
-      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const result = await getMyNotifications({ page: 1, limit: 200 });
+      const merged = (result?.data || []).map(normalizeUserNotification);
 
       setItems(merged);
       setHasNextPage(false);
