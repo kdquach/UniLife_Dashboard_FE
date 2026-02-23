@@ -15,7 +15,7 @@ export const useInventoryManagement = () => {
   const [outOfStockItems, setOutOfStockItems] = useState([]);
   const [outOfStockPagination, setOutOfStockPagination] = useState({
     current: 1,
-    pageSize: 10,
+    pageSize: 20,
     total: 0,
   });
 
@@ -23,13 +23,13 @@ export const useInventoryManagement = () => {
   const [lowStockItems, setLowStockItems] = useState([]);
   const [lowStockPagination, setLowStockPagination] = useState({
     current: 1,
-    pageSize: 10,
+    pageSize: 20,
     total: 0,
   });
 
   // Fetch danh sách sản phẩm hết hàng
   const fetchOutOfStockProducts = useCallback(
-    async (page = 1, pageSize = 10) => {
+    async (page = 1, pageSize = 20) => {
       setLoadingOutOfStock(true);
       try {
         const response = await getOutOfStockProducts({
@@ -40,9 +40,16 @@ export const useInventoryManagement = () => {
         setOutOfStockItems(response?.data || []);
         if (response?.pagination) {
           setOutOfStockPagination({
-            current: response.pagination.page,
-            pageSize: response.pagination.limit,
-            total: response.pagination.total,
+            current: response.pagination.page || page,
+            pageSize: response.pagination.limit || pageSize,
+            total: response.pagination.total || 0,
+          });
+        } else {
+          // Fallback nếu không có pagination
+          setOutOfStockPagination({
+            current: page,
+            pageSize: pageSize,
+            total: response?.data?.length || 0,
           });
         }
       } catch (error) {
@@ -60,7 +67,7 @@ export const useInventoryManagement = () => {
 
   // Fetch danh sách sản phẩm sắp hết hàng
   const fetchLowStockProducts = useCallback(
-    async (page = 1, pageSize = 10) => {
+    async (page = 1, pageSize = 20) => {
       setLoadingLowStock(true);
       try {
         const response = await getLowStockProducts({
@@ -71,9 +78,16 @@ export const useInventoryManagement = () => {
         setLowStockItems(response?.data || []);
         if (response?.pagination) {
           setLowStockPagination({
-            current: response.pagination.page,
-            pageSize: response.pagination.limit,
-            total: response.pagination.total,
+            current: response.pagination.page || page,
+            pageSize: response.pagination.limit || pageSize,
+            total: response.pagination.total || 0,
+          });
+        } else {
+          // Fallback nếu không có pagination
+          setLowStockPagination({
+            current: page,
+            pageSize: pageSize,
+            total: response?.data?.length || 0,
           });
         }
       } catch (error) {
