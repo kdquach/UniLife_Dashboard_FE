@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Dropdown, Empty } from "antd";
+import { useMemo } from "react";
+import { Dropdown, Empty, Select } from "antd";
 import dayjs from "dayjs";
 import GIcon from "@/components/GIcon";
 
@@ -54,21 +54,14 @@ function NotificationItem({ item, isExpanded, onClick }) {
         </div>
 
         <div className="nd-item-body">
-          <p className="nd-item-text">
-            <span className="nd-item-title">{actorText}</span>
-            {actionText ? ` ${actionText}` : ""}
-          </p>
-          <div className="nd-item-time">{item.time}</div>
+          <p className="nd-item-title">{actorText}</p>
+          <p className="nd-item-content">{actionText}</p>
+          <p className="nd-item-time">{item.time}</p>
         </div>
 
         {!item.isRead && <span className="nd-dot" />}
       </button>
-
-      {isExpanded && (
-        <div className="nd-detail">
-          <div>{item.content || "(Không có nội dung)"}</div>
-        </div>
-      )}
+      {isExpanded && item.metadata?.note && <div className="nd-detail">{item.metadata.note}</div>}
     </div>
   );
 }
@@ -86,16 +79,13 @@ export default function NotificationDropdown({
   onOpenChange,
   expandedId,
   loadingAll,
+  selectedType = "",
+  selectedStatus = "all",
+  onFilterChange,
+  typeOptions = [],
 }) {
   const badgeCount = typeof badge === "number" ? badge : notifications.length;
-  const [activeTab, setActiveTab] = useState("all");
-
-  const filteredNotifications = useMemo(() => {
-    if (activeTab === "unread") {
-      return notifications.filter((n) => !n.isRead);
-    }
-    return notifications;
-  }, [activeTab, notifications]);
+  const filteredNotifications = useMemo(() => notifications, [notifications]);
 
   const groupedNotifications = useMemo(() => {
     const groups = {
@@ -153,24 +143,42 @@ export default function NotificationDropdown({
           </div>
 
           <div className="nd-tabs">
-            <button
-              type="button"
-              onClick={() => setActiveTab("all")}
-              className={`nd-tab ${activeTab === "all" ? "active" : ""}`}
-            >
-              Tất cả
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("unread")}
-              className={`nd-tab ${activeTab === "unread" ? "active" : ""}`}
-            >
-              Chưa đọc
-            </button>
+            <div className="nd-filter-row">
+              <div className="nd-filter-box">
+                <Select
+                  value={selectedType}
+                  onChange={(value) => onFilterChange?.({ type: value })}
+                  options={typeOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  variant="borderless"
+                  size="small"
+                  className="nd-filter-select"
+                />
+              </div>
 
-            <button type="button" onClick={onMarkAllRead} className="nd-markall-btn">
-              Đánh dấu tất cả đã đọc
-            </button>
+              <div className="nd-filter-box">
+                <Select
+                  value={selectedStatus}
+                  onChange={(value) => onFilterChange?.({ status: value })}
+                  options={[
+                    { value: "all", label: "Tất cả trạng thái" },
+                    { value: "read", label: "Đã đọc" },
+                    { value: "unread", label: "Chưa đọc" },
+                  ]}
+                  variant="borderless"
+                  size="small"
+                  className="nd-filter-select"
+                />
+              </div>
+            </div>
+
+            <div className="nd-filter-actions">
+              <button type="button" onClick={onMarkAllRead} className="nd-markall-btn">
+                Đánh dấu tất cả đã đọc
+              </button>
+            </div>
           </div>
 
           <div className="nd-body">
