@@ -5,6 +5,8 @@ import "dayjs/locale/vi";
 import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import NotificationDropdown from "@/components/NotificationDropdown";
+import { useAuthStore } from "@/store/useAuthStore";
+import { getNotificationSocket } from "@/services/notification.socket";
 import {
   getNotificationById,
   getMyNotifications,
@@ -41,6 +43,7 @@ export default function NotificationCenter() {
   ];
 
   const navigate = useNavigate();
+  const { user, token } = useAuthStore();
   const [api, contextHolder] = notification.useNotification();
   const [open, setOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("");
@@ -51,7 +54,6 @@ export default function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const isFirstLoadRef = useRef(true);
   const knownNotificationIdsRef = useRef(new Set());
-  const limit = 200;
 
   const buildFilterParams = useCallback(() => {
     const params = { limit: 200 };
@@ -110,13 +112,87 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     loadInitial();
-
-    const timer = setInterval(() => {
-      loadInitial();
-    }, 8000);
-
-    return () => clearInterval(timer);
   }, [loadInitial]);
+
+  useEffect(() => {
+    if (!user || !token) return;
+
+    const socket = getNotificationSocket();
+    socket.auth = { token };
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    const handleConnect = async () => {
+      if (user.canteenId) {
+        socket.emit("join:canteen", user.canteenId);
+      }
+
+      try {
+        const unread = await getUnreadNotificationCount();
+        setUnreadCount(unread);
+      } catch {
+      }
+    };
+
+    const handleNotificationNew = (event) => {
+      if (!event?.title) return;
+      if (event.type === "order") return;
+
+      const createdAt = event.createdAt ? dayjs(event.createdAt) : dayjs();
+      const nextItem = {
+        id: event.id || `ws-${Date.now()}`,
+        type: event.type || "system",
+        title: event.title,
+        content: event.content || "",
+        time: createdAt.fromNow(),
+        createdAt: createdAt.toISOString(),
+        isRead: Boolean(event.isRead),
+        metadata: event.meta || null,
+      };
+
+      const typeMatch = !selectedType || nextItem.type === selectedType;
+      const statusMatch =
+        selectedStatus === "all" ||
+        (selectedStatus === "read" ? nextItem.isRead : !nextItem.isRead);
+
+      if (!nextItem.isRead) {
+        setUnreadCount((prev) => prev + 1);
+      }
+
+      if (!typeMatch || !statusMatch) {
+        return;
+      }
+
+      setItems((prev) => {
+        if (prev.some((item) => String(item.id) === String(nextItem.id))) {
+          return prev;
+        }
+        return [nextItem, ...prev].slice(0, 200);
+      });
+
+      knownNotificationIdsRef.current.add(String(nextItem.id));
+
+      api.info({
+        key: `notif-${nextItem.id}`,
+        message: nextItem.title || "Thông báo mới",
+        description: nextItem.content || "Bạn có một thông báo mới",
+        placement: "bottomRight",
+        duration: 4.5,
+      });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("notification:new", handleNotificationNew);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("notification:new", handleNotificationNew);
+      if (user.canteenId) {
+        socket.emit("leave:canteen", user.canteenId);
+      }
+    };
+  }, [api, selectedStatus, selectedType, token, user]);
 
   const handleMarkRead = async (item) => {
     if (item.isRead) return;
