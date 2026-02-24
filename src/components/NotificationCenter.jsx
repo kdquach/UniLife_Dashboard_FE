@@ -30,24 +30,47 @@ function normalizeUserNotification(item) {
 }
 
 export default function NotificationCenter() {
+  const DASHBOARD_NOTIFICATION_TYPES = [
+    { value: "", label: "Tất cả loại" },
+    { value: "order", label: "Đơn hàng" },
+    { value: "promotion", label: "Khuyến mãi" },
+    { value: "system", label: "Hệ thống" },
+    { value: "feedback", label: "Phản hồi" },
+    { value: "shift", label: "Ca làm" },
+    { value: "salary", label: "Lương" },
+  ];
+
   const navigate = useNavigate();
   const [api, contextHolder] = notification.useNotification();
   const [open, setOpen] = useState(false);
-  const [nextCursor, setNextCursor] = useState(null);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [loadingAll, setLoadingAll] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const isFirstLoadRef = useRef(true);
   const knownNotificationIdsRef = useRef(new Set());
-  const limit = 10;
+  const limit = 200;
+
+  const buildFilterParams = useCallback(() => {
+    const params = { limit: 200 };
+    if (selectedType) {
+      params.type = selectedType;
+    }
+    if (selectedStatus === "read") {
+      params.isRead = true;
+    }
+    if (selectedStatus === "unread") {
+      params.isRead = false;
+    }
+    return params;
+  }, [selectedType, selectedStatus]);
 
   const loadInitial = useCallback(async () => {
     try {
       const [result, unread] = await Promise.all([
-        getMyNotifications({ limit: 20 }),
+        getMyNotifications(buildFilterParams()),
         getUnreadNotificationCount(),
       ]);
 
@@ -79,15 +102,11 @@ export default function NotificationCenter() {
 
       setItems(merged);
       setUnreadCount(unread);
-      setNextCursor(result?.pagination?.nextCursor || null);
-      setHasNextPage(Boolean(result?.pagination?.hasNextPage));
     } catch {
       setItems([]);
       setUnreadCount(0);
-      setNextCursor(null);
-      setHasNextPage(false);
     }
-  }, [api]);
+  }, [api, buildFilterParams]);
 
   useEffect(() => {
     loadInitial();
@@ -180,33 +199,25 @@ export default function NotificationCenter() {
     navigate(`/notifications/${notification.id}`);
   };
 
-  const handleLoadMore = async () => {
-    if (loadingMore || !hasNextPage || !nextCursor) return;
-
-    try {
-      setLoadingMore(true);
-      const result = await getMyNotifications({ limit, cursor: nextCursor });
-      const mapped = (result?.data || []).map(normalizeUserNotification);
-      setItems((prev) => [...prev, ...mapped]);
-      setNextCursor(result?.pagination?.nextCursor || null);
-      setHasNextPage(Boolean(result?.pagination?.hasNextPage));
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
   const handleViewAll = async () => {
     if (loadingAll) return;
     try {
       setLoadingAll(true);
-      const result = await getMyNotifications({ page: 1, limit: 200 });
+      const result = await getMyNotifications(buildFilterParams());
       const merged = (result?.data || []).map(normalizeUserNotification);
 
       setItems(merged);
-      setHasNextPage(false);
-      setNextCursor(null);
     } finally {
       setLoadingAll(false);
+    }
+  };
+
+  const handleFilterChange = ({ type, status }) => {
+    if (type !== undefined) {
+      setSelectedType(type);
+    }
+    if (status !== undefined) {
+      setSelectedStatus(status);
     }
   };
 
@@ -218,14 +229,18 @@ export default function NotificationCenter() {
         badge={unreadCount}
         onItemClick={handleOpenNotification}
         onMarkAllRead={handleReadAll}
-        onLoadMore={handleLoadMore}
-        hasMore={hasNextPage}
-        loadingMore={loadingMore}
+        onLoadMore={undefined}
+        hasMore={false}
+        loadingMore={false}
         onViewAll={handleViewAll}
         open={open}
         onOpenChange={setOpen}
         expandedId={expandedId}
         loadingAll={loadingAll}
+        selectedType={selectedType}
+        selectedStatus={selectedStatus}
+        onFilterChange={handleFilterChange}
+        typeOptions={DASHBOARD_NOTIFICATION_TYPES}
       />
     </>
   );
