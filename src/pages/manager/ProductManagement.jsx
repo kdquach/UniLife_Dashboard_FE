@@ -116,12 +116,15 @@ export default function ProductManagementPage() {
         isPopular: record.isPopular,
         isNew: record.isNew,
         stockQuantity: record.stockQuantity,
+        lowStockThreshold: record.lowStockThreshold,
         recipe: record.recipe || [],
       });
       setSelected(record);
 
       // Chuyển đổi URL ảnh hiện có thành format của Upload component
       const existingImages = [];
+
+      // Thêm ảnh chính (nếu có)
       if (record.image) {
         existingImages.push({
           uid: '-1',
@@ -130,16 +133,22 @@ export default function ProductManagementPage() {
           url: record.image,
         });
       }
+
+      // Thêm các ảnh phụ (loại bỏ trùng với ảnh chính)
       if (record.images && record.images.length > 0) {
         record.images.forEach((img, index) => {
-          existingImages.push({
-            uid: `-${index + 2}`,
-            name: `image-${index + 1}.png`,
-            status: 'done',
-            url: img,
-          });
+          // Chỉ thêm nếu không trùng với ảnh chính
+          if (img !== record.image) {
+            existingImages.push({
+              uid: `-${index + 2}`,
+              name: `image-${index + 1}.png`,
+              status: 'done',
+              url: img,
+            });
+          }
         });
       }
+
       setImageList(existingImages);
       setFormOpen(true);
     },

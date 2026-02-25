@@ -9,7 +9,7 @@ export async function getNotifications(params = {}) {
 }
 
 export async function getMyNotifications(params = {}) {
-  const response = await api.get("/notifications/feed", { params });
+  const response = await api.get("/notifications/my", { params });
   return {
     data: Array.isArray(response.data?.data) ? response.data.data : [],
     pagination: response.data?.pagination || null,
@@ -40,12 +40,6 @@ export async function markAllNotificationsAsRead() {
   return response.data?.data || null;
 }
 
-export async function deleteNotification(notificationId) {
-  if (!notificationId) return null;
-  await api.delete(`/notifications/${notificationId}`);
-  return true;
-}
-
 export async function getNotificationById(notificationId) {
   if (!notificationId) return null;
   const response = await api.get("/notifications", {
@@ -58,12 +52,6 @@ export async function getNotificationById(notificationId) {
 export async function sendNotification(payload) {
   const response = await api.post("/notifications", payload);
   return response.data?.data?.notification || null;
-}
-
-export async function getActiveSystemNotifications(params = {}) {
-  const response = await api.get("/notifications/system/active", { params });
-  const items = response.data?.data?.notifications;
-  return Array.isArray(items) ? items : [];
 }
 
 export async function createSystemNotification(payload) {

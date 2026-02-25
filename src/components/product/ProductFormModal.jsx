@@ -44,6 +44,7 @@ export default function ProductFormModal({
       formData.append('preparationTime', values.preparationTime || 0);
       formData.append('isPopular', values.isPopular || false);
       formData.append('isNew', values.isNew || false);
+      formData.append('lowStockThreshold', values.lowStockThreshold || 10);
 
       // Đảm bảo consistency: Nếu có recipe → stockQuantity = 0
       if (values.recipe && values.recipe.length > 0) {
@@ -78,13 +79,15 @@ export default function ProductFormModal({
         }
       });
 
+      // Gửi ảnh mới (nếu có)
       if (newImageFiles.length > 0) {
-        // Có ảnh mới: upload ảnh mới
         newImageFiles.forEach((img) => {
           formData.append('images', img);
         });
-      } else if (mode === 'edit') {
-        // Không có ảnh mới: gửi danh sách ảnh cần giữ lại từng URL
+      }
+
+      // Gửi danh sách ảnh cũ cần giữ lại (nếu có)
+      if (mode === 'edit' && keepImageUrls.length > 0) {
         keepImageUrls.forEach((url, index) => {
           formData.append(`keepImageUrls[${index}]`, url);
         });

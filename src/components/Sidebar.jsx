@@ -30,6 +30,25 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
+      key: '/staff/products-group',
+      icon: <GIcon name="inventory_2" />,
+      label: 'Quản lý sản phẩm',
+      children: [
+        {
+          key: '/staff/products',
+          label: 'Danh sách sản phẩm',
+        },
+        {
+          key: '/staff/inventory',
+          label: 'Bảng điều khiển tồn kho',
+        },
+        {
+          key: '/staff/assign-food-menu',
+          label: 'Phân bổ vào thực đơn',
+        },
+      ],
+    },
+    {
       key: '/staff/categories',
       icon: <GIcon name="category" />,
       label: 'Danh mục',
@@ -45,12 +64,12 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: "/staff/orders-group",
+      key: '/staff/orders-group',
       icon: <GIcon name="shopping_cart" />,
-      label: "Đơn hàng",
+      label: 'Đơn hàng',
       children: [
-        { key: "/staff/orders", label: "Đơn chờ nhận" },
-        { key: "/staff/qr-scan", label: "Quét QR trả hàng" },
+        { key: '/staff/orders', label: 'Đơn chờ nhận' },
+        { key: '/staff/qr-scan', label: 'Quét QR trả hàng' },
       ],
     },
   ];
@@ -67,16 +86,16 @@ export default function Sidebar({ collapsed }) {
       label: 'Người dùng',
     },
     {
-      key: '/manager/products-group',
+      key: '/products-group',
       icon: <GIcon name="inventory_2" />,
       label: 'Quản lý sản phẩm',
       children: [
         {
-          key: '/manager/products',
+          key: '/products',
           label: 'Danh sách sản phẩm',
         },
         {
-          key: '/manager/inventory',
+          key: '/inventory',
           label: 'Bảng điều khiển tồn kho',
         },
       ],
@@ -91,7 +110,7 @@ export default function Sidebar({ collapsed }) {
           label: 'Danh sách thực đơn',
         },
         {
-          key: '/manager/assign-food-menu',
+          key: '/assign-food-menu',
           label: 'Phân bổ vào thực đơn',
         },
       ],

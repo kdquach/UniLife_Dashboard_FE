@@ -1,0 +1,115 @@
+/* Inventory Dashboard Styles */
+
+/* Card hover effects */
+.inventory-stat-card {
+  transition: all 0.3s ease;
+}
+
+.inventory-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Table row hover */
+.ant-table-tbody > tr:hover > td {
+  background: #fafafa !important;
+}
+
+/* Tag animations */
+.ant-tag {
+  transition: all 0.2s ease;
+}
+
+.ant-tag:hover {
+  opacity: 0.8;
+}
+
+/* Button hover effects */
+.inventory-action-btn {
+  transition: all 0.3s ease;
+}
+
+.inventory-action-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Statistic animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inventory-stat-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Loading pulse */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.inventory-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ant-table {
+    font-size: 12px;
+  }
+
+  .ant-statistic-title {
+    font-size: 12px !important;
+  }
+
+  .ant-statistic-content {
+    font-size: 24px !important;
+  }
+}
+
+/* Empty state */
+.ant-empty-description {
+  color: #8c8c8c;
+}
+
+/* Progress bar for stock percentage */
+.stock-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.stock-progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+/* Table striped rows */
+.ant-table-tbody > tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Critical item highlight */
+.critical-item {
+  background-color: #fff2f0 !important;
+}
+
+.critical-item:hover {
+  background-color: #ffe7e7 !important;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getNotificationSocket } from "@/services/notification.socket";
 
 /**
  * Custom hook to manage Socket.IO connection for canteen real-time events.
@@ -22,44 +22,46 @@ export function useSocket(onOrderStatusChanged) {
   useEffect(() => {
     if (!user || !token) return;
 
-    // Derive socket URL from API base URL (strip "/api" suffix)
-    const apiBase =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-    const socketUrl =
-      apiBase.replace(/\/api\/?$/, "") || "http://localhost:5000";
-
-    const socket = io(socketUrl, {
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-    });
+    const socket = getNotificationSocket();
+    socket.auth = { token };
+    if (!socket.connected) {
+      socket.connect();
+    }
     socketRef.current = socket;
 
-    socket.on("connect", () => {
+    const handleConnect = () => {
       setIsConnected(true);
-      // Register into canteen room
-      socket.emit("register", {
-        userId: user._id,
-        canteenId: user.canteenId,
-      });
       if (user.canteenId) {
         socket.emit("join:canteen", user.canteenId);
       }
-    });
+    };
 
-    socket.on("disconnect", () => setIsConnected(false));
+    const handleDisconnect = () => setIsConnected(false);
 
-    // Listen for canteen notifications
-    socket.on("canteen:notification", (data) => {
-      if (data.type === "order:statusChanged" && callbackRef.current) {
-        callbackRef.current(data.order || data);
+    const handleNotificationNew = (event) => {
+      if (!event || event.type !== "order" || !callbackRef.current) {
+        return;
       }
-    });
+
+      callbackRef.current({
+        _id: event.meta?.orderId || event.id,
+        status: event.meta?.status,
+        previousStatus: event.meta?.previousStatus,
+        orderNumber: event.meta?.orderNumber,
+      });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("notification:new", handleNotificationNew);
 
     return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("notification:new", handleNotificationNew);
       if (user.canteenId) {
         socket.emit("leave:canteen", user.canteenId);
       }
-      socket.disconnect();
       socketRef.current = null;
       setIsConnected(false);
     };

@@ -1,12 +1,12 @@
 import { api } from './axios.config';
 
 /**
- * Lấy tất cả sản phẩm
+ * Lấy tất cả sản phẩm (cho trang quản lý - tự động lọc theo canteen)
  * @param {Object} params - Query parameters (page, limit, search, status, categoryId, etc.)
  * @returns {Promise} Response chứa danh sách sản phẩm
  */
 export const getAllProducts = async (params = {}) => {
-  const response = await api.get('/products', { params });
+  const response = await api.get('/products/manage', { params });
   return response.data;
 };
 

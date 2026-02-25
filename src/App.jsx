@@ -1,22 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ConfigProvider } from "antd";
-import viVN from "antd/locale/vi_VN";
-import { theme } from "@/config/theme";
-import { useAuthStore } from "@/store/useAuthStore";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
+import { theme } from '@/config/theme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Layouts
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 // Pages
-import LoginPage from "@/pages/Login";
-import DashboardPage from "@/pages/Dashboard";
+import LoginPage from '@/pages/Login';
+import DashboardPage from '@/pages/Dashboard';
 
 // Staff pages
-import StaffSchedulePage from "@/pages/staff/StaffSchedule";
-import StaffAttendancePage from "@/pages/staff/StaffAttendance";
-import PendingPickupOrdersPage from "@/pages/staff/PendingPickupOrders";
-import QRScanScreenPage from "@/pages/staff/QRScanScreen";
-import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
+import StaffSchedulePage from '@/pages/staff/StaffSchedule';
+import StaffAttendancePage from '@/pages/staff/StaffAttendance';
+import PendingPickupOrdersPage from '@/pages/staff/PendingPickupOrders';
+import QRScanScreenPage from '@/pages/staff/QRScanScreen';
+import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
 
 // Manager pages
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
@@ -75,7 +75,12 @@ export default function App() {
                 path="product-categories"
                 element={<ProductCategoriesPage />}
               />
-              <Route path="products" element={<div>Products Page - Coming Soon</div>} />
+              <Route path="products" element={<ProductManagementPage />} />
+              <Route path="inventory" element={<InventoryDashboardPage />} />
+              <Route
+                path="assign-food-menu"
+                element={<AssignFoodToMenuPage />}
+              />
               <Route path="orders" element={<PendingPickupOrdersPage />} />
               <Route path="qr-scan" element={<QRScanScreenPage />} />
             </Route>

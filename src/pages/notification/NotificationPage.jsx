@@ -92,17 +92,16 @@ export default function NotificationPage() {
       if (values.mode === "all") {
         await createSystemNotification({
           title: values.title,
-          content: values.body,
+          body: values.body,
           targetRole: "staff",
-          isActive: true,
-          activeFrom: new Date().toISOString(),
         });
       } else {
         await sendNotification({
           userId: values.userId,
           title: values.title,
           body: values.body,
-          meta: { source: "dashboard" },
+          type: "system",
+          metadata: { source: "dashboard" },
         });
       }
       message.success("Gửi thông báo thành công");

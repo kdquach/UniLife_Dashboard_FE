@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Form,
   Input,
@@ -30,13 +30,27 @@ export default function ProductForm({
 }) {
   // Danh sách công thức (nguyên liệu)
   const { user } = useAuthStore();
-  const initialRecipe = form.getFieldValue('recipe') || [];
-  const [recipes, setRecipes] = useState(initialRecipe);
+  const [recipes, setRecipes] = useState([]);
   const [recipeForm] = Form.useForm();
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [ingredients, setIngredients] = useState([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
+
+  // Theo dõi canteenId từ form để hiển thị tên
+  const canteenId = Form.useWatch('canteenId', form);
+  const canteenName = useMemo(() => {
+    if (!canteenId || !canteens || canteens.length === 0)
+      return 'Chưa xác định';
+    const canteen = canteens.find((c) => c._id === canteenId);
+    return canteen?.name || 'Chưa xác định';
+  }, [canteenId, canteens]);
+
+  // Đồng bộ recipes từ form value
+  useEffect(() => {
+    const formRecipe = form.getFieldValue('recipe') || [];
+    setRecipes(formRecipe);
+  }, [form]);
 
   // Fetch danh sách nguyên liệu
   useEffect(() => {
@@ -193,35 +207,63 @@ export default function ProductForm({
       label: 'Kho hàng',
       children: (
         <div style={{ padding: '16px 0' }}>
-          <Form.Item
-            name="stockQuantity"
-            label="Số lượng tồn kho"
-            rules={[
-              {
-                validator: () => {
-                  if (recipes.length > 0) {
-                    // Nếu có recipe, không yêu cầu stockQuantity
-                    return Promise.resolve();
-                  }
-                  // Nếu không có recipe, bắt buộc nhập
-                  const value = form.getFieldValue('stockQuantity');
-                  if (value === null || value === undefined || value < 0) {
-                    return Promise.reject(
-                      new Error('Vui lòng nhập số lượng tồn kho (>= 0)')
-                    );
-                  }
-                  return Promise.resolve();
-                },
-              },
-            ]}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16,
+            }}
           >
-            <InputNumber
-              placeholder="Nhập số lượng tồn kho"
-              min={0}
-              style={{ width: '100%' }}
-              disabled={recipes.length > 0}
-            />
-          </Form.Item>
+            <Form.Item
+              name="stockQuantity"
+              label="Số lượng tồn kho"
+              rules={[
+                {
+                  validator: () => {
+                    if (recipes.length > 0) {
+                      // Nếu có recipe, không yêu cầu stockQuantity
+                      return Promise.resolve();
+                    }
+                    // Nếu không có recipe, bắt buộc nhập
+                    const value = form.getFieldValue('stockQuantity');
+                    if (value === null || value === undefined || value < 0) {
+                      return Promise.reject(
+                        new Error('Vui lòng nhập số lượng tồn kho (>= 0)')
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber
+                placeholder="Nhập số lượng tồn kho"
+                min={0}
+                style={{ width: '100%' }}
+                disabled={recipes.length > 0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="lowStockThreshold"
+              label="Ngưỡng cảnh báo tồn kho thấp"
+              rules={[
+                {
+                  type: 'number',
+                  min: 0,
+                  message: 'Ngưỡng cảnh báo phải >= 0',
+                },
+              ]}
+              tooltip="Hệ thống sẽ cảnh báo khi số lượng tồn kho thấp hơn ngưỡng này"
+            >
+              <InputNumber
+                placeholder="Nhập ngưỡng cảnh báo (mặc định: 10)"
+                min={0}
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          </div>
+
           {recipes.length > 0 && (
             <div
               style={{ color: '#1890ff', marginTop: '8px', fontSize: '12px' }}
@@ -271,38 +313,44 @@ export default function ProductForm({
           isPopular: false,
           isNew: true,
           recipe: [],
+          lowStockThreshold: 10,
         }}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           {/* Căng tin */}
           <div style={{ paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
             <h4 style={{ marginTop: 0 }}>Căng tin</h4>
+
+            {/* Hidden field để lưu ID căng tin */}
             <Form.Item
               name="canteenId"
-              label="Chọn căng tin"
               rules={[{ required: true, message: 'Vui lòng chọn căng tin' }]}
-              style={{ marginBottom: 0 }}
+              hidden
             >
-              <Select
-                placeholder="Chọn căng tin"
-                disabled={user?.role === 'staff'}
-                loading={canteens.length === 0}
-                options={
-                  canteens && canteens.length > 0
-                    ? canteens.map((canteen) => ({
-                        label: canteen.name,
-                        value: canteen._id,
-                      }))
-                    : []
-                }
+              <Input />
+            </Form.Item>
+
+            {/* Hiển thị tên căng tin dưới dạng text */}
+            <Form.Item label="Căng tin" style={{ marginBottom: 8 }}>
+              <Input
+                disabled
+                value={canteenName}
+                style={{
+                  cursor: 'not-allowed',
+                  backgroundColor: '#f5f5f5',
+                  color: 'rgba(0, 0, 0, 0.85)',
+                  fontWeight: '500',
+                }}
+                prefix={<GIcon name="store" style={{ color: '#8c8c8c' }} />}
               />
             </Form.Item>
-            {user?.role === 'staff' && (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                <GIcon name="info" style={{ marginRight: 4 }} />
-                Bạn chỉ có thể tạo sản phẩm cho căng tin của bạn
-              </Text>
-            )}
+
+            <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+              <GIcon name="info" style={{ marginRight: 4 }} />
+              {user?.role === 'staff'
+                ? 'Bạn chỉ có thể tạo sản phẩm cho căng tin của bạn'
+                : 'Căng tin được gán tự động theo tài khoản của bạn'}
+            </Text>
           </div>
 
           {/* Thông tin sản phẩm */}
