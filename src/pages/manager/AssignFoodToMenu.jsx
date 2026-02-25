@@ -45,7 +45,8 @@ export default function AssignFoodToMenu() {
   // Fetch thực đơn khi component mount
   useEffect(() => {
     if (user?.canteenId) {
-      fetchMenus(user.canteenId, 'daily', new Date());
+      // Lấy danh sách thực đơn theo căng tin hiện tại
+      fetchMenus(user.canteenId);
     }
   }, [user?.canteenId, fetchMenus]);
 

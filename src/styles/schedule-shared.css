@@ -95,6 +95,15 @@
   background: #eef2ff;
 }
 
+.day-box.past-day {
+  opacity: 0.3;
+}
+
+.shift-cell.past-cell {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
 .staff-card {
   display: flex;
   gap: 8px;

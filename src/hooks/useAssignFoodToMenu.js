@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { message } from 'antd';
+import { getAllMenus, updateMenu } from '@/services/menu.service';
 
 /**
  * Hook quản lý logic phân bổ thực phẩm vào thực đơn
- * Hiện tại dùng mock data, sẽ thay bằng real API sau
+ * Dùng API menu từ backend để lấy và cập nhật thực đơn
  */
 export const useAssignFoodToMenu = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -18,39 +19,52 @@ export const useAssignFoodToMenu = () => {
   const [selectedFoods, setSelectedFoods] = useState([]);
   const [preview, setPreview] = useState(null);
 
-  // Lấy danh sách thực đơn theo ngày/tuần
+  // Hàm map dữ liệu thực đơn từ API sang dạng dùng cho UI
+  const mapMenuFromApi = useCallback((menu) => {
+    if (!menu) return null;
+
+    const foods = (menu.items || []).map((item, index) => {
+      const product = item.productId || {};
+      const category = product.categoryId || null;
+
+      return {
+        _id: product._id || item.productId,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        // Comment: Lưu lại thông tin danh mục nếu BE đã populate categoryId
+        categoryId: category,
+        sequence: typeof item.order === 'number' ? item.order : index,
+      };
+    });
+
+    return {
+      ...menu,
+      foods,
+    };
+  }, []);
+
+  // Lấy danh sách thực đơn theo căng tin
   const fetchMenus = useCallback(
     async (canteenId) => {
       setMenuLoading(true);
       try {
-        // TODO: Thay thế mock data bằng thực API menu khi backend hoàn thành
-        // const response = await menuService.getMenuByDate(canteenId, date);
-        // const actualMenus = response?.data?.menus || [];
+        const response = await getAllMenus({ canteenId });
+        const apiMenus = response?.data?.menus || [];
+        const mappedMenus = apiMenus.map((menu) => mapMenuFromApi(menu));
 
-        // Mock data
-        const mockMenus = [
-          {
-            _id: 'menu-daily-' + new Date().getTime(),
-            type: 'daily',
-            date: new Date(),
-            status: 'draft',
-            foods: [],
-            description: 'Thực đơn hôm nay',
-            canteenId,
-          },
-          {
-            _id: 'menu-weekly-' + new Date().getTime(),
-            type: 'weekly',
-            date: new Date(),
-            status: 'draft',
-            foods: [],
-            description: 'Thực đơn tuần này',
-            canteenId,
-          },
-        ];
+        setMenus(mappedMenus);
 
-        setMenus(mockMenus);
-        return mockMenus;
+        // Nếu chưa chọn menu thì tự động chọn menu đầu tiên
+        setSelectedMenu((prevSelected) => {
+          if (!prevSelected && mappedMenus.length > 0) {
+            setSelectedFoods(mappedMenus[0].foods || []);
+            return mappedMenus[0];
+          }
+          return prevSelected;
+        });
+
+        return mappedMenus;
       } catch (error) {
         messageApi.error(
           error?.response?.data?.message || 'Không thể tải thực đơn'
@@ -60,13 +74,13 @@ export const useAssignFoodToMenu = () => {
         setMenuLoading(false);
       }
     },
-    [messageApi]
+    [messageApi, mapMenuFromApi]
   );
 
   // Chọn thực đơn để phân bổ
   const handleSelectMenu = useCallback((menu) => {
     setSelectedMenu(menu);
-    setSelectedFoods([]);
+    setSelectedFoods(menu?.foods || []);
   }, []);
 
   // Thêm thực phẩm vào danh sách chọn
@@ -117,28 +131,26 @@ export const useAssignFoodToMenu = () => {
 
     setLoading(true);
     try {
-      // TODO: Thay thế bằng real API menuService.addFoodToMenu()
-      // khi backend menu hoàn thành
-      // const response = await menuService.addFoodsToMenu(
-      //   selectedMenu._id,
-      //   selectedFoods
-      // );
-
-      // Mock: Giả lập call API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Cập nhật selected menu
-      const updatedMenu = {
-        ...selectedMenu,
-        foods: selectedFoods.map((f) => ({
-          foodId: f._id,
-          foodName: f.name,
-          price: f.price,
-          sequence: f.sequence,
+      // Gọi API cập nhật danh sách món trong thực đơn
+      const payload = {
+        items: selectedFoods.map((food, index) => ({
+          productId: food._id,
+          order:
+            typeof food.sequence === 'number' ? food.sequence : index,
         })),
       };
 
-      setSelectedMenu(updatedMenu);
+      const response = await updateMenu(selectedMenu._id, payload);
+      const updatedMenuApi = response?.data?.menu;
+      const mappedMenu = mapMenuFromApi(updatedMenuApi || selectedMenu);
+
+      setSelectedMenu(mappedMenu);
+      setMenus((prev) =>
+        prev.map((menu) =>
+          menu._id === mappedMenu._id ? mappedMenu : menu
+        )
+      );
+      setSelectedFoods(mappedMenu.foods || []);
       messageApi.success(
         `Phân bổ ${selectedFoods.length} thực phẩm thành công`
       );
@@ -173,17 +185,19 @@ export const useAssignFoodToMenu = () => {
 
     setLoading(true);
     try {
-      // TODO: Thay thế bằng real API menuService.publishMenu()
-      // const response = await menuService.publishMenu(selectedMenu._id);
+      const response = await updateMenu(selectedMenu._id, {
+        status: 'active',
+      });
 
-      // Mock
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const updatedMenuApi = response?.data?.menu;
+      const mappedMenu = mapMenuFromApi(updatedMenuApi || selectedMenu);
 
-      const updatedMenu = {
-        ...selectedMenu,
-        status: 'published',
-      };
-      setSelectedMenu(updatedMenu);
+      setSelectedMenu(mappedMenu);
+      setMenus((prev) =>
+        prev.map((menu) =>
+          menu._id === mappedMenu._id ? mappedMenu : menu
+        )
+      );
 
       messageApi.success('Xuất bản thực đơn thành công');
       return true;

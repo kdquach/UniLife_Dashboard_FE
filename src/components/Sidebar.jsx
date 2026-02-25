@@ -98,9 +98,31 @@ export default function Sidebar({ collapsed }) {
           key: '/inventory',
           label: 'Bảng điều khiển tồn kho',
         },
+      ],
+    },
+    {
+      key: '/manager/menu-management-group',
+      icon: <GIcon name="restaurant_menu" />,
+      label: 'Quản lý thực đơn',
+      children: [
+        {
+          key: '/manager/menus',
+          label: 'Danh sách thực đơn',
+        },
         {
           key: '/assign-food-menu',
           label: 'Phân bổ vào thực đơn',
+        },
+      ],
+    },
+    {
+      key: '/manager/menu-scheduling-group',
+      icon: <GIcon name="event_note" />,
+      label: 'Lịch thực đơn',
+      children: [
+        {
+          key: '/manager/menu-schedules',
+          label: 'Lịch áp dụng thực đơn',
         },
       ],
     },
@@ -175,9 +197,31 @@ export default function Sidebar({ collapsed }) {
           key: '/manager/inventory',
           label: 'Bảng điều khiển tồn kho',
         },
+      ],
+    },
+    {
+      key: '/manager/menu-management-group',
+      icon: <GIcon name="restaurant_menu" />,
+      label: 'Quản lý thực đơn',
+      children: [
+        {
+          key: '/manager/menus',
+          label: 'Danh sách thực đơn',
+        },
         {
           key: '/manager/assign-food-menu',
           label: 'Phân bổ vào thực đơn',
+        },
+      ],
+    },
+    {
+      key: '/manager/menu-scheduling-group',
+      icon: <GIcon name="event_note" />,
+      label: 'Lịch thực đơn',
+      children: [
+        {
+          key: '/manager/menu-schedules',
+          label: 'Lịch áp dụng thực đơn',
         },
       ],
     },

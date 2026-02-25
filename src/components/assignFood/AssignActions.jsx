@@ -60,11 +60,7 @@ export default function AssignActions({
             <Statistic
               title="Thực đơn được chọn"
               value={
-                selectedMenu
-                  ? selectedMenu.type === 'daily'
-                    ? 'Hôm nay'
-                    : 'Tuần này'
-                  : '---'
+                selectedMenu?.name || '---'
               }
               prefix={<GIcon name="calendar_today" />}
             />
