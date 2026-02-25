@@ -183,7 +183,7 @@ export default function ProductCategoriesPage() {
         width: 120,
         align: "center",
         render: (isActive) => (
-          <Tag color={isActive ? "success" : "default"}>
+          <Tag color={isActive ? "success" : "warning"}>
             {isActive ? "Hoạt động" : "Không hoạt động"}
           </Tag>
         ),
@@ -213,13 +213,13 @@ export default function ProductCategoriesPage() {
                 {
                   key: "view",
                   label: "Xem chi tiết",
-                  icon: <GIcon icon="eye" />,
+                  icon: <GIcon name="visibility" />,
                   onClick: () => handleViewDetail(record),
                 },
                 {
                   key: "edit",
                   label: "Chỉnh sửa",
-                  icon: <GIcon icon="edit" />,
+                  icon: <GIcon name="edit" />,
                   onClick: () => handleEdit(record),
                 },
                 {
@@ -228,7 +228,7 @@ export default function ProductCategoriesPage() {
                 {
                   key: "delete",
                   label: "Xóa",
-                  icon: <GIcon icon="delete" />,
+                  icon: <GIcon name="delete" />,
                   danger: true,
                   onClick: () => handleDelete(record),
                 },
@@ -236,7 +236,7 @@ export default function ProductCategoriesPage() {
             }}
             trigger={["click"]}
           >
-            <Button type="text" icon={<GIcon icon="more_vert" />} />
+            <Button type="text" icon={<GIcon name="more_vert" />} />
           </Dropdown>
         ),
       },
@@ -261,7 +261,7 @@ export default function ProductCategoriesPage() {
             </Title>
             <Button
               type="primary"
-              icon={<GIcon icon="add" />}
+              icon={<GIcon name="add" />}
               onClick={handleCreate}
             >
               Thêm danh mục
@@ -300,7 +300,7 @@ export default function ProductCategoriesPage() {
           <Button
             key="edit"
             type="primary"
-            icon={<GIcon icon="edit" />}
+            icon={<GIcon name="edit" />}
             onClick={() => {
               setDetailOpen(false);
               handleEdit(selected);
@@ -325,7 +325,7 @@ export default function ProductCategoriesPage() {
             <div>
               <Text strong>Trạng thái:</Text>
               <div>
-                <Tag color={selected.isActive ? "success" : "default"}>
+                <Tag color={selected.isActive ? "success" : "warning"}>
                   {selected.isActive ? "Hoạt động" : "Không hoạt động"}
                 </Tag>
               </div>
