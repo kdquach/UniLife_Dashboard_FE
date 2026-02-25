@@ -1,5 +1,6 @@
 import { Layout, Button, Dropdown, Avatar, Space, Input, message } from "antd";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useGlobalSearchStore } from "@/store/useGlobalSearchStore";
 import { useNavigate } from "react-router-dom";
 import GIcon from "@/components/GIcon";
 import NotificationCenter from "@/components/NotificationCenter";
@@ -10,6 +11,7 @@ export default function Header({ collapsed, onToggle }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
+  const { keyword, setKeyword } = useGlobalSearchStore();
 
   const handleLogout = async () => {
     try {
@@ -73,6 +75,8 @@ export default function Header({ collapsed, onToggle }) {
           placeholder="Tìm kiếm..."
           prefix={<GIcon name="search" />}
           allowClear
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
           style={{
             maxWidth: 520,
             height: 44,

@@ -24,6 +24,8 @@ import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement
 import ProductManagementPage from "@/pages/manager/ProductManagement";
 import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
 import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
+import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
+import MenuManagementPage from "@/pages/manager/MenuManagement";
 
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
@@ -95,6 +97,8 @@ export default function App() {
                 path="assign-food-menu"
                 element={<AssignFoodToMenuPage />}
               />
+              <Route path="menus" element={<MenuManagementPage />} />
+              <Route path="menu-schedules" element={<MenuSchedulesPage />} />
             </Route>
 
             {/* COMMON ROUTES */}

@@ -4,7 +4,22 @@ import GIcon from '@/components/GIcon';
 
 const { Text } = Typography;
 
-export default function MenuSelector({ menus, selectedMenu, onSelectMenu }) {
+// Map trạng thái thực đơn sang label + màu hiển thị
+const getStatusMeta = (status) => {
+  const normalized = String(status || '').toLowerCase();
+
+  if (normalized === 'active') {
+    return { color: 'green', label: 'Đã xuất bản' };
+  }
+
+  if (normalized === 'inactive') {
+    return { color: 'default', label: 'Ngưng sử dụng' };
+  }
+
+  return { color: 'orange', label: 'Nháp' };
+};
+
+const MenuSelector = ({ menus, selectedMenu, onSelectMenu }) => {
   if (!menus || menus.length === 0) {
     return (
       <Empty
@@ -38,33 +53,38 @@ export default function MenuSelector({ menus, selectedMenu, onSelectMenu }) {
             },
           }}
         >
-          <List.Item.Meta
-            avatar={<GIcon name="calendar_today" />}
-            title={
-              <Space size="small">
-                <Text strong>
-                  {menu.type === 'daily' ? 'Hôm nay' : 'Tuần này'}
-                </Text>
-                <Tag
-                  color={menu.status === 'draft' ? 'orange' : 'green'}
-                  style={{ marginLeft: '0' }}
-                >
-                  {menu.status === 'draft' ? 'Nháp' : 'Đã xuất bản'}
-                </Tag>
-              </Space>
-            }
-            description={
-              <Space direction="vertical" size={0}>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  {dayjs(menu.date).format('DD/MM/YYYY HH:mm')}
-                </Text>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  <GIcon name="restaurant_menu" /> {menu.foods?.length || 0}{' '}
-                  thực phẩm
-                </Text>
-              </Space>
-            }
-          />
+          {(() => {
+            const { color, label } = getStatusMeta(menu.status);
+            const dateSource = menu.updatedAt || menu.createdAt;
+            const hasDate = dateSource && dayjs(dateSource).isValid();
+
+            return (
+              <List.Item.Meta
+                avatar={<GIcon name="calendar_today" />}
+                title={
+                  <Space size="small">
+                    <Text strong>{menu.name || 'Thực đơn'}</Text>
+                    <Tag color={color} style={{ marginLeft: '0' }}>
+                      {label}
+                    </Tag>
+                  </Space>
+                }
+                description={
+                  <Space direction="vertical" size={0}>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      {hasDate
+                        ? dayjs(dateSource).format('DD/MM/YYYY HH:mm')
+                        : '--/--/---- --:--'}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      <GIcon name="restaurant_menu" />{' '}
+                      {menu.foods?.length || 0} thực phẩm
+                    </Text>
+                  </Space>
+                }
+              />
+            );
+          })()}
           {selectedMenu?._id === menu._id && (
             <Badge
               count={<GIcon name="check_circle" style={{ color: '#52c41a' }} />}
@@ -74,4 +94,6 @@ export default function MenuSelector({ menus, selectedMenu, onSelectMenu }) {
       )}
     />
   );
-}
+};
+
+export default MenuSelector;

@@ -1,0 +1,12 @@
+.menu-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ant-table-tbody>tr:hover .menu-row-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
