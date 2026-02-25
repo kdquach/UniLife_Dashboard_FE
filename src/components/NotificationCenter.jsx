@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { getNotificationSocket } from "@/services/notification.socket";
 import {
   getNotificationById,
-  getMyNotifications,
+  getNotificationFeed,
   getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -72,7 +72,7 @@ export default function NotificationCenter() {
   const loadInitial = useCallback(async () => {
     try {
       const [result, unread] = await Promise.all([
-        getMyNotifications(buildFilterParams()),
+        getNotificationFeed(buildFilterParams()),
         getUnreadNotificationCount(),
       ]);
 
@@ -131,7 +131,8 @@ export default function NotificationCenter() {
       try {
         const unread = await getUnreadNotificationCount();
         setUnreadCount(unread);
-      } catch {
+      } catch (error) {
+        console.error("Failed to fetch unread count:", error);
       }
     };
 
@@ -204,82 +205,91 @@ export default function NotificationCenter() {
     await loadInitial();
   };
 
+  const shouldFetchNotificationDetails = (notificationItem) => {
+    if (!notificationItem?.id) return false;
+    if (notificationItem?.metadata) return false;
+    return !String(notificationItem.id).startsWith("sys-");
+  };
+
+  const resolveNotificationMetadata = async (notificationItem) => {
+    if (!shouldFetchNotificationDetails(notificationItem)) {
+      return notificationItem?.metadata || null;
+    }
+
+    const full = await getNotificationById(notificationItem.id);
+    if (!full?.metadata) {
+      return notificationItem?.metadata || null;
+    }
+
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === notificationItem.id
+          ? {
+            ...item,
+            metadata: full.metadata,
+          }
+          : item,
+      ),
+    );
+
+    return full.metadata;
+  };
+
+  const closeAndNavigate = (to, options = undefined) => {
+    setOpen(false);
+    navigate(to, options);
+  };
+
   const handleOpenNotification = async (notification) => {
     if (!notification) return;
-
-    if (!notification.isRead) {
-      await handleMarkRead(notification);
-    }
-
-    let resolvedMetadata = notification.metadata || null;
-
-    if (!resolvedMetadata && !String(notification.id).startsWith("sys-")) {
-      const full = await getNotificationById(notification.id);
-      if (full?.metadata) {
-        resolvedMetadata = full.metadata;
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === notification.id
-              ? {
-                ...item,
-                metadata: full.metadata,
-              }
-              : item,
-          ),
-        );
+    try {
+      if (!notification.isRead) {
+        await handleMarkRead(notification);
       }
+
+      const resolvedMetadata = await resolveNotificationMetadata(notification);
+
+      setExpandedId((prev) => (prev === notification.id ? null : notification.id));
+
+      const refreshToken = Date.now();
+      const kind = resolvedMetadata?.kind;
+
+      if (kind === "schedule_published") {
+        closeAndNavigate(`/staff/schedule?refresh=${refreshToken}`);
+        return;
+      }
+
+      if (kind === "shift_change_request") {
+        closeAndNavigate(`/manager/shift-requests?refresh=${refreshToken}`);
+        return;
+      }
+
+      if (notification.type === "order" && resolvedMetadata?.orderId) {
+        closeAndNavigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
+        return;
+      }
+
+      if (notification.type === "order") {
+        closeAndNavigate("/orders");
+        return;
+      }
+
+      if (notification.type === "shift") {
+        closeAndNavigate("/staff-shifts");
+        return;
+      }
+
+      closeAndNavigate(`/notifications/${notification.id}`);
+    } catch (error) {
+      console.error("Failed to open notification", error);
     }
-
-    setExpandedId((prev) => (prev === notification.id ? null : notification.id));
-
-    const refreshToken = Date.now();
-    const kind = resolvedMetadata?.kind;
-
-    if (kind === "schedule_published") {
-      setOpen(false);
-      navigate(`/staff/schedule?refresh=${refreshToken}`);
-      return;
-    }
-
-    if (kind === "shift_change_request") {
-      setOpen(false);
-      navigate(`/manager/shift-requests?refresh=${refreshToken}`);
-      return;
-    }
-
-    if (notification.type === "order" && resolvedMetadata?.orderId) {
-      setOpen(false);
-      navigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
-      return;
-    }
-
-    if (notification.type === "order") {
-      setOpen(false);
-      navigate("/orders");
-      return;
-    }
-
-    if (notification.type === "shift") {
-      setOpen(false);
-      navigate("/staff-shifts");
-      return;
-    }
-
-    if (["system", "promotion"].includes(notification.type)) {
-      setOpen(false);
-      navigate(`/notifications/${notification.id}`);
-      return;
-    }
-
-    setOpen(false);
-    navigate(`/notifications/${notification.id}`);
   };
 
   const handleViewAll = async () => {
     if (loadingAll) return;
     try {
       setLoadingAll(true);
-      const result = await getMyNotifications(buildFilterParams());
+      const result = await getNotificationFeed(buildFilterParams());
       const merged = (result?.data || []).map(normalizeUserNotification);
 
       setItems(merged);
