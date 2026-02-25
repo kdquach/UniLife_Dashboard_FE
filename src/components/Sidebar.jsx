@@ -85,21 +85,21 @@ export default function Sidebar({ collapsed }) {
       icon: <GIcon name="group" />,
       label: 'Người dùng',
     },
-    {
-      key: '/products-group',
-      icon: <GIcon name="inventory_2" />,
-      label: 'Quản lý sản phẩm',
-      children: [
-        {
-          key: '/products',
-          label: 'Danh sách sản phẩm',
-        },
-        {
-          key: '/inventory',
-          label: 'Bảng điều khiển tồn kho',
-        },
-      ],
-    },
+    // {
+    //   key: '/products-group',
+    //   icon: <GIcon name="inventory_2" />,
+    //   label: 'Quản lý sản phẩm',
+    //   children: [
+    //     {
+    //       key: '/products',
+    //       label: 'Danh sách sản phẩm',
+    //     },
+    //     {
+    //       key: '/inventory',
+    //       label: 'Bảng điều khiển tồn kho',
+    //     },
+    //   ],
+    // },
     {
       key: '/manager/menu-management-group',
       icon: <GIcon name="restaurant_menu" />,
