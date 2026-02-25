@@ -91,9 +91,24 @@ export default function ProductManagementPage() {
   // Xử lý mở form tạo mới
   const handleAdd = useCallback(() => {
     setFormMode('create');
+    // ✅ Set canteenId cho cả staff VÀ manager
+    const canteenIdValue =
+      (user?.role === 'staff' || user?.role === 'manager') && user?.canteenId
+        ? user.canteenId
+        : null;
+    console.log('ProductManagement - handleAdd - user:', user);
+    console.log(
+      'ProductManagement - handleAdd - canteenIdValue:',
+      canteenIdValue
+    );
     form.resetFields();
-    if (user?.role === 'staff' && user?.canteenId) {
-      form.setFieldValue('canteenId', user.canteenId);
+    // ✅ Set lại canteenId SAU khi reset
+    if (canteenIdValue) {
+      form.setFieldsValue({ canteenId: canteenIdValue });
+      console.log(
+        'ProductManagement - handleAdd - Set canteenId to form:',
+        canteenIdValue
+      );
     }
     setImageList([]);
     setFormOpen(true);
@@ -124,6 +139,15 @@ export default function ProductManagementPage() {
       // Chuyển đổi URL ảnh hiện có thành format của Upload component
       const existingImages = [];
 
+      console.log(
+        'ProductManagement - handleEdit - record.image:',
+        record.image
+      );
+      console.log(
+        'ProductManagement - handleEdit - record.images:',
+        record.images
+      );
+
       // Thêm ảnh chính (nếu có)
       if (record.image) {
         existingImages.push({
@@ -145,10 +169,19 @@ export default function ProductManagementPage() {
               status: 'done',
               url: img,
             });
+          } else {
+            console.log(
+              'ProductManagement - handleEdit - Skipped duplicate image:',
+              img
+            );
           }
         });
       }
 
+      console.log(
+        'ProductManagement - handleEdit - existingImages:',
+        existingImages
+      );
       setImageList(existingImages);
       setFormOpen(true);
     },

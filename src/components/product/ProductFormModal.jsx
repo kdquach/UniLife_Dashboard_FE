@@ -20,6 +20,10 @@ export default function ProductFormModal({
     try {
       const values = await form.validateFields();
 
+      // Debug: Kiểm tra canteenId
+      console.log('ProductFormModal - Form values:', values);
+      console.log('ProductFormModal - canteenId:', values.canteenId);
+
       // Kiểm tra căng tin
       if (!values.canteenId) {
         messageApi.error('Vui lòng chọn căng tin');
@@ -68,6 +72,8 @@ export default function ProductFormModal({
       const newImageFiles = [];
       const keepImageUrls = [];
 
+      console.log('ProductFormModal - imageList:', imageList);
+
       // Thu thập ảnh mới và ảnh cũ cần giữ lại
       imageList.forEach((file) => {
         if (file.originFileObj) {
@@ -78,6 +84,12 @@ export default function ProductFormModal({
           keepImageUrls.push(file.url);
         }
       });
+
+      console.log(
+        'ProductFormModal - newImageFiles count:',
+        newImageFiles.length
+      );
+      console.log('ProductFormModal - keepImageUrls:', keepImageUrls);
 
       // Gửi ảnh mới (nếu có)
       if (newImageFiles.length > 0) {
