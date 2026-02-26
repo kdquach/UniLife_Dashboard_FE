@@ -224,17 +224,17 @@ export const useMenuScheduling = () => {
                 .second(0)
                 .millisecond(0);
 
-            if (startDateTime.isBefore(now)) {
-                // Comment: Không cho chỉnh sửa lịch về thời điểm trong quá khứ
-                messageApi.error('Không thể chỉnh sửa ngày về quá khứ');
-                return false;
-            }
-
             const endDateTime = baseDate
                 .hour(endHour)
                 .minute(0)
                 .second(0)
                 .millisecond(0);
+
+            if (endDateTime.isBefore(now)) {
+                // Comment: Không cho tạo lịch hoàn toàn trong quá khứ (ca đã kết thúc)
+                messageApi.error('Không thể tạo lịch trong khoảng thời gian đã kết thúc');
+                return false;
+            }
 
             const startAt = startDateTime.toISOString();
             const endAt = endDateTime.toISOString();
