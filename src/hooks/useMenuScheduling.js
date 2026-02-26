@@ -108,7 +108,7 @@ export const useMenuScheduling = () => {
 
             weekDates.forEach((date) => {
                 const current = date.startOf('day');
-                //Chỉ những ngày nằm trong khoảng áp dụng của schedule mới được hiển thị.
+                // Chỉ những ngày nằm trong khoảng áp dụng của schedule mới được hiển thị.
                 if (current.isBefore(start) || current.isAfter(end)) return;
 
                 const dateKey = current.format('YYYY-MM-DD');

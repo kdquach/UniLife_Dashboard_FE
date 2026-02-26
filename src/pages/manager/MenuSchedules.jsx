@@ -195,8 +195,9 @@ export default function MenuSchedulesPage() {
                                         let canDelete = false;
                                         if (schedule) {
                                             const now = dayjs();
+                                            const start = dayjs(schedule.startAt);
                                             const end = dayjs(schedule.endAt);
-                                            if (end.isValid() && end.isBefore(now) && !isEnabled) {
+                                            if (end.isValid() && (end.isBefore(now) || start.isAfter(now)) && !isEnabled) {
                                                 // Comment: Chỉ cho phép xóa lịch đã tắt và đã qua thời gian áp dụng
                                                 canDelete = true;
                                             }
