@@ -18,7 +18,7 @@ export default function Header({ collapsed, onToggle }) {
       await logout();
       messageApi.success("Đăng xuất thành công");
       navigate("/login");
-    } catch (error) {
+    } catch {
       messageApi.error("Có lỗi xảy ra khi đăng xuất");
     }
   };

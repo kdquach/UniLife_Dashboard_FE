@@ -23,14 +23,14 @@ export default function RightPanel({
           className={`right-panel-tab ${activeTab === "staff" ? "active" : ""}`}
           onClick={() => setActiveTab("staff")}
         >
-          Staff List
+          Danh sách nhân viên
         </button>
         <button
           type="button"
           className={`right-panel-tab ${activeTab === "requests" ? "active" : ""}`}
           onClick={() => setActiveTab("requests")}
         >
-          Change Requests
+          Yêu cầu đổi ca
           {requestPendingCount > 0 && <span className="right-panel-badge">{requestPendingCount}</span>}
         </button>
       </div>
@@ -41,7 +41,7 @@ export default function RightPanel({
             type="text"
             className="right-panel-search"
             value={staffSearch}
-            placeholder="Search staff"
+            placeholder="Tìm nhân viên"
             onChange={(event) => onStaffSearch?.(event.target.value)}
           />
 
@@ -64,34 +64,34 @@ export default function RightPanel({
           <div className="request-list">
             {displayedRequests.map((request) => (
               <div key={request._id} className="request-item">
-                <div className="request-item-name">{request.staffId?.fullName || "Staff"}</div>
+                <div className="request-item-name">{request.staffId?.fullName || "Nhân viên"}</div>
                 <div className="request-item-reason">
-                  Old shift: {request.staffShiftId?.shiftId?.name || "—"}
+                  Ca hiện tại: {request.staffShiftId?.shiftId?.name || "—"}
                   {request.staffShiftId?.shiftId?.startTime && request.staffShiftId?.shiftId?.endTime
                     ? ` (${request.staffShiftId.shiftId.startTime} - ${request.staffShiftId.shiftId.endTime})`
                     : ""}
                 </div>
                 <div className="request-item-reason">
-                  Requested shift: {request.requestedShiftId?.name || "—"}
+                  Ca mong muốn: {request.requestedShiftId?.name || "—"}
                   {request.requestedShiftId?.startTime && request.requestedShiftId?.endTime
                     ? ` (${request.requestedShiftId.startTime} - ${request.requestedShiftId.endTime})`
                     : ""}
                 </div>
-                <div className="request-item-reason">Reason: {request.reason || "—"}</div>
+                <div className="request-item-reason">Lý do: {request.reason || "—"}</div>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <button
                     type="button"
                     className="btn-soft"
                     onClick={() => onRejectRequest?.(request._id)}
                   >
-                    Reject
+                    Từ chối
                   </button>
                   <button
                     type="button"
                     className="btn-solid"
                     onClick={() => onApproveRequest?.(request._id)}
                   >
-                    Approve
+                    Duyệt
                   </button>
                 </div>
               </div>
@@ -99,7 +99,7 @@ export default function RightPanel({
           </div>
 
           <button type="button" className="btn-solid right-panel-action" onClick={onGoToRequests}>
-            Staff Requests Management
+            Quản lý yêu cầu đổi ca
           </button>
         </div>
       )}
