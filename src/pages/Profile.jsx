@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Avatar,
   Button,
   Card,
@@ -23,7 +24,7 @@ const { Title, Text } = Typography;
 export default function ProfilePage() {
   const { profile, loading, error, fetchMe, updateMe, uploadAvatar } =
     useProfile();
-  const { updateUser } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
 
   const [messageApi, contextHolder] = message.useMessage();
   const [editing, setEditing] = useState(false);
@@ -115,6 +116,13 @@ export default function ProfilePage() {
       }
 
       await changePassword({ currentPassword, newPassword, confirmPassword });
+      if (user?.mustChangePassword) {
+        updateUser({ ...user, mustChangePassword: false });
+      }
+      if (profile?.mustChangePassword) {
+        const updatedProfile = { ...profile, mustChangePassword: false };
+        updateUser(updatedProfile);
+      }
       messageApi.success("Đổi mật khẩu thành công");
       passwordForm.resetFields();
     } catch (err) {
@@ -151,6 +159,15 @@ export default function ProfilePage() {
         </Title>
         <Text type="secondary">Quản lý thông tin hồ sơ của bạn</Text>
       </div>
+
+      {profile?.mustChangePassword && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Bắt buộc đổi mật khẩu"
+          description="Tài khoản của bạn đang dùng mật khẩu mặc định. Vui lòng đổi mật khẩu để tiếp tục sử dụng an toàn."
+        />
+      )}
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
 import { ToastContainer } from "react-toastify";
@@ -32,6 +32,7 @@ import MenuManagementPage from "@/pages/manager/MenuManagement";
 import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
+import StaffManagementPage from "@/pages/manager/StaffManagement";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -39,8 +40,18 @@ import NotificationPage from "@/pages/notification/NotificationPage";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+  const { isAuthenticated, user } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.mustChangePassword && !location.pathname.startsWith("/profile")) {
+    return <Navigate to="/profile?forceChangePassword=1" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
@@ -131,6 +142,7 @@ export default function App() {
               <Route path="payroll" element={<PayrollList />} />
               <Route path="payroll/:id" element={<PayrollDetail />} />
               <Route path="salary-rates" element={<SalaryRateManagement />} />
+              <Route path="staff" element={<StaffManagementPage />} />
             </Route>
 
             {/* COMMON ROUTES */}

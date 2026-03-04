@@ -251,6 +251,11 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
+      key: "/manager/staff",
+      icon: <GIcon name="group" />,
+      label: "Quản lý nhân viên",
+    },
+    {
       key: "/categories",
       icon: <GIcon name="category" />,
       label: "Danh mục",

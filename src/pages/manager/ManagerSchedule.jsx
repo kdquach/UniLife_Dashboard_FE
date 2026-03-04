@@ -130,7 +130,7 @@ function mapAssignmentsToGrid(assignments, shiftRows) {
 
     mapped[dateKey][targetShiftId].push({
       id: staffId,
-      name: staff.fullName || "Staff",
+      name: staff.fullName || "Nhân viên",
       shiftColor: staff.shiftColor || "var(--primary)",
       assignmentId: assignment._id,
       status: assignment.status === "scheduled" ? "assigned" : assignment.status,
@@ -191,7 +191,7 @@ export default function ManagerSchedulePage() {
     return buildSlotRows(shiftsRaw);
   }, [shiftsRaw]);
 
-  const weekLabel = `${weekStart.format("D MMM")} - ${weekEnd.format("D MMM, YYYY")}`;
+  const weekLabel = `${weekStart.format("DD/MM")} - ${weekEnd.format("DD/MM/YYYY")}`;
 
   const panelStaffItems = useMemo(
     () =>
@@ -218,7 +218,7 @@ export default function ManagerSchedulePage() {
         page: 1,
         canteenId,
       }),
-      getShiftChangeRequests({ status: "pending" }),
+      getShiftChangeRequests({ status: "pending", canteenId }),
     ]);
 
     const rows = buildSlotRows(shiftData);
@@ -395,7 +395,7 @@ export default function ManagerSchedulePage() {
     <div className="schedule-page">
       <Space direction="vertical" size={14} style={{ width: "100%" }}>
         <ScheduleHeader
-          title="Manager Schedule"
+          title="Lịch làm việc quản lý"
           weekLabel={weekLabel}
           onPrevWeek={() => setCurrentWeek((prev) => prev.subtract(7, "day"))}
           onToday={() => setCurrentWeek(dayjs().startOf("week"))}

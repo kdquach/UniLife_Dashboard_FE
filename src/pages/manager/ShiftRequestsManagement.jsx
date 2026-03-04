@@ -1,58 +1,19 @@
-import { useEffect, useState } from "react";
-import { Button, Card, Select, Space, Table, Tag, message } from "antd";
+import { Button, Card, Select, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
-import { useLocation } from "react-router-dom";
-import {
-  getShiftChangeRequests,
-  reviewShiftChangeRequest,
-} from "@/services/shiftManagement.service";
+import { useShiftRequestsManagement } from "@/hooks/useShiftRequestsManagement";
 
 export default function ShiftRequestsManagementPage() {
-  const location = useLocation();
-  const [requests, setRequests] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("pending");
-  const [loading, setLoading] = useState(false);
-
-  const loadRequests = async () => {
-    try {
-      setLoading(true);
-      const data = await getShiftChangeRequests(
-        statusFilter ? { status: statusFilter } : {},
-      );
-      setRequests(data);
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Không tải được yêu cầu đổi ca");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const refreshToken = params.get("refresh");
-    if (!refreshToken) return;
-    void loadRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]);
-
-  const handleReview = async (id, status) => {
-    try {
-      await reviewShiftChangeRequest(id, status);
-      message.success(status === "approved" ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu");
-      await loadRequests();
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể xử lý yêu cầu");
-    }
-  };
+  const {
+    requests,
+    statusFilter,
+    setStatusFilter,
+    loading,
+    handleReview,
+  } = useShiftRequestsManagement();
 
   return (
     <Card
-      title="Staff Requests Management"
+      title="Quản lý yêu cầu đổi ca"
       extra={(
         <Space>
           <Select
@@ -60,9 +21,10 @@ export default function ShiftRequestsManagementPage() {
             style={{ width: 160 }}
             onChange={setStatusFilter}
             options={[
-              { value: "pending", label: "Pending" },
-              { value: "approved", label: "Approved" },
-              { value: "rejected", label: "Rejected" },
+              { value: "all", label: "Tất cả" },
+              { value: "pending", label: "Đang chờ" },
+              { value: "approved", label: "Đã duyệt" },
+              { value: "rejected", label: "Đã từ chối" },
             ]}
           />
         </Space>
@@ -74,11 +36,11 @@ export default function ShiftRequestsManagementPage() {
         dataSource={requests}
         columns={[
           {
-            title: "Staff",
+            title: "Nhân viên",
             render: (_, row) => row.staffId?.fullName || "—",
           },
           {
-            title: "Old Shift",
+            title: "Ca hiện tại",
             render: (_, row) => {
               const oldShift = row.staffShiftId?.shiftId;
               if (!oldShift) return "—";
@@ -86,7 +48,7 @@ export default function ShiftRequestsManagementPage() {
             },
           },
           {
-            title: "Requested Shift",
+            title: "Ca mong muốn",
             render: (_, row) => {
               const shift = row.requestedShiftId;
               if (!shift) return "—";
@@ -94,11 +56,11 @@ export default function ShiftRequestsManagementPage() {
             },
           },
           {
-            title: "Reason",
+            title: "Lý do",
             dataIndex: "reason",
           },
           {
-            title: "Status",
+            title: "Trạng thái",
             render: (_, row) => {
               const color =
                 row.status === "approved"
@@ -106,15 +68,25 @@ export default function ShiftRequestsManagementPage() {
                   : row.status === "rejected"
                     ? "red"
                     : "gold";
-              return <Tag color={color}>{row.status}</Tag>;
+              const statusLabel =
+                row.status === "approved"
+                  ? "Đã duyệt"
+                  : row.status === "rejected"
+                    ? "Đã từ chối"
+                    : "Đang chờ";
+              return <Tag color={color}>{statusLabel}</Tag>;
             },
           },
           {
-            title: "Created At",
+            title: "Thời gian tạo",
             render: (_, row) => dayjs(row.createdAt).format("DD/MM/YYYY HH:mm"),
           },
           {
-            title: "Action",
+            title: "Thời gian xử lý",
+            render: (_, row) => (row.reviewedAt ? dayjs(row.reviewedAt).format("DD/MM/YYYY HH:mm") : "—"),
+          },
+          {
+            title: "Thao tác",
             render: (_, row) => (
               <Space>
                 <Button
@@ -123,7 +95,7 @@ export default function ShiftRequestsManagementPage() {
                   disabled={row.status !== "pending"}
                   onClick={() => handleReview(row._id, "approved")}
                 >
-                  Approve
+                  Duyệt
                 </Button>
                 <Button
                   danger
@@ -131,7 +103,7 @@ export default function ShiftRequestsManagementPage() {
                   disabled={row.status !== "pending"}
                   onClick={() => handleReview(row._id, "rejected")}
                 >
-                  Reject
+                  Từ chối
                 </Button>
               </Space>
             ),
