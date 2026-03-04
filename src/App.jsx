@@ -24,6 +24,7 @@ import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
 import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
 import ProductManagementPage from "@/pages/manager/ProductManagement";
+import IngredientManagementPage from "@/pages/manager/IngredientManagement";
 import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
 import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
@@ -31,7 +32,6 @@ import MenuManagementPage from "@/pages/manager/MenuManagement";
 import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
-
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -92,6 +92,10 @@ export default function App() {
                 element={<ProductCategoriesPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -113,6 +117,10 @@ export default function App() {
                 element={<ShiftRequestsManagementPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"

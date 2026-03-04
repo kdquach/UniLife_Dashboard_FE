@@ -143,11 +143,11 @@ const SalaryRateManagement = () => {
       dataIndex: ["userId", "fullName"],
       key: "staffName",
       fixed: "left",
-      width: 200,
+      width: 50,
       render: (text, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>{text}</div>
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>
             {record.userId?.email}
           </Text>
         </div>
@@ -158,9 +158,9 @@ const SalaryRateManagement = () => {
       dataIndex: "hourlyRate",
       key: "hourlyRate",
       align: "right",
-      width: 120,
+      width: 50,
       render: (value) => (
-        <Tag color="blue" icon={<DollarOutlined />}>
+        <Tag color="blue" icon={<DollarOutlined />} style={{ fontSize: 13 }}>
           {formatCurrency(value)}
         </Tag>
       ),
@@ -168,16 +168,16 @@ const SalaryRateManagement = () => {
     {
       title: "Thưởng chuyên cần",
       key: "attendanceBonus",
-      width: 250,
+      width: 50,
       render: (_, record) => (
         <Space direction="vertical" orientation="vertical" size={2}>
-          <Text style={{ fontSize: 12 }}>
+          <Text style={{ fontSize: 13 }}>
             100%: <strong>{formatCurrency(record.attendanceBonus100)}</strong>
           </Text>
-          <Text style={{ fontSize: 12 }}>
+          <Text style={{ fontSize: 13 }}>
             ≥95%: <strong>{formatCurrency(record.attendanceBonus95)}</strong>
           </Text>
-          <Text style={{ fontSize: 12 }}>
+          <Text style={{ fontSize: 13 }}>
             ≥90%: <strong>{formatCurrency(record.attendanceBonus90)}</strong>
           </Text>
         </Space>
@@ -188,22 +188,22 @@ const SalaryRateManagement = () => {
       dataIndex: "overtimeMultiplier",
       key: "overtimeMultiplier",
       align: "center",
-      width: 100,
+      width: 50,
       render: (value) => <Tag color="green">x{value}</Tag>,
     },
     {
       title: "Phạt",
       key: "deductions",
-      width: 250,
+      width: 50,
       render: (_, record) => (
         <Space direction="vertical" orientation="vertical" size={2}>
-          <Text style={{ fontSize: 12, color: "#ff4d4f" }}>
+          <Text style={{ fontSize: 13, color: "#ff4d4f" }}>
             Đi muộn: {formatCurrency(record.lateDeduction)}
           </Text>
-          <Text style={{ fontSize: 12, color: "#ff4d4f" }}>
+          <Text style={{ fontSize: 13, color: "#ff4d4f" }}>
             Về sớm: {formatCurrency(record.earlyLeaveDeduction)}
           </Text>
-          <Text style={{ fontSize: 12, color: "#ff4d4f" }}>
+          <Text style={{ fontSize: 13, color: "#ff4d4f" }}>
             Nghỉ KP: {formatCurrency(record.absentDeduction)}
           </Text>
         </Space>
@@ -214,14 +214,14 @@ const SalaryRateManagement = () => {
       dataIndex: "maxLateAllowed",
       key: "maxLateAllowed",
       align: "center",
-      width: 120,
+      width: 30,
       render: (value) => <Tag>{value} lần</Tag>,
     },
     {
       title: "Thao tác",
       key: "action",
       fixed: "right",
-      width: 100,
+      width: 20,
       render: (_, record) => (
         <Button
           type="link"

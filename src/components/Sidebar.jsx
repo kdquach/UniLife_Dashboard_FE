@@ -49,6 +49,11 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
+      key: "/staff/ingredients",
+      icon: <GIcon name="restaurant" />,
+      label: "Nguyên liệu",
+    },
+    {
       key: "/staff/categories",
       icon: <GIcon name="category" />,
       label: "Danh mục",
@@ -198,6 +203,11 @@ export default function Sidebar({ collapsed }) {
           label: "Bảng điều khiển tồn kho",
         },
       ],
+    },
+    {
+      key: "/manager/ingredients",
+      icon: <GIcon name="restaurant" />,
+      label: "Nguyên liệu",
     },
     {
       key: "/manager/menu-management-group",
