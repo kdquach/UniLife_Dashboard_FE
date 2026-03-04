@@ -1,14 +1,10 @@
 import { useState } from "react";
+import { Modal, Form, DatePicker, Alert, Spin, Typography, Space } from "antd";
 import {
-  Modal,
-  Form,
-  DatePicker,
-  Alert,
-  Spin,
-  Typography,
-  InputNumber,
-} from "antd";
-import { CalendarOutlined } from "@ant-design/icons";
+  CalendarOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Text } = Typography;
@@ -28,7 +24,6 @@ const GeneratePayrollDialog = ({ open, onClose, onGenerate }) => {
       await onGenerate({
         periodStart: periodStart.toISOString(),
         periodEnd: periodEnd.toISOString(),
-        hourlyRate: values.hourlyRate || 25000,
       });
 
       form.resetFields();
@@ -76,20 +71,40 @@ const GeneratePayrollDialog = ({ open, onClose, onGenerate }) => {
     >
       <Spin spinning={loading}>
         <Alert
-          message="Lưu ý"
-          description={
-            <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
-              <li>Hệ thống sẽ tính toán tự động dựa trên giờ làm thực tế</li>
-              <li>
-                Mức lương ưu tiên theo cài đặt cá nhân, nếu không có sẽ dùng mức
-                mặc định
-              </li>
-              <li>Bảng lương có thể chỉnh sửa sau khi tạo</li>
-              <li>Chỉ tạo một bảng lương cho mỗi kỳ</li>
-            </ul>
+          message={
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <div style={{ fontWeight: 500, marginBottom: 8 }}>
+                <InfoCircleOutlined /> Quy trình tạo bảng lương tự động
+              </div>
+              <Space direction="vertical">
+                <div>
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} /> Hệ thống
+                  sẽ lấy tất cả ca làm việc đã check-out trong kỳ
+                </div>
+                <div>
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} /> Tính
+                  lương theo mức <strong>Lương giờ cá nhân</strong> của từng
+                  nhân viên
+                </div>
+                <div>
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} /> Tự động
+                  tính <strong>thưởng chuyên cần</strong>,{" "}
+                  <strong>thưởng làm thêm</strong>
+                </div>
+                <div>
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} /> Tự động
+                  khấu trừ <strong>đi muộn, về sớm, vắng mặt</strong>
+                </div>
+                <div>
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} /> Có thể{" "}
+                  <strong>điều chỉnh</strong> lương từng nhân viên sau khi tạo
+                </div>
+              </Space>
+            </Space>
           }
           type="info"
           showIcon
+          icon={<InfoCircleOutlined />}
           style={{ marginBottom: 24 }}
         />
 
@@ -98,7 +113,6 @@ const GeneratePayrollDialog = ({ open, onClose, onGenerate }) => {
           layout="vertical"
           initialValues={{
             period: getDefaultPeriod(),
-            hourlyRate: 25000,
           }}
         >
           <Form.Item
@@ -112,7 +126,7 @@ const GeneratePayrollDialog = ({ open, onClose, onGenerate }) => {
             ]}
             extra={
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Chọn từ ngày đầu đến ngày cuối của tháng muốn tạo lương
+                💡 Chọn từ ngày đầu đến ngày cuối của tháng muốn tạo lương
               </Text>
             }
           >
@@ -121,45 +135,34 @@ const GeneratePayrollDialog = ({ open, onClose, onGenerate }) => {
               format="DD/MM/YYYY"
               placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
               disabledDate={disabledDate}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="hourlyRate"
-            label="Mức lương mặc định (VNĐ/giờ)"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng nhập mức lương",
-              },
-              {
-                type: "number",
-                min: 1000,
-                message: "Mức lương phải >= 1,000 VNĐ",
-              },
-            ]}
-            extra={
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Áp dụng cho nhân viên chưa có mức lương cá nhân
-              </Text>
-            }
-          >
-            <InputNumber
-              style={{ width: "100%" }}
-              formatter={(value) =>
-                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
-              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-              placeholder="Nhập mức lương theo giờ"
-              addonAfter="VNĐ"
+              size="large"
             />
           </Form.Item>
 
           <Alert
             message={
               <div>
-                <Text strong>Gợi ý:</Text> Bảng lương thường tính từ ngày 1 đến
-                ngày cuối tháng. Mức lương mặc định: 25,000 VNĐ/giờ
+                <Text strong>📌 Lưu ý quan trọng:</Text>
+                <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+                  <li>
+                    Mức lương được ưu tiên theo{" "}
+                    <Text strong style={{ color: "#1890ff" }}>
+                      Cài đặt lương cá nhân
+                    </Text>{" "}
+                    trong mục "Quản lý mức lương"
+                  </li>
+                  <li>
+                    Thưởng/phạt tự động được tính theo cấu hình riêng của từng
+                    nhân viên
+                  </li>
+                  <li>
+                    Chỉ tạo <Text type="danger">một bảng lương</Text> cho mỗi kỳ
+                  </li>
+                  <li>
+                    Bảng lương có thể chỉnh sửa trước khi{" "}
+                    <Text type="success">duyệt</Text>
+                  </li>
+                </ul>
               </div>
             }
             type="warning"

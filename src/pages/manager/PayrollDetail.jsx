@@ -48,10 +48,6 @@ const PayrollDetail = () => {
   const [openAdjustDialog, setOpenAdjustDialog] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState(null);
 
-  useEffect(() => {
-    fetchPayrollDetail();
-  }, [id]);
-
   const fetchPayrollDetail = async () => {
     setLoading(true);
     try {
@@ -65,6 +61,11 @@ const PayrollDetail = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPayrollDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleApprove = async () => {
     try {
@@ -141,7 +142,7 @@ const PayrollDetail = () => {
       dataIndex: ["userId", "fullName"],
       key: "staffName",
       fixed: "left",
-      width: 200,
+      width: 180,
       render: (text, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>{text}</div>
@@ -150,6 +151,20 @@ const PayrollDetail = () => {
           </Text>
         </div>
       ),
+    },
+    {
+      title: "Lương giờ",
+      key: "hourlyRate",
+      align: "right",
+      width: 120,
+      render: (_, record) => {
+        const hourlyRate = record.baseSalary / (record.totalHours || 1);
+        return (
+          <Tag color="cyan">
+            {new Intl.NumberFormat("vi-VN").format(Math.round(hourlyRate))}đ/h
+          </Tag>
+        );
+      },
     },
     {
       title: "Số giờ",
@@ -459,31 +474,32 @@ const PayrollDetail = () => {
                   <Table.Summary.Cell index={0}>
                     <Text strong>Tổng cộng</Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
+                  <Table.Summary.Cell index={1} />
+                  <Table.Summary.Cell index={2} align="right">
                     <Tag icon={<ClockCircleOutlined />}>
                       {totalHours.toFixed(1)} giờ
                     </Tag>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
+                  <Table.Summary.Cell index={3} align="right">
                     <Text strong>{formatCurrency(totalBase)}</Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="right">
+                  <Table.Summary.Cell index={4} align="right">
                     <Text strong style={{ color: "#52c41a" }}>
                       +{formatCurrency(totalBonus)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4} align="right">
+                  <Table.Summary.Cell index={5} align="right">
                     <Text strong style={{ color: "#ff4d4f" }}>
                       -{formatCurrency(totalDeduction)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={5} align="right">
+                  <Table.Summary.Cell index={6} align="right">
                     <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
                       {formatCurrency(totalFinal)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={6} />
                   <Table.Summary.Cell index={7} />
+                  <Table.Summary.Cell index={8} />
                 </Table.Summary.Row>
               </Table.Summary>
             );
