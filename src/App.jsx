@@ -19,18 +19,19 @@ import QRScanScreenPage from '@/pages/staff/QRScanScreen';
 import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
 
 // Manager pages
-import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
-import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
-import ProductManagementPage from "@/pages/manager/ProductManagement";
-import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
-import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
-import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
-import MenuManagementPage from "@/pages/manager/MenuManagement";
+import ManagerSchedulePage from '@/pages/manager/ManagerSchedule';
+import ShiftRequestsManagementPage from '@/pages/manager/ShiftRequestsManagement';
+import ProductManagementPage from '@/pages/manager/ProductManagement';
+import IngredientManagementPage from '@/pages/manager/IngredientManagement';
+import InventoryDashboardPage from '@/pages/manager/InventoryDashboard';
+import AssignFoodToMenuPage from '@/pages/manager/AssignFoodToMenu';
+import MenuSchedulesPage from '@/pages/manager/MenuSchedules';
+import MenuManagementPage from '@/pages/manager/MenuManagement';
 
-import ProfilePage from "@/pages/Profile";
-import IngredientCategoriesPage from "@/pages/IngredientCategories";
-import ProductCategoriesPage from "@/pages/ProductCategories";
-import NotificationPage from "@/pages/notification/NotificationPage";
+import ProfilePage from '@/pages/Profile';
+import IngredientCategoriesPage from '@/pages/IngredientCategories';
+import ProductCategoriesPage from '@/pages/ProductCategories';
+import NotificationPage from '@/pages/notification/NotificationPage';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -76,6 +77,10 @@ export default function App() {
                 element={<ProductCategoriesPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -97,6 +102,10 @@ export default function App() {
                 element={<ShiftRequestsManagementPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
