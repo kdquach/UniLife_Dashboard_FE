@@ -226,9 +226,19 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: "/manager/payroll",
+      key: "/manager/payroll-group",
       icon: <GIcon name="payments" />,
       label: "Quản lý lương",
+      children: [
+        {
+          key: "/manager/payroll",
+          label: "Bảng lương",
+        },
+        {
+          key: "/manager/salary-rates",
+          label: "Cấu hình lương",
+        },
+      ],
     },
     {
       key: "/categories",
@@ -265,6 +275,7 @@ export default function Sidebar({ collapsed }) {
   const menuByRole = {
     staff: staffMenuItems,
     manager: managerMenuItems,
+    canteen_owner: managerMenuItems,
     admin: adminMenuItems,
   };
 

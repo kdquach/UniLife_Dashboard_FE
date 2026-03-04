@@ -1,4 +1,4 @@
-import api from "./axios.config";
+import { api } from "./axios.config";
 
 /**
  * Thiết lập mức lương cho nhân viên

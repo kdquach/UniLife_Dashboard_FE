@@ -43,6 +43,7 @@ const PayrollDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [payroll, setPayroll] = useState(null);
+  const [salaries, setSalaries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openAdjustDialog, setOpenAdjustDialog] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState(null);
@@ -56,6 +57,7 @@ const PayrollDetail = () => {
     try {
       const response = await getPayrollDetail(id);
       setPayroll(response.data.payroll);
+      setSalaries(response.data.salaries || []);
     } catch (error) {
       console.error("Lỗi khi tải chi tiết payroll:", error);
       message.error("Không thể tải chi tiết bảng lương");
@@ -421,7 +423,7 @@ const PayrollDetail = () => {
       <Card title="Chi tiết lương nhân viên">
         <Table
           columns={columns}
-          dataSource={payroll.salaries}
+          dataSource={salaries}
           rowKey="_id"
           scroll={{ x: 1400 }}
           pagination={{

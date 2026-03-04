@@ -30,6 +30,7 @@ import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
 import MenuManagementPage from "@/pages/manager/MenuManagement";
 import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
+import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
 
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
@@ -121,6 +122,7 @@ export default function App() {
               <Route path="menu-schedules" element={<MenuSchedulesPage />} />
               <Route path="payroll" element={<PayrollList />} />
               <Route path="payroll/:id" element={<PayrollDetail />} />
+              <Route path="salary-rates" element={<SalaryRateManagement />} />
             </Route>
 
             {/* COMMON ROUTES */}

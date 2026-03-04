@@ -46,7 +46,7 @@ const PayrollList = () => {
   const [openGenerateDialog, setOpenGenerateDialog] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
-    month: dayjs().month() + 1,
+    month: "",
     year: dayjs().year(),
   });
 
