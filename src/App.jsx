@@ -1,33 +1,40 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import viVN from 'antd/locale/vi_VN';
-import { theme } from '@/config/theme';
-import { useAuthStore } from '@/store/useAuthStore';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import viVN from "antd/locale/vi_VN";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { theme } from "@/config/theme";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Layouts
-import DashboardLayout from '@/layouts/DashboardLayout';
+import DashboardLayout from "@/layouts/DashboardLayout";
 
 // Pages
-import LoginPage from '@/pages/Login';
-import DashboardPage from '@/pages/Dashboard';
+import LoginPage from "@/pages/Login";
+import DashboardPage from "@/pages/Dashboard";
 
 // Staff pages
-import StaffSchedulePage from '@/pages/staff/StaffSchedule';
-import StaffAttendancePage from '@/pages/staff/StaffAttendance';
-import PendingPickupOrdersPage from '@/pages/staff/PendingPickupOrders';
-import QRScanScreenPage from '@/pages/staff/QRScanScreen';
-import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
+import StaffSchedulePage from "@/pages/staff/StaffSchedule";
+import StaffAttendancePage from "@/pages/staff/StaffAttendance";
+import PendingPickupOrdersPage from "@/pages/staff/PendingPickupOrders";
+import QRScanScreenPage from "@/pages/staff/QRScanScreen";
+import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
 
 // Manager pages
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
 import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
 import ProductManagementPage from "@/pages/manager/ProductManagement";
+import IngredientManagementPage from "@/pages/manager/IngredientManagement";
 import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
 import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
 import MenuManagementPage from "@/pages/manager/MenuManagement";
 import CanteenManagementPage from "@/pages/manager/CanteenManagement";
 
+import PayrollList from "@/pages/manager/PayrollList";
+import PayrollDetail from "@/pages/manager/PayrollDetail";
+import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
+import StaffManagementPage from "@/pages/manager/StaffManagement";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
@@ -35,14 +42,39 @@ import NotificationPage from "@/pages/notification/NotificationPage";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+  const { isAuthenticated, user } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (
+    user?.role === "staff" &&
+    user?.forceChangePassword &&
+    !location.pathname.startsWith("/profile")
+  ) {
+    return <Navigate to="/profile?forceChangePassword=1" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
   return (
     <ConfigProvider theme={theme} locale={viVN}>
       <BrowserRouter>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
@@ -77,6 +109,10 @@ export default function App() {
                 element={<ProductCategoriesPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -98,6 +134,10 @@ export default function App() {
                 element={<ShiftRequestsManagementPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route
+                path="ingredients"
+                element={<IngredientManagementPage />}
+              />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -105,7 +145,10 @@ export default function App() {
               />
               <Route path="menus" element={<MenuManagementPage />} />
               <Route path="menu-schedules" element={<MenuSchedulesPage />} />
-
+              <Route path="payroll" element={<PayrollList />} />
+              <Route path="payroll/:id" element={<PayrollDetail />} />
+              <Route path="salary-rates" element={<SalaryRateManagement />} />
+              <Route path="staff" element={<StaffManagementPage />} />
             </Route>
 
             {/* COMMON ROUTES */}

@@ -44,3 +44,16 @@ export const USER_ROLES = {
   staff: "Nhân viên",
   customer: "Khách hàng",
 };
+
+export const STAFF_GENDER_OPTIONS = [
+  { value: "male", label: "Nam" },
+  { value: "female", label: "Nữ" },
+  { value: "other", label: "Khác" },
+];
+
+export const STAFF_STATUS_OPTIONS = [
+  { value: "active", label: "Đang hoạt động" },
+  { value: "inactive", label: "Ngưng hoạt động" },
+  { value: "pending", label: "Chờ kích hoạt" },
+  { value: "banned", label: "Bị khóa" },
+];

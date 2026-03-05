@@ -60,3 +60,14 @@ export const getLowStockIngredients = async (params = {}) => {
   const response = await api.get('/ingredients/low-stock', { params });
   return response.data;
 };
+
+/**
+ * Cập nhật tồn kho nguyên liệu
+ * @param {string} id - ID của nguyên liệu
+ * @param {Object} data - Dữ liệu cập nhật { quantity, operation }
+ * @returns {Promise} Response sau khi cập nhật
+ */
+export const updateIngredientStock = async (id, data) => {
+  const response = await api.patch(`/ingredients/${id}/stock`, data);
+  return response.data;
+};
