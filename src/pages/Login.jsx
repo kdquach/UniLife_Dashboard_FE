@@ -24,6 +24,13 @@ export default function LoginPage() {
       if (!token || !user) throw new Error("Invalid login response");
 
       setAuth(user, token);
+
+      if (user?.role === "staff" && user?.forceChangePassword) {
+        message.warning("Bạn cần đổi mật khẩu ngay lần đăng nhập đầu tiên");
+        navigate("/profile?forceChangePassword=1");
+        return;
+      }
+
       message.success("Đăng nhập thành công!");
       navigate(user?.role === "staff" ? "/staff/schedule" : "/");
     } catch (err) {

@@ -206,13 +206,13 @@ export default function StaffSchedulePage() {
     }
   };
 
-  const weekLabel = `${weekStart.format("D MMM")} - ${weekEnd.format("D MMM, YYYY")}`;
+  const weekLabel = `${weekStart.format("DD/MM")} - ${weekEnd.format("DD/MM/YYYY")}`;
 
   return (
     <div className="schedule-page">
       <Space direction="vertical" size={14} style={{ width: "100%" }}>
         <ScheduleHeader
-          title="Staff Schedule"
+          title="Lịch làm việc của tôi"
           weekLabel={weekLabel}
           onPrevWeek={() => setCurrentWeek((prev) => prev.subtract(7, "day"))}
           onToday={() => setCurrentWeek(dayjs().startOf("week"))}

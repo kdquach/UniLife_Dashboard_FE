@@ -8,7 +8,7 @@ export default function DraftControls({
   return (
     <div className="draft-controls">
       <div className="draft-controls-status-wrap">
-        <span className="draft-controls-title">Weekly Schedule</span>
+        <span className="draft-controls-title">Lịch làm việc tuần</span>
         {draftChanges && (
           <span className="draft-controls-status">
             <span className="draft-controls-dot">●</span>
@@ -24,7 +24,7 @@ export default function DraftControls({
           onClick={onSaveDraft}
           disabled={!draftChanges || savingDraft}
         >
-          Save Draft
+          Lưu nháp
         </button>
         <button
           type="button"
@@ -32,7 +32,7 @@ export default function DraftControls({
           onClick={onPublish}
           disabled={publishing}
         >
-          Publish Weekly Schedule
+          Phát hành lịch tuần
         </button>
       </div>
     </div>

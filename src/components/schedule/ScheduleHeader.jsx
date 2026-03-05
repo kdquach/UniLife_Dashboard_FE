@@ -12,7 +12,7 @@ export default function ScheduleHeader({
           ‹
         </button>
         <button type="button" className="schedule-nav-btn schedule-today-btn" onClick={onToday}>
-          Today
+          Hôm nay
         </button>
         <button type="button" className="schedule-nav-btn" onClick={onNextWeek}>
           ›
