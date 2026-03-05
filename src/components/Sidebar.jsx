@@ -162,6 +162,11 @@ export default function Sidebar({ collapsed }) {
       label: 'Báo cáo',
     },
     {
+      key: '/audit-logs',
+      icon: <GIcon name="history" />,
+      label: 'Nhật ký hệ thống',
+    },
+    {
       key: '/settings',
       icon: <GIcon name="settings" />,
       label: 'Cài đặt',
@@ -259,6 +264,11 @@ export default function Sidebar({ collapsed }) {
       key: '/reports',
       icon: <GIcon name="bar_chart" />,
       label: 'Báo cáo',
+    },
+    {
+      key: '/audit-logs',
+      icon: <GIcon name="history" />,
+      label: 'Nhật ký hệ thống',
     },
     {
       key: '/canteens',

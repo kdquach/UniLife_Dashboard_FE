@@ -32,6 +32,7 @@ import ProfilePage from '@/pages/Profile';
 import IngredientCategoriesPage from '@/pages/IngredientCategories';
 import ProductCategoriesPage from '@/pages/ProductCategories';
 import NotificationPage from '@/pages/notification/NotificationPage';
+import AuditLogPage from '@/pages/AuditLog';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -129,6 +130,7 @@ export default function App() {
             <Route path="staff-shifts" element={<ManagerSchedulePage />} />
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationPage />} />
+            <Route path="audit-logs" element={<AuditLogPage />} />
 
             {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />

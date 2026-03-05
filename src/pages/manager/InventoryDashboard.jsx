@@ -5,18 +5,27 @@ import {
   Col,
   Table,
   Tag,
-  Statistic,
-  Empty,
-  Button,
-  Tooltip,
   Form,
+  Tabs,
+  message,
+  Tooltip,
+  Button,
 } from 'antd';
 import GIcon from '@/components/GIcon';
 import { useInventoryManagement } from '@/hooks/useInventoryManagement';
 import { useProductManagement } from '@/hooks/useProductManagement';
+import { useIngredientManagement } from '@/hooks/useIngredientManagement';
 import { getAllProductCategories } from '@/services/productCategory.service';
 import { getAllCanteens } from '@/services/canteen.service';
+import {
+  getLowStockIngredients,
+  updateIngredientStock,
+} from '@/services/ingredient.service';
 import ProductFormModal from '@/components/product/ProductFormModal';
+import IngredientFormModal from '@/components/ingredient/IngredientFormModal';
+import StockUpdateModal from '@/components/ingredient/StockUpdateModal';
+import ProductInventoryTab from '@/components/inventory/ProductInventoryTab';
+import IngredientInventoryTab from '@/components/inventory/IngredientInventoryTab';
 import '@/styles/InventoryDashboard.css';
 
 export default function InventoryDashboard() {
@@ -32,13 +41,34 @@ export default function InventoryDashboard() {
     fetchLowStockProducts,
   } = useInventoryManagement();
 
-  // State cho modal chỉnh sửa
+  // Import useIngredientManagement hook
+  const {
+    categories: ingredientCategories,
+    handleFormSubmit: handleIngredientSubmit,
+  } = useIngredientManagement();
+
+  // State cho modal chỉnh sửa sản phẩm
   const [form] = Form.useForm();
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [imageList, setImageList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [canteens, setCanteens] = useState([]);
+
+  // State cho modal nguyên liệu
+  const [ingredientForm] = Form.useForm();
+  const [ingredientFormOpen, setIngredientFormOpen] = useState(false);
+  const [ingredientStockModalOpen, setIngredientStockModalOpen] =
+    useState(false);
+  const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const [lowStockIngredients, setLowStockIngredients] = useState([]);
+  const [ingredientPagination, setIngredientPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [ingredientLoading, setIngredientLoading] = useState(false);
+  const [messageApi] = message.useMessage();
 
   // Hook cho update product
   const { handleUpdate: updateProduct } = useProductManagement();
@@ -59,6 +89,33 @@ export default function InventoryDashboard() {
     };
     fetchData();
   }, []);
+
+  // Fetch danh sách nguyên liệu sắp hết
+  useEffect(() => {
+    const fetchLowStockIngredients = async (page = 1, pageSize = 10) => {
+      setIngredientLoading(true);
+      try {
+        const response = await getLowStockIngredients({
+          page,
+          limit: pageSize,
+        });
+        setLowStockIngredients(response?.data || []);
+        if (response?.pagination) {
+          setIngredientPagination({
+            current: response.pagination.page || page,
+            pageSize: response.pagination.limit || pageSize,
+            total: response.pagination.total || 0,
+          });
+        }
+      } catch (error) {
+        messageApi.error('Không thể tải danh sách nguyên liệu sắp hết');
+        console.error('Lỗi khi tải nguyên liệu:', error);
+      } finally {
+        setIngredientLoading(false);
+      }
+    };
+    fetchLowStockIngredients();
+  }, [messageApi]);
 
   // Fetch dữ liệu khi component mount
   useEffect(() => {
@@ -144,12 +201,80 @@ export default function InventoryDashboard() {
     ]
   );
 
-  // Xử lý đóng form
+  // Xử lý cancel form sản phẩm
   const handleFormCancel = useCallback(() => {
     setFormOpen(false);
     form.resetFields();
     setImageList([]);
   }, [form]);
+
+  // Xử lý mở modal chỉnh sửa nguyên liệu
+  const handleEditIngredient = useCallback((ingredient) => {
+    setSelectedIngredient(ingredient);
+    setIngredientFormOpen(true);
+  }, []);
+
+  // Xử lý mở modal cập nhật tồn kho nguyên liệu
+  const handleUpdateIngredientStock = useCallback((ingredient) => {
+    setSelectedIngredient(ingredient);
+    setIngredientStockModalOpen(true);
+  }, []);
+
+  // Xử lý cancel modal form nguyên liệu
+  const handleCloseIngredientFormModal = useCallback(() => {
+    setIngredientFormOpen(false);
+    ingredientForm.resetFields();
+    setSelectedIngredient(null);
+  }, [ingredientForm]);
+
+  // Xử lý cancel modal cập nhật tồn kho
+  const handleCloseIngredientStockModal = useCallback(() => {
+    setIngredientStockModalOpen(false);
+    setSelectedIngredient(null);
+  }, []);
+
+  // Xử lý submit form chỉnh sửa nguyên liệu
+  const handleSubmitIngredientForm = useCallback(
+    async (values) => {
+      const success = await handleIngredientSubmit(values);
+      if (success) {
+        handleCloseIngredientFormModal();
+        // Refresh lại danh sách nguyên liệu sắp hết
+        const response = await getLowStockIngredients({
+          page: ingredientPagination.current,
+          limit: ingredientPagination.pageSize,
+        });
+        setLowStockIngredients(response?.data || []);
+      }
+    },
+    [
+      handleIngredientSubmit,
+      handleCloseIngredientFormModal,
+      ingredientPagination,
+    ]
+  );
+
+  // Xử lý submit cập nhật tồn kho nguyên liệu
+  const handleSubmitIngredientStock = useCallback(
+    async ({ ingredientId, quantity, operation }) => {
+      try {
+        await updateIngredientStock(ingredientId, { quantity, operation });
+        messageApi.success('Cập nhật tồn kho nguyên liệu thành công');
+        handleCloseIngredientStockModal();
+        // Refresh lại danh sách
+        const response = await getLowStockIngredients({
+          page: ingredientPagination.current,
+          limit: ingredientPagination.pageSize,
+        });
+        setLowStockIngredients(response?.data || []);
+      } catch (error) {
+        messageApi.error(
+          error?.response?.data?.message || 'Lỗi cập nhật tồn kho'
+        );
+      }
+    },
+    [messageApi, handleCloseIngredientStockModal, ingredientPagination]
+  );
 
   // Định nghĩa cột cho bảng hết hàng
   const outOfStockColumns = [
@@ -425,7 +550,109 @@ export default function InventoryDashboard() {
     },
   ];
 
-  // Helper function để highlight row critical
+  // Định nghĩa cột cho bảng nguyên liệu sắp hết
+  const lowStockIngredientColumns = [
+    {
+      title: 'Tên nguyên liệu',
+      dataIndex: 'name',
+      key: 'name',
+      flex: 1,
+      render: (text) => (
+        <span style={{ fontWeight: '500', color: '#262626' }}>{text}</span>
+      ),
+    },
+    {
+      title: 'Danh mục',
+      dataIndex: ['categoryId', 'name'],
+      key: 'categoryId',
+      width: 150,
+      render: (text) => (
+        <Tag color="blue" style={{ margin: 0 }}>
+          {text || 'N/A'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Tồn kho',
+      dataIndex: 'stock',
+      key: 'stock',
+      width: 100,
+      render: (stock, record) => {
+        const isLow = stock <= record.lowStockThreshold;
+        return (
+          <Tag
+            color={isLow ? 'red' : 'orange'}
+            icon={<GIcon name={isLow ? 'error' : 'warning'} />}
+            style={{ fontWeight: '600', fontSize: '13px' }}
+          >
+            {stock} {record.unit}
+          </Tag>
+        );
+      },
+      align: 'center',
+    },
+    {
+      title: 'Đơn vị',
+      dataIndex: 'unit',
+      key: 'unit',
+      width: 80,
+      align: 'center',
+      render: (unit) => (
+        <Tag color="default" style={{ margin: 0 }}>
+          {unit}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Ngưỡng cảnh báo',
+      dataIndex: 'lowStockThreshold',
+      key: 'lowStockThreshold',
+      width: 130,
+      render: (threshold) => (
+        <Tag
+          color="cyan"
+          icon={<GIcon name="notifications_active" />}
+          style={{
+            fontWeight: '600',
+            fontSize: '13px',
+            padding: '4px 12px',
+            borderRadius: '6px',
+          }}
+        >
+          {threshold}
+        </Tag>
+      ),
+      align: 'center',
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: 150,
+      fixed: 'right',
+      align: 'center',
+      render: (_, record) => (
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <Tooltip title="Cập nhật tồn kho">
+            <Button
+              type="primary"
+              size="small"
+              icon={<GIcon name="add_circle" />}
+              onClick={() => handleUpdateIngredientStock(record)}
+              className="inventory-action-btn"
+            />
+          </Tooltip>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              size="small"
+              icon={<GIcon name="edit" />}
+              onClick={() => handleEditIngredient(record)}
+              className="inventory-action-btn"
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
   const getRowClassName = (record) => {
     const percentage = record.lowStockThreshold
       ? ((record.stockQuantity / record.lowStockThreshold) * 100).toFixed(0)
@@ -433,16 +660,28 @@ export default function InventoryDashboard() {
     return percentage <= 25 ? 'critical-item' : '';
   };
 
-  // Tính toán thống kê
+  // Tính toán thống kê sản phẩm và nguyên liệu
   const stats = useMemo(
     () => ({
+      // Sản phẩm
       totalOutOfStock: outOfStockPagination.total,
       totalLowStock: lowStockPagination.total,
       criticalItems: lowStockItems.filter(
         (item) => item.stockQuantity / (item.lowStockThreshold || 1) <= 0.25
       ).length,
+      // Nguyên liệu
+      totalLowStockIngredients: ingredientPagination.total,
+      criticalIngredients: lowStockIngredients.filter(
+        (item) => item.stock / (item.lowStockThreshold || 1) <= 0.25
+      ).length,
     }),
-    [outOfStockPagination.total, lowStockPagination.total, lowStockItems]
+    [
+      outOfStockPagination.total,
+      lowStockPagination.total,
+      lowStockItems,
+      ingredientPagination.total,
+      lowStockIngredients,
+    ]
   );
 
   return (
@@ -471,281 +710,79 @@ export default function InventoryDashboard() {
           </h1>
         </div>
         <p style={{ margin: 0, color: '#8c8c8c', fontSize: '14px' }}>
-          Theo dõi và quản lý sản phẩm hết hàng và sắp hết hàng theo thời gian
-          thực
+          Theo dõi và quản lý tồn kho sản phẩm và nguyên liệu trong hệ thống
         </p>
       </div>
 
-      {/* Thống kê tóm tắt */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={8}>
-          <Card
-            hoverable
-            className="inventory-stat-card"
-            style={{
-              background: 'linear-gradient(135deg, #fff5f5 0%, #fff 100%)',
-              borderLeft: '4px solid #ff4d4f',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Statistic
-              title={
-                <span
-                  style={{
-                    fontSize: '14px',
-                    color: '#8c8c8c',
-                    fontWeight: '500',
-                  }}
-                >
-                  Sản phẩm hết hàng
-                </span>
-              }
-              value={stats.totalOutOfStock}
-              prefix={
-                <GIcon name="error_outline" style={{ color: '#ff4d4f' }} />
-              }
-              valueStyle={{
-                color: '#ff4d4f',
-                fontSize: '32px',
-                fontWeight: 'bold',
-              }}
-              suffix={
-                <span style={{ fontSize: '14px', color: '#8c8c8c' }}>món</span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card
-            hoverable
-            className="inventory-stat-card"
-            style={{
-              background: 'linear-gradient(135deg, #fffbf0 0%, #fff 100%)',
-              borderLeft: '4px solid #faad14',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Statistic
-              title={
-                <span
-                  style={{
-                    fontSize: '14px',
-                    color: '#8c8c8c',
-                    fontWeight: '500',
-                  }}
-                >
-                  Sản phẩm sắp hết hàng
-                </span>
-              }
-              value={stats.totalLowStock}
-              prefix={
-                <GIcon name="warning_amber" style={{ color: '#faad14' }} />
-              }
-              valueStyle={{
-                color: '#faad14',
-                fontSize: '32px',
-                fontWeight: 'bold',
-              }}
-              suffix={
-                <span style={{ fontSize: '14px', color: '#8c8c8c' }}>món</span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card
-            hoverable
-            className="inventory-stat-card"
-            style={{
-              background: 'linear-gradient(135deg, #fff7e6 0%, #fff 100%)',
-              borderLeft: '4px solid #ff7a45',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Statistic
-              title={
-                <span
-                  style={{
-                    fontSize: '14px',
-                    color: '#8c8c8c',
-                    fontWeight: '500',
-                  }}
-                >
-                  Mức nguy hiểm (≤25%)
-                </span>
-              }
-              value={stats.criticalItems}
-              prefix={
-                <GIcon name="priority_high" style={{ color: '#ff7a45' }} />
-              }
-              valueStyle={{
-                color: '#ff7a45',
-                fontSize: '32px',
-                fontWeight: 'bold',
-              }}
-              suffix={
-                <span style={{ fontSize: '14px', color: '#8c8c8c' }}>món</span>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Bảng hết hàng */}
-      <Card
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GIcon
-              name="error"
-              style={{ color: '#ff4d4f', fontSize: '20px' }}
-            />
-            <span style={{ fontSize: '16px', fontWeight: '600' }}>
-              Sản phẩm Hết Hàng
-            </span>
-            <Tag color="red" style={{ marginLeft: '8px' }}>
-              {outOfStockPagination.total} món
-            </Tag>
-          </div>
-        }
+      {/* Tabs cho sản phẩm và nguyên liệu */}
+      <Tabs
+        defaultActiveKey="products"
+        type="card"
         style={{
-          marginBottom: '24px',
+          background: '#fff',
           borderRadius: '8px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         }}
-        extra={
-          <span style={{ fontSize: '12px', color: '#8c8c8c' }}>
-            <GIcon name="sync" style={{ marginRight: '4px' }} />
-            Cập nhật tự động
-          </span>
-        }
-      >
-        {outOfStockItems.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div>
-                <p
-                  style={{
-                    fontSize: '16px',
-                    color: '#8c8c8c',
-                    marginBottom: '4px',
-                  }}
-                >
-                  <GIcon
-                    name="check_circle"
-                    style={{ color: '#52c41a', marginRight: '8px' }}
-                  />
-                  Không có sản phẩm hết hàng
-                </p>
-                <p style={{ fontSize: '12px', color: '#bfbfbf' }}>
-                  Tất cả sản phẩm đều có tồn kho
-                </p>
-              </div>
-            }
-            style={{ padding: '40px 0' }}
-          />
-        ) : (
-          <Table
-            columns={outOfStockColumns}
-            dataSource={outOfStockItems.map((item, index) => ({
-              ...item,
-              key: item._id || index,
-            }))}
-            loading={loadingOutOfStock}
-            pagination={{
-              current: outOfStockPagination.current,
-              pageSize: outOfStockPagination.pageSize,
-              total: outOfStockPagination.total,
-              onChange: (page, pageSize) =>
-                fetchOutOfStockProducts(page, pageSize),
-              showSizeChanger: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total} sản phẩm`,
-            }}
-            scroll={{ x: 1000 }}
-            size="middle"
-            style={{ background: '#fff' }}
-          />
-        )}
-      </Card>
-
-      {/* Bảng sắp hết hàng */}
-      <Card
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GIcon
-              name="warning"
-              style={{ color: '#faad14', fontSize: '20px' }}
-            />
-            <span style={{ fontSize: '16px', fontWeight: '600' }}>
-              Sản phẩm Sắp Hết Hàng
-            </span>
-            <Tag color="orange" style={{ marginLeft: '8px' }}>
-              {lowStockPagination.total} món
-            </Tag>
-          </div>
-        }
-        style={{
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        }}
-        extra={
-          <span style={{ fontSize: '12px', color: '#8c8c8c' }}>
-            <GIcon name="info" style={{ marginRight: '4px' }} />
-            Dưới ngưỡng cảnh báo
-          </span>
-        }
-      >
-        {lowStockItems.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div>
-                <p
-                  style={{
-                    fontSize: '16px',
-                    color: '#8c8c8c',
-                    marginBottom: '4px',
-                  }}
-                >
-                  <GIcon
-                    name="check_circle"
-                    style={{ color: '#52c41a', marginRight: '8px' }}
-                  />
-                  Không có sản phẩm sắp hết hàng
-                </p>
-                <p style={{ fontSize: '12px', color: '#bfbfbf' }}>
-                  Tồn kho đều ở mức an toàn
-                </p>
-              </div>
-            }
-            style={{ padding: '40px 0' }}
-          />
-        ) : (
-          <Table
-            columns={lowStockColumns}
-            dataSource={lowStockItems.map((item, index) => ({
-              ...item,
-              key: item._id || index,
-            }))}
-            loading={loadingLowStock}
-            pagination={{
-              current: lowStockPagination.current,
-              pageSize: lowStockPagination.pageSize,
-              total: lowStockPagination.total,
-              onChange: (page, pageSize) =>
-                fetchLowStockProducts(page, pageSize),
-              showSizeChanger: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total} sản phẩm`,
-            }}
-            scroll={{ x: 1000 }}
-            size="middle"
-            style={{ background: '#fff' }}
-            rowClassName={getRowClassName}
-          />
-        )}
-      </Card>
+        items={[
+          {
+            key: 'products',
+            label: (
+              <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                <GIcon name="shopping_bag" style={{ marginRight: '8px' }} />
+                Quản lý Sản Phẩm
+              </span>
+            ),
+            children: (
+              <ProductInventoryTab
+                stats={stats}
+                outOfStockItems={outOfStockItems}
+                outOfStockPagination={outOfStockPagination}
+                loadingOutOfStock={loadingOutOfStock}
+                lowStockItems={lowStockItems}
+                lowStockPagination={lowStockPagination}
+                loadingLowStock={loadingLowStock}
+                fetchOutOfStockProducts={fetchOutOfStockProducts}
+                fetchLowStockProducts={fetchLowStockProducts}
+                outOfStockColumns={outOfStockColumns}
+                lowStockColumns={lowStockColumns}
+                getRowClassName={getRowClassName}
+              />
+            ),
+          },
+          {
+            key: 'ingredients',
+            label: (
+              <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                <GIcon name="restaurant" style={{ marginRight: '8px' }} />
+                Quản lý Nguyên Liệu
+              </span>
+            ),
+            children: (
+              <IngredientInventoryTab
+                stats={stats}
+                lowStockIngredients={lowStockIngredients}
+                ingredientPagination={ingredientPagination}
+                ingredientLoading={ingredientLoading}
+                lowStockIngredientColumns={lowStockIngredientColumns}
+                fetchLowStockIngredients={async (page, pageSize) => {
+                  const response = await getLowStockIngredients({
+                    page,
+                    limit: pageSize,
+                  });
+                  setLowStockIngredients(response?.data || []);
+                  if (response?.pagination) {
+                    setIngredientPagination({
+                      current: response.pagination.page || page,
+                      pageSize: response.pagination.limit || pageSize,
+                      total: response.pagination.total || 0,
+                    });
+                  }
+                }}
+              />
+            ),
+          },
+        ]}
+      />
 
       {/* Modal chỉnh sửa sản phẩm */}
       <ProductFormModal
@@ -758,6 +795,24 @@ export default function InventoryDashboard() {
         onImageChange={({ fileList }) => setImageList(fileList)}
         onSubmit={handleFormSubmit}
         onCancel={handleFormCancel}
+      />
+
+      {/* Modal chỉnh sửa nguyên liệu */}
+      <IngredientFormModal
+        open={ingredientFormOpen}
+        mode="edit"
+        initialValues={selectedIngredient}
+        categories={ingredientCategories}
+        onSubmit={handleSubmitIngredientForm}
+        onCancel={handleCloseIngredientFormModal}
+      />
+
+      {/* Modal cập nhật tồn kho nguyên liệu */}
+      <StockUpdateModal
+        open={ingredientStockModalOpen}
+        ingredient={selectedIngredient}
+        onSubmit={handleSubmitIngredientStock}
+        onCancel={handleCloseIngredientStockModal}
       />
     </div>
   );

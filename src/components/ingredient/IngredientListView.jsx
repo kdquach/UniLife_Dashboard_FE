@@ -25,6 +25,7 @@ export default function IngredientListView({
   onSearch,
   onPaginationChange,
   onAdd,
+  onDetail,
   onEdit,
   onDelete,
   onUpdateStock,
@@ -36,7 +37,7 @@ export default function IngredientListView({
         title: 'Tên nguyên liệu',
         dataIndex: 'name',
         key: 'name',
-        width: 200,
+        width: 150,
         sorter: (a, b) => a.name.localeCompare(b.name),
         render: (name) => <strong>{name}</strong>,
       },
@@ -44,13 +45,13 @@ export default function IngredientListView({
         title: 'Danh mục',
         dataIndex: ['categoryId', 'name'],
         key: 'categoryId',
-        width: 150,
+        width: 100,
       },
       {
         title: 'Tồn kho',
         dataIndex: 'stock',
         key: 'stock',
-        width: 120,
+        width: 100,
         align: 'right',
         render: (stock, record) => {
           const isLow = stock <= record.lowStockThreshold;
@@ -73,7 +74,7 @@ export default function IngredientListView({
         title: 'Ngưỡng cảnh báo',
         dataIndex: 'lowStockThreshold',
         key: 'lowStockThreshold',
-        width: 150,
+        width: 120,
         align: 'right',
         render: (threshold, record) => `${threshold} ${record.unit}`,
       },
@@ -113,6 +114,12 @@ export default function IngredientListView({
             menu={{
               items: [
                 {
+                  key: 'detail',
+                  label: 'Xem chi tiết',
+                  icon: <GIcon name="info" />,
+                  onClick: () => onDetail(record._id),
+                },
+                {
                   key: 'updateStock',
                   label: 'Cập nhật tồn kho',
                   icon: <GIcon name="inventory" />,
@@ -143,7 +150,7 @@ export default function IngredientListView({
         ),
       },
     ],
-    [onEdit, onDelete, onUpdateStock]
+    [onDetail, onEdit, onDelete, onUpdateStock]
   );
 
   return (
