@@ -47,7 +47,11 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.mustChangePassword && !location.pathname.startsWith("/profile")) {
+  if (
+    user?.role === "staff" &&
+    user?.forceChangePassword &&
+    !location.pathname.startsWith("/profile")
+  ) {
     return <Navigate to="/profile?forceChangePassword=1" replace />;
   }
 
