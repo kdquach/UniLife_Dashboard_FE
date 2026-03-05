@@ -30,7 +30,7 @@ import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
 import MenuManagementPage from "@/pages/manager/MenuManagement";
 import CanteenManagementPage from "@/pages/manager/CanteenManagement";
-
+import AuditLogPage from '@/pages/AuditLog';
 import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
@@ -39,6 +39,7 @@ import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
 import NotificationPage from "@/pages/notification/NotificationPage";
+
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -165,6 +166,7 @@ export default function App() {
             <Route path="staff-shifts" element={<ManagerSchedulePage />} />
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationPage />} />
+            <Route path="audit-logs" element={<AuditLogPage />} />
 
             {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />

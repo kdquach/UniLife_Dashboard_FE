@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 const { TextArea } = Input;
 
 // Danh sách đơn vị hợp lệ (phải khớp với BE)
-const VALID_UNITS = ['kg', 'g', 'lít', 'ml', 'cái', 'gói', 'hộp', 'lon'];
+const VALID_UNITS = ['kg', 'g', 'lit', 'lít', 'ml', 'cái', 'gói', 'hộp', 'lon'];
 
 // Modal form thêm/sửa nguyên liệu
 export default function IngredientFormModal({
