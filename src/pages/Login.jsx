@@ -25,7 +25,7 @@ export default function LoginPage() {
 
       setAuth(user, token);
 
-      if (user?.mustChangePassword) {
+      if (user?.role === "staff" && user?.forceChangePassword) {
         message.warning("Bạn cần đổi mật khẩu ngay lần đăng nhập đầu tiên");
         navigate("/profile?forceChangePassword=1");
         return;
