@@ -26,6 +26,7 @@ import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
 import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
 import MenuManagementPage from "@/pages/manager/MenuManagement";
+import CanteenManagementPage from "@/pages/manager/CanteenManagement";
 
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
@@ -104,6 +105,7 @@ export default function App() {
               />
               <Route path="menus" element={<MenuManagementPage />} />
               <Route path="menu-schedules" element={<MenuSchedulesPage />} />
+
             </Route>
 
             {/* COMMON ROUTES */}
@@ -133,7 +135,7 @@ export default function App() {
             />
             <Route
               path="canteens"
-              element={<div>Canteens Page - Coming Soon</div>}
+              element={<CanteenManagementPage />}
             />
             <Route
               path="reports"

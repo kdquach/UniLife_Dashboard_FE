@@ -85,47 +85,6 @@ export default function Sidebar({ collapsed }) {
       icon: <GIcon name="group" />,
       label: 'Người dùng',
     },
-    // {
-    //   key: '/products-group',
-    //   icon: <GIcon name="inventory_2" />,
-    //   label: 'Quản lý sản phẩm',
-    //   children: [
-    //     {
-    //       key: '/products',
-    //       label: 'Danh sách sản phẩm',
-    //     },
-    //     {
-    //       key: '/inventory',
-    //       label: 'Bảng điều khiển tồn kho',
-    //     },
-    //   ],
-    // },
-    {
-      key: '/manager/menu-management-group',
-      icon: <GIcon name="restaurant_menu" />,
-      label: 'Quản lý thực đơn',
-      children: [
-        {
-          key: '/manager/menus',
-          label: 'Danh sách thực đơn',
-        },
-        {
-          key: '/assign-food-menu',
-          label: 'Phân bổ vào thực đơn',
-        },
-      ],
-    },
-    {
-      key: '/manager/menu-scheduling-group',
-      icon: <GIcon name="event_note" />,
-      label: 'Lịch thực đơn',
-      children: [
-        {
-          key: '/manager/menu-schedules',
-          label: 'Lịch áp dụng thực đơn',
-        },
-      ],
-    },
     {
       key: '/categories',
       icon: <GIcon name="category" />,
