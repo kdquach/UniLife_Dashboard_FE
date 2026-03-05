@@ -264,6 +264,11 @@ export default function NotificationCenter() {
         return;
       }
 
+      if (kind === "shift_change_reviewed") {
+        closeAndNavigate(`/staff/schedule?refresh=${refreshToken}`);
+        return;
+      }
+
       if (notification.type === "order" && resolvedMetadata?.orderId) {
         closeAndNavigate("/orders", { state: { orderId: resolvedMetadata.orderId } });
         return;
