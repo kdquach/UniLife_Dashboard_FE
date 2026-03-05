@@ -50,3 +50,5 @@ export const deleteCanteen = async (id) => {
   const response = await api.delete(`/canteens/${id}`);
   return response.data;
 };
+
+// Các API /canteens/owner/* không còn dùng nữa, nên đã lược bỏ
