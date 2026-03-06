@@ -249,6 +249,7 @@ const AuditLogTable = ({ onViewDetail }) => {
 
         <Col xs={24} sm={12} md={6}>
           <Space>
+            <Button onClick={handleResetFilters}>Reset</Button>
             <Button
               icon={<ReloadOutlined />}
               onClick={() =>
@@ -257,7 +258,6 @@ const AuditLogTable = ({ onViewDetail }) => {
             >
               Làm mới
             </Button>
-            <Button onClick={handleResetFilters}>Reset</Button>
           </Space>
         </Col>
       </Row>

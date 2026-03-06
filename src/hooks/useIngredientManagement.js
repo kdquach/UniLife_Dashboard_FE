@@ -21,6 +21,12 @@ export const useIngredientManagement = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
 
+  // State filters
+  const [filters, setFilters] = useState({
+    categoryId: undefined,
+    stockStatus: undefined, // 'all' | 'low' | 'normal'
+  });
+
   // State data
   const [ingredients, setIngredients] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -49,7 +55,7 @@ export const useIngredientManagement = () => {
 
   // Fetch danh sách nguyên liệu
   const fetchIngredients = useCallback(
-    async (page = 1, pageSize = 10, search = '') => {
+    async (page = 1, pageSize = 10, search = '', currentFilters = {}) => {
       setLoading(true);
       try {
         const params = {
@@ -61,9 +67,34 @@ export const useIngredientManagement = () => {
           params.search = search;
         }
 
+        // Áp dụng filters
+        if (currentFilters.categoryId) {
+          params.categoryId = currentFilters.categoryId;
+        }
+
+        // Filter theo tình trạng tồn kho
+        if (currentFilters.stockStatus === 'low') {
+          // Sử dụng endpoint low-stock nếu backend hỗ trợ
+          // Hoặc filter ở client-side sau khi lấy dữ liệu
+          params.lowStock = true;
+        }
+
         const response = await getAllIngredients(params);
 
-        setIngredients(response?.data || []);
+        let filteredData = response?.data || [];
+
+        // Filter ở client-side nếu backend chưa hỗ trợ
+        if (currentFilters.stockStatus === 'low') {
+          filteredData = filteredData.filter(
+            (item) => item.stock <= item.lowStockThreshold
+          );
+        } else if (currentFilters.stockStatus === 'normal') {
+          filteredData = filteredData.filter(
+            (item) => item.stock > item.lowStockThreshold
+          );
+        }
+
+        setIngredients(filteredData);
         setPagination({
           current: response?.pagination?.page || page,
           pageSize: response?.pagination?.limit || pageSize,
@@ -82,21 +113,42 @@ export const useIngredientManagement = () => {
   // Load dữ liệu ban đầu
   useEffect(() => {
     fetchCategories();
-    fetchIngredients();
-  }, [fetchCategories, fetchIngredients]);
+    fetchIngredients(1, 10, '', filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchCategories]);
 
   // Tìm kiếm nguyên liệu
   const handleSearch = useCallback(() => {
-    fetchIngredients(1, pagination.pageSize, searchText);
-  }, [fetchIngredients, pagination.pageSize, searchText]);
+    fetchIngredients(1, pagination.pageSize, searchText, filters);
+  }, [fetchIngredients, pagination.pageSize, searchText, filters]);
 
   // Chuyển trang
   const handlePaginationChange = useCallback(
     (page, pageSize) => {
-      fetchIngredients(page, pageSize, searchText);
+      fetchIngredients(page, pageSize, searchText, filters);
     },
-    [fetchIngredients, searchText]
+    [fetchIngredients, searchText, filters]
   );
+
+  // Thay đổi filter
+  const handleFilterChange = useCallback(
+    (filterKey, value) => {
+      const newFilters = { ...filters, [filterKey]: value };
+      setFilters(newFilters);
+      fetchIngredients(1, pagination.pageSize, searchText, newFilters);
+    },
+    [filters, fetchIngredients, pagination.pageSize, searchText]
+  );
+
+  // Reset filters
+  const handleResetFilters = useCallback(() => {
+    const resetFilters = {
+      categoryId: undefined,
+      stockStatus: undefined,
+    };
+    setFilters(resetFilters);
+    fetchIngredients(1, pagination.pageSize, searchText, resetFilters);
+  }, [fetchIngredients, pagination.pageSize, searchText]);
 
   // Mở modal thêm mới
   const handleAdd = useCallback(() => {
@@ -148,7 +200,12 @@ export const useIngredientManagement = () => {
         }
 
         handleCloseFormModal();
-        fetchIngredients(pagination.current, pagination.pageSize, searchText);
+        fetchIngredients(
+          pagination.current,
+          pagination.pageSize,
+          searchText,
+          filters
+        );
       } catch (error) {
         console.error('Error submitting ingredient:', error);
         messageApi.error(
@@ -159,6 +216,7 @@ export const useIngredientManagement = () => {
     },
     [
       fetchIngredients,
+      filters,
       handleCloseFormModal,
       messageApi,
       modalMode,
@@ -180,7 +238,12 @@ export const useIngredientManagement = () => {
 
         messageApi.success('Cập nhật tồn kho thành công');
         handleCloseStockModal();
-        fetchIngredients(pagination.current, pagination.pageSize, searchText);
+        fetchIngredients(
+          pagination.current,
+          pagination.pageSize,
+          searchText,
+          filters
+        );
       } catch (error) {
         console.error('Error updating stock:', error);
         messageApi.error(
@@ -190,6 +253,7 @@ export const useIngredientManagement = () => {
     },
     [
       fetchIngredients,
+      filters,
       handleCloseStockModal,
       messageApi,
       pagination,
@@ -213,7 +277,8 @@ export const useIngredientManagement = () => {
             fetchIngredients(
               pagination.current,
               pagination.pageSize,
-              searchText
+              searchText,
+              filters
             );
           } catch (error) {
             console.error('Error deleting ingredient:', error);
@@ -224,13 +289,14 @@ export const useIngredientManagement = () => {
         },
       });
     },
-    [fetchIngredients, messageApi, pagination, searchText]
+    [fetchIngredients, filters, messageApi, pagination, searchText]
   );
 
   return {
     contextHolder,
     loading,
     searchText,
+    filters,
     ingredients,
     categories,
     pagination,
@@ -241,6 +307,8 @@ export const useIngredientManagement = () => {
     setSearchText,
     handleSearch,
     handlePaginationChange,
+    handleFilterChange,
+    handleResetFilters,
     handleAdd,
     handleEdit,
     handleUpdateStock,

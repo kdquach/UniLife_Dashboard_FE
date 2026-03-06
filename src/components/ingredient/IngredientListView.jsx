@@ -2,8 +2,11 @@ import { useMemo } from 'react';
 import {
   Button,
   Card,
+  Col,
   Dropdown,
   Input,
+  Row,
+  Select,
   Space,
   Table,
   Tag,
@@ -19,11 +22,15 @@ const { Search } = Input;
 export default function IngredientListView({
   loading,
   items,
+  categories,
   pagination,
   searchText,
+  filters,
   onSearchChange,
   onSearch,
   onPaginationChange,
+  onFilterChange,
+  onResetFilters,
   onAdd,
   onDetail,
   onEdit,
@@ -164,22 +171,66 @@ export default function IngredientListView({
         </div>
       }
       extra={
-        <Space>
+        <Button type="primary" icon={<GIcon name="add" />} onClick={onAdd}>
+          Thêm nguyên liệu
+        </Button>
+      }
+    >
+      {/* Bộ lọc và tìm kiếm */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Col xs={24} sm={12} md={8} lg={6}>
           <Search
             placeholder="Tìm kiếm nguyên liệu..."
             allowClear
             value={searchText}
             onChange={(e) => onSearchChange(e.target.value)}
             onSearch={onSearch}
-            style={{ width: 300 }}
             enterButton
           />
-          <Button type="primary" icon={<GIcon name="add" />} onClick={onAdd}>
-            Thêm nguyên liệu
+        </Col>
+
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Select
+            placeholder="Lọc theo danh mục"
+            allowClear
+            value={filters?.categoryId}
+            onChange={(value) => onFilterChange('categoryId', value)}
+            style={{ width: '100%' }}
+            options={[
+              { label: 'Tất cả danh mục', value: undefined },
+              ...(categories || []).map((cat) => ({
+                label: cat.name,
+                value: cat._id,
+              })),
+            ]}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Select
+            placeholder="Lọc theo tồn kho"
+            allowClear
+            value={filters?.stockStatus}
+            onChange={(value) => onFilterChange('stockStatus', value)}
+            style={{ width: '100%' }}
+            options={[
+              { label: 'Tất cả', value: undefined },
+              { label: 'Sắp hết', value: 'low' },
+              { label: 'Còn nhiều', value: 'normal' },
+            ]}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} md={8} lg={3}>
+          <Button
+            icon={<GIcon name="refresh" />}
+            onClick={onResetFilters}
+            block
+          >
+            Reset
           </Button>
-        </Space>
-      }
-    >
+        </Col>
+      </Row>
       <Table
         loading={loading}
         columns={columns}
