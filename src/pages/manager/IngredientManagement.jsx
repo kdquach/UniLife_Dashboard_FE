@@ -15,6 +15,7 @@ export default function IngredientManagement() {
     contextHolder,
     loading,
     searchText,
+    filters,
     ingredients,
     categories,
     pagination,
@@ -25,6 +26,8 @@ export default function IngredientManagement() {
     setSearchText,
     handleSearch,
     handlePaginationChange,
+    handleFilterChange,
+    handleResetFilters,
     handleAdd,
     handleEdit,
     handleUpdateStock,
@@ -54,11 +57,15 @@ export default function IngredientManagement() {
       <IngredientListView
         loading={loading}
         items={ingredients}
+        categories={categories}
         pagination={pagination}
         searchText={searchText}
+        filters={filters}
         onSearchChange={setSearchText}
         onSearch={handleSearch}
         onPaginationChange={handlePaginationChange}
+        onFilterChange={handleFilterChange}
+        onResetFilters={handleResetFilters}
         onAdd={handleAdd}
         onDetail={handleDetail}
         onEdit={handleEdit}
