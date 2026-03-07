@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -10,6 +10,8 @@ import {
 } from "@dnd-kit/core";
 import ShiftRow from "@/components/schedule/ShiftRow";
 import StaffCard from "@/components/schedule/StaffCard";
+
+const WEEKDAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
 function resolveTarget(over) {
   const data = over?.data?.current;
@@ -41,14 +43,14 @@ function resolveTarget(over) {
 
 function GridBody({ weekDates, shifts, assignments, editable, onRemove, onCardClick }) {
   return (
-    <>
+    <div className="schedule-grid-content">
       <div className="week-header">
         <div />
         {weekDates.map((date) => {
           const isToday = date.isSame(new Date(), "day");
           return (
             <div key={date.format("YYYY-MM-DD")} className={`day-box ${isToday ? "today" : ""}`}>
-              <div>{date.format("ddd")}</div>
+              <div>{WEEKDAY_LABELS[date.day()]}</div>
               <div>{date.format("D/M")}</div>
             </div>
           );
@@ -66,7 +68,7 @@ function GridBody({ weekDates, shifts, assignments, editable, onRemove, onCardCl
           onCardClick={onCardClick}
         />
       ))}
-    </>
+    </div>
   );
 }
 

@@ -44,6 +44,14 @@ export default function StaffCard({
 
   const normalizedStatus = String(staff?.status || "").toLowerCase();
   const showStatusBadge = Boolean(normalizedStatus);
+  const statusLabelMap = {
+    assigned: "đã phân công",
+    scheduled: "đã xếp lịch",
+    draft: "nháp",
+    checked_in: "đã vào ca",
+    checked_out: "đã kết thúc",
+  };
+  const statusLabel = statusLabelMap[normalizedStatus] || normalizedStatus;
 
   return (
     <Tooltip title={staff.name}>
@@ -85,7 +93,7 @@ export default function StaffCard({
           <div className="staff-card-bottom">
             {showStatusBadge && (
               <span className={`staff-status-badge status-${normalizedStatus}`}>
-                {normalizedStatus}
+                {statusLabel}
               </span>
             )}
           </div>

@@ -162,17 +162,20 @@ export default function StaffSchedulePage() {
     );
   }, [selectedShift?.assignmentId, pendingRequests]);
 
-  const isWeekendRequestWindow = useMemo(() => {
-    const day = dayjs().day();
-    return day === 0 || day === 6;
-  }, []);
+  const canRequestByMinDateRule = useMemo(() => {
+    if (!selectedShift?.start) return false;
+    const todayStart = dayjs().startOf("day");
+    const minShiftDate = todayStart.add(2, "day");
+    const shiftDate = dayjs(selectedShift.start).startOf("day");
+    return !shiftDate.isBefore(minShiftDate);
+  }, [selectedShift?.start]);
 
   const canRequestChange = Boolean(
     selectedShift &&
       String(selectedShift.staffId) === String(currentUserId) &&
       ["assigned", "scheduled"].includes(selectedShift.status) &&
       dayjs(selectedShift.start).isAfter(dayjs()) &&
-      isWeekendRequestWindow &&
+      canRequestByMinDateRule &&
       !hasPendingRequest,
   );
 
@@ -206,13 +209,13 @@ export default function StaffSchedulePage() {
     }
   };
 
-  const weekLabel = `${weekStart.format("D MMM")} - ${weekEnd.format("D MMM, YYYY")}`;
+  const weekLabel = `${weekStart.format("DD/MM")} - ${weekEnd.format("DD/MM/YYYY")}`;
 
   return (
     <div className="schedule-page">
       <Space direction="vertical" size={14} style={{ width: "100%" }}>
         <ScheduleHeader
-          title="Staff Schedule"
+          title="Lịch làm việc của tôi"
           weekLabel={weekLabel}
           onPrevWeek={() => setCurrentWeek((prev) => prev.subtract(7, "day"))}
           onToday={() => setCurrentWeek(dayjs().startOf("week"))}
@@ -253,7 +256,7 @@ export default function StaffSchedulePage() {
             {(canRequestChange || hasPendingRequest) && (
               <Button
                 type="primary"
-                disabled={hasPendingRequest || !isWeekendRequestWindow}
+                disabled={hasPendingRequest}
                 onClick={() => {
                   setRequestReason("");
                   setOpenRequestModal(true);
@@ -303,11 +306,9 @@ export default function StaffSchedulePage() {
         okButtonProps={{ loading: submitting }}
         destroyOnHidden
       >
-        {!isWeekendRequestWindow && (
-          <div style={{ marginBottom: 10, color: "var(--text-muted)", fontSize: 12 }}>
-            Chỉ được gửi yêu cầu đổi ca vào Thứ 7 hoặc Chủ nhật.
-          </div>
-        )}
+        <div style={{ marginBottom: 10, color: "var(--text-muted)", fontSize: 12 }}>
+          Chỉ có thể gửi yêu cầu đổi ca cho ca làm cách hiện tại tối thiểu 2 ngày.
+        </div>
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ fontWeight: 600 }}>Ca hiện tại</div>
           <div style={{ color: "var(--text-muted)" }}>

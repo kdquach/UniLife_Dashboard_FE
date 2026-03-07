@@ -2,12 +2,15 @@
   background: #f9fafb;
   border-radius: 16px;
   padding: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .schedule-layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   gap: 16px;
+  align-items: start;
 }
 
 .schedule-container {
@@ -15,14 +18,19 @@
   border-radius: 16px;
   border: 1px solid rgba(15, 23, 42, 0.06);
   padding: 20px;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
   min-width: 0;
+}
+
+.schedule-grid-content {
+  min-width: 920px;
 }
 
 .week-header,
 .shift-row {
   display: grid;
-  grid-template-columns: 120px repeat(7, 1fr);
+  grid-template-columns: minmax(96px, 120px) repeat(7, minmax(108px, 1fr));
   gap: 8px;
 }
 
@@ -66,7 +74,6 @@
 }
 
 .shift-cell {
-  aspect-ratio: 1 / 1;
   border-radius: 12px;
   border: none;
   background: #ffffff;
@@ -76,7 +83,7 @@
   gap: 6px;
   transition: background 0.15s ease;
   position: relative;
-  min-height: auto;
+  min-height: 96px;
 }
 
 .shift-cell:hover {
@@ -119,6 +126,8 @@
   position: relative;
   z-index: auto;
   cursor: move;
+  width: 100%;
+  min-width: 0;
 }
 
 .staff-card-content {
@@ -228,6 +237,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.06);
   border-radius: 14px;
@@ -261,6 +272,7 @@
 .draft-controls-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-soft,
@@ -325,6 +337,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
   width: 100%;
 }
 
@@ -364,6 +378,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  min-width: 0;
 }
 
 .schedule-header-title {
@@ -386,6 +401,7 @@
   gap: 14px;
   align-content: start;
   min-height: 100%;
+  min-width: 0;
 }
 
 .right-panel-tabs {
@@ -393,6 +409,7 @@
   gap: 16px;
   border-bottom: 1px solid rgba(15, 35, 46, 0.08);
   padding-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .right-panel-tab {
@@ -461,6 +478,7 @@
   background: #f8fafc;
   border-radius: 10px;
   padding: 9px 10px;
+  min-width: 0;
 }
 
 .request-item-name {
@@ -481,6 +499,7 @@
 
 .schedule-view-readonly {
   width: 100%;
+  min-width: 0;
 }
 
 .surface-card {
@@ -495,8 +514,43 @@
     grid-template-columns: 1fr;
   }
 
-  .week-header,
-  .shift-row {
-    grid-template-columns: 100px repeat(7, 1fr);
+  .schedule-grid-content {
+    min-width: 860px;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 12px;
+  }
+
+  .schedule-container {
+    padding: 14px;
+  }
+
+  .schedule-grid-content {
+    min-width: 780px;
+  }
+
+  .schedule-header-right {
+    align-items: flex-start;
+  }
+
+  .schedule-header-title {
+    font-size: 15px;
+  }
+
+  .schedule-header-week {
+    font-size: 12px;
+  }
+
+  .draft-controls {
+    align-items: flex-start;
+  }
+
+  .btn-soft,
+  .btn-solid {
+    width: 100%;
+    text-align: center;
   }
 }

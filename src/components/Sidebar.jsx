@@ -168,6 +168,12 @@ export default function Sidebar({ collapsed }) {
     },
     {
       key: "/settings",
+      key: '/audit-logs',
+      icon: <GIcon name="history" />,
+      label: 'Nhật ký hệ thống',
+    },
+    {
+      key: '/settings',
       icon: <GIcon name="settings" />,
       label: "Cài đặt",
     },
@@ -242,6 +248,27 @@ export default function Sidebar({ collapsed }) {
     },
     {
       key: "/categories",
+      key: '/manager/payroll-group',
+      icon: <GIcon name="payments" />,
+      label: 'Quản lý lương',
+      children: [
+        {
+          key: '/manager/payroll',
+          label: 'Bảng lương',
+        },
+        {
+          key: '/manager/salary-rates',
+          label: 'Cấu hình lương',
+        },
+      ],
+    },
+    {
+      key: '/manager/staff',
+      icon: <GIcon name="group" />,
+      label: 'Quản lý nhân viên',
+    },
+    {
+      key: '/categories',
       icon: <GIcon name="category" />,
       label: "Danh mục",
       children: [
@@ -272,6 +299,12 @@ export default function Sidebar({ collapsed }) {
     },
     {
       key: "/canteens",
+      key: '/audit-logs',
+      icon: <GIcon name="history" />,
+      label: 'Nhật ký hệ thống',
+    },
+    {
+      key: '/canteens',
       icon: <GIcon name="storefront" />,
       label: "Canteen",
     },
@@ -280,6 +313,7 @@ export default function Sidebar({ collapsed }) {
   const menuByRole = {
     staff: staffMenuItems,
     manager: managerMenuItems,
+    canteen_owner: managerMenuItems,
     admin: adminMenuItems,
   };
 
@@ -350,7 +384,9 @@ export default function Sidebar({ collapsed }) {
         style={{
           borderRight: 0,
           marginTop: 16,
-          padding: "0 10px",
+          padding: '0 10px',
+          maxHeight: 'calc(100vh - 120px)',
+          overflow: 'auto',
         }}
       />
     </Sider>
