@@ -1,37 +1,39 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import viVN from 'antd/locale/vi_VN';
-import { theme } from '@/config/theme';
-import { useAuthStore } from '@/store/useAuthStore';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import viVN from "antd/locale/vi_VN";
+import { theme } from "@/config/theme";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Layouts
-import DashboardLayout from '@/layouts/DashboardLayout';
+import DashboardLayout from "@/layouts/DashboardLayout";
 
 // Pages
-import LoginPage from '@/pages/Login';
-import DashboardPage from '@/pages/Dashboard';
+import LoginPage from "@/pages/Login";
+import DashboardPage from "@/pages/Dashboard";
 
 // Staff pages
-import StaffSchedulePage from '@/pages/staff/StaffSchedule';
-import StaffAttendancePage from '@/pages/staff/StaffAttendance';
-import PendingPickupOrdersPage from '@/pages/staff/PendingPickupOrders';
-import QRScanScreenPage from '@/pages/staff/QRScanScreen';
-import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
+import StaffSchedulePage from "@/pages/staff/StaffSchedule";
+import StaffAttendancePage from "@/pages/staff/StaffAttendance";
+import PendingPickupOrdersPage from "@/pages/staff/PendingPickupOrders";
+import QRScanScreenPage from "@/pages/staff/QRScanScreen";
+import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
 
 // Manager pages
-import ManagerSchedulePage from '@/pages/manager/ManagerSchedule';
-import ShiftRequestsManagementPage from '@/pages/manager/ShiftRequestsManagement';
-import ProductManagementPage from '@/pages/manager/ProductManagement';
-import IngredientManagementPage from '@/pages/manager/IngredientManagement';
-import InventoryDashboardPage from '@/pages/manager/InventoryDashboard';
-import AssignFoodToMenuPage from '@/pages/manager/AssignFoodToMenu';
-import MenuSchedulesPage from '@/pages/manager/MenuSchedules';
-import MenuManagementPage from '@/pages/manager/MenuManagement';
+import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
+import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
+import ProductManagementPage from "@/pages/manager/ProductManagement";
+import IngredientManagementPage from "@/pages/manager/IngredientManagement";
+import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
+import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
+import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
+import MenuManagementPage from "@/pages/manager/MenuManagement";
+import VoucherManagementPage from "@/pages/manager/VoucherManagement";
+import VoucherDetailPage from "@/pages/manager/VoucherDetailPage";
 
-import ProfilePage from '@/pages/Profile';
-import IngredientCategoriesPage from '@/pages/IngredientCategories';
-import ProductCategoriesPage from '@/pages/ProductCategories';
-import NotificationPage from '@/pages/notification/NotificationPage';
+import ProfilePage from "@/pages/Profile";
+import IngredientCategoriesPage from "@/pages/IngredientCategories";
+import ProductCategoriesPage from "@/pages/ProductCategories";
+import NotificationPage from "@/pages/notification/NotificationPage";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -102,6 +104,8 @@ export default function App() {
                 element={<ShiftRequestsManagementPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route path="vouchers" element={<VoucherManagementPage />} />
+              <Route path="vouchers/:id" element={<VoucherDetailPage />} />
               <Route
                 path="ingredients"
                 element={<IngredientManagementPage />}
@@ -126,6 +130,8 @@ export default function App() {
               element={<ProductCategoriesPage />}
             />
             <Route path="products" element={<ProductManagementPage />} />
+            <Route path="vouchers" element={<VoucherManagementPage />} />
+            <Route path="vouchers/:id" element={<VoucherDetailPage />} />
             <Route path="staff-shifts" element={<ManagerSchedulePage />} />
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationPage />} />
