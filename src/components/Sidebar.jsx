@@ -168,7 +168,6 @@ export default function Sidebar({ collapsed }) {
     },
     {
       key: "/settings",
-      key: '/audit-logs',
       icon: <GIcon name="history" />,
       label: 'Nhật ký hệ thống',
     },
@@ -191,8 +190,8 @@ export default function Sidebar({ collapsed }) {
       label: "Quản lý ca làm việc",
       children: [
         {
-          key: "/manager/schedule",
-          label: "Lịch làm việc",
+          key: "/manager/schedule-builder",
+          label: "Lập lịch làm việc",
         },
         {
           key: "/manager/shift-requests",
@@ -247,7 +246,6 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: "/categories",
       key: '/manager/payroll-group',
       icon: <GIcon name="payments" />,
       label: 'Quản lý lương',
@@ -268,7 +266,7 @@ export default function Sidebar({ collapsed }) {
       label: 'Quản lý nhân viên',
     },
     {
-      key: '/categories',
+      key: '/manager/categories-group',
       icon: <GIcon name="category" />,
       label: "Danh mục",
       children: [
@@ -298,7 +296,6 @@ export default function Sidebar({ collapsed }) {
       label: "Báo cáo",
     },
     {
-      key: "/canteens",
       key: '/audit-logs',
       icon: <GIcon name="history" />,
       label: 'Nhật ký hệ thống',

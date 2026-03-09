@@ -42,11 +42,6 @@ import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
 import StaffManagementPage from "@/pages/manager/StaffManagement";
-import ProfilePage from "@/pages/Profile";
-import IngredientCategoriesPage from "@/pages/IngredientCategories";
-import ProductCategoriesPage from "@/pages/ProductCategories";
-import NotificationPage from "@/pages/notification/NotificationPage";
-
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -134,9 +129,13 @@ export default function App() {
             <Route path="manager">
               <Route
                 index
-                element={<Navigate to="/manager/schedule" replace />}
+                element={<Navigate to="/manager/schedule-builder" replace />}
               />
-              <Route path="schedule" element={<ManagerSchedulePage />} />
+              <Route
+                path="schedule"
+                element={<Navigate to="/manager/schedule-builder" replace />}
+              />
+              <Route path="schedule-builder" element={<ManagerSchedulePage />} />
               <Route
                 path="shift-requests"
                 element={<ShiftRequestsManagementPage />}

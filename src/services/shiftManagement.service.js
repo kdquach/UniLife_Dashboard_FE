@@ -16,13 +16,27 @@ export async function assignShiftToStaff(payload) {
 }
 
 export async function bulkSaveShiftAssignments(payload) {
-  const response = await api.post("/shifts/assignments/bulk-save", payload);
+  const response = await api.post("/shifts/draft/save", payload);
   return response.data?.data || [];
 }
 
 export async function publishShiftAssignments(payload = {}) {
-  const response = await api.post("/shifts/assignments/publish", payload);
+  const response = await api.post("/shifts/draft/publish", payload);
   return response.data?.data || [];
+}
+
+export async function getManagerDraftAssignments(params = {}) {
+  const response = await api.get("/shifts/draft", { params });
+  const data = Array.isArray(response.data?.data) ? response.data.data : [];
+  return data.map((item) => ({
+    ...item,
+    status: "draft",
+  }));
+}
+
+export async function cancelManagerDraft(params = {}) {
+  const response = await api.delete("/shifts/draft/cancel", { params });
+  return response.data?.data || {};
 }
 
 export async function removeAssignment(assignmentId) {
