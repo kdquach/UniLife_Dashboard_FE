@@ -50,8 +50,8 @@ function GridBody({ weekDates, shifts, assignments, editable, onRemove, onCardCl
           const isToday = date.isSame(new Date(), "day");
           return (
             <div key={date.format("YYYY-MM-DD")} className={`day-box ${isToday ? "today" : ""}`}>
-              <div>{WEEKDAY_LABELS[date.day()]}</div>
-              <div>{date.format("D/M")}</div>
+              <div className="day-box-weekday">{WEEKDAY_LABELS[date.day()]}</div>
+              <div className="day-box-date">{date.format("D/M")}</div>
             </div>
           );
         })}
@@ -79,6 +79,7 @@ function DragOverlayContent({ activeData }) {
     <StaffCard
       cardId={activeData.id}
       staff={activeData.staff}
+      showAvatar={false}
       draggable={false}
       hideAccent={false}
       onClick={() => {}}
