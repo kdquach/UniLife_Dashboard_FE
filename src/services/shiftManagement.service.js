@@ -15,17 +15,17 @@ export async function assignShiftToStaff(payload) {
   return response.data?.data?.assignment;
 }
 
-export async function bulkSaveShiftAssignments(payload) {
+export async function saveShiftDraft(payload) {
   const response = await api.post("/shifts/draft/save", payload);
   return response.data?.data || [];
 }
 
-export async function publishShiftAssignments(payload = {}) {
+export async function publishShiftDraft(payload = {}) {
   const response = await api.post("/shifts/draft/publish", payload);
   return response.data?.data || [];
 }
 
-export async function getManagerDraftAssignments(params = {}) {
+export async function getShiftDraft(params = {}) {
   const response = await api.get("/shifts/draft", { params });
   const data = Array.isArray(response.data?.data) ? response.data.data : [];
   return data.map((item) => ({
@@ -34,7 +34,7 @@ export async function getManagerDraftAssignments(params = {}) {
   }));
 }
 
-export async function cancelManagerDraft(params = {}) {
+export async function cancelShiftDraft(params = {}) {
   const response = await api.delete("/shifts/draft/cancel", { params });
   return response.data?.data || {};
 }

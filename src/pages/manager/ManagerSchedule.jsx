@@ -7,13 +7,13 @@ import ScheduleHeader from "@/components/schedule/ScheduleHeader";
 import DraftControls from "@/components/schedule/DraftControls";
 import StaffPlanningPanel from "@/components/schedule/StaffPlanningPanel";
 import {
-  bulkSaveShiftAssignments,
-  cancelManagerDraft,
+  cancelShiftDraft,
   getManagerAssignments,
-  getManagerDraftAssignments,
+  getShiftDraft,
   getManagerShifts,
   getShiftStaffList,
-  publishShiftAssignments,
+  publishShiftDraft,
+  saveShiftDraft,
 } from "@/services/shiftManagement.service";
 import "@/styles/schedule-shared.css";
 
@@ -294,7 +294,7 @@ export default function ManagerSchedulePage() {
 
     const [shiftData, draftData, publishedData] = await Promise.all([
       getManagerShifts({ status: "active", limit: 200, page: 1, canteenId }),
-      getManagerDraftAssignments({
+      getShiftDraft({
         weekStart: startDate,
       }),
       getManagerAssignments({
@@ -478,7 +478,7 @@ export default function ManagerSchedulePage() {
 
     setSavingDraft(true);
     try {
-      await bulkSaveShiftAssignments({
+      await saveShiftDraft({
         weekStart: formatDateISO(weekStart),
         assignments: assignmentPayload,
       });
@@ -496,7 +496,7 @@ export default function ManagerSchedulePage() {
   const handleCancelDraft = async () => {
     setCancelingDraft(true);
     try {
-      await cancelManagerDraft({ weekStart: formatDateISO(weekStart) });
+      await cancelShiftDraft({ weekStart: formatDateISO(weekStart) });
       setMode("published");
       await refreshAll();
       message.success("Đã hủy nháp tuần hiện tại");
@@ -514,7 +514,7 @@ export default function ManagerSchedulePage() {
         await handleSaveDraft({ silent: true });
       }
 
-      await publishShiftAssignments({
+      await publishShiftDraft({
         weekStart: formatDateISO(weekStart),
       });
 
