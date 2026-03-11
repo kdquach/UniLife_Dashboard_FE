@@ -43,7 +43,7 @@ function normalizeAssignment(assignment) {
 }
 
 export async function getMyStaffShifts(params = {}) {
-  const response = await api.get("/shifts/my-assignments", { params });
+  const response = await api.get("/staff-shifts/my", { params });
   const assignments = Array.isArray(response?.data?.data) ? response.data.data : [];
   return assignments.map(normalizeAssignment);
 }

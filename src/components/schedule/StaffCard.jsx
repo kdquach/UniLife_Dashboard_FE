@@ -45,11 +45,12 @@ export default function StaffCard({
   const normalizedStatus = String(staff?.status || "").toLowerCase();
   const showStatusBadge = Boolean(normalizedStatus);
   const statusAccentMap = {
-    scheduled: "#f59e0b",
+    scheduled: "#64748b",
     checked_in: "#16a34a",
     checked_out: "#2563eb",
     absent: "#ef4444",
     draft: "#fb923c",
+    assigned: "#94a3b8",
   };
   const statusLabelMap = {
     assigned: "đã phân công",
