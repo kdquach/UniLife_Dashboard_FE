@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { message, Space } from "antd";
+import { Modal, message, Space } from "antd";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/store/useAuthStore";
 import ScheduleGrid from "@/components/schedule/ScheduleGrid";
@@ -7,9 +7,8 @@ import ScheduleHeader from "@/components/schedule/ScheduleHeader";
 import DraftControls from "@/components/schedule/DraftControls";
 import StaffPlanningPanel from "@/components/schedule/StaffPlanningPanel";
 import {
-  cancelShiftDraft,
+  getManagerDraftAssignments,
   getManagerAssignments,
-  getShiftDraft,
   getManagerShifts,
   getShiftStaffList,
   publishShiftDraft,
@@ -40,7 +39,7 @@ const SHIFT_TIME_SLOTS = {
 };
 
 const PUBLISHED_STATUS_META = {
-  scheduled: { label: "Chưa vào ca", color: "#f59e0b" },
+  scheduled: { label: "Chưa vào ca", color: "#64748b" },
   checked_in: { label: "Đang làm việc", color: "#16a34a" },
   checked_out: { label: "Đã hoàn thành", color: "#2563eb" },
   absent: { label: "Vắng mặt", color: "#ef4444" },
@@ -104,6 +103,20 @@ function buildSlotRows(shifts = []) {
   return rows;
 }
 
+function resolvePublishedStatus(assignment = {}) {
+  const rawStatus = String(assignment?.status || "").toLowerCase();
+
+  if (["checked_in", "checked_out", "absent", "draft", "assigned", "scheduled"].includes(rawStatus)) {
+    return rawStatus === "assigned" ? "scheduled" : rawStatus;
+  }
+
+  // Hỗ trợ dữ liệu legacy khi trạng thái chưa đồng bộ hoàn toàn.
+  if (assignment?.checkOutTime) return "checked_out";
+  if (assignment?.checkInTime) return "checked_in";
+
+  return "scheduled";
+}
+
 function normalizeAssignments(assignments, shiftRows) {
   const rowIds = new Set(shiftRows.map((item) => item.id));
   const rowBySlot = shiftRows.reduce((acc, item) => {
@@ -114,9 +127,6 @@ function normalizeAssignments(assignments, shiftRows) {
   const assignmentsById = {};
 
   for (const assignment of assignments) {
-    if (!["assigned", "draft", "scheduled", "checked_in", "checked_out", "absent"].includes(assignment?.status)) {
-      continue;
-    }
 
     const dateKey = dayjs(assignment.date).format("YYYY-MM-DD");
     const shift = assignment.shiftId || {};
@@ -150,7 +160,7 @@ function normalizeAssignments(assignments, shiftRows) {
     });
     if (existed) continue;
 
-    const normalizedStatus = assignment.status === "assigned" ? "scheduled" : assignment.status;
+    const normalizedStatus = resolvePublishedStatus(assignment);
 
     assignmentsById[assignmentId] = {
       id: assignmentId,
@@ -217,6 +227,7 @@ export default function ManagerSchedulePage() {
   const [cancelingDraft, setCancelingDraft] = useState(false);
   const [mode, setMode] = useState("published");
   const [hasDraftData, setHasDraftData] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
 
   const [shiftsRaw, setShiftsRaw] = useState([]);
   const [slots, setSlots] = useState({});
@@ -289,34 +300,37 @@ export default function ManagerSchedulePage() {
       throw new Error("Tài khoản manager chưa được gán canteen. Vui lòng liên hệ admin.");
     }
 
-    const startDate = formatDateISO(weekStart);
-    const endDate = formatDateISO(weekEnd);
+    const weekStartDate = formatDateISO(weekStart);
 
-    const [shiftData, draftData, publishedData] = await Promise.all([
+    const [shiftData, publishedData, draftData] = await Promise.all([
       getManagerShifts({ status: "active", limit: 200, page: 1, canteenId }),
-      getShiftDraft({
-        weekStart: startDate,
-      }),
       getManagerAssignments({
-        startDate,
-        endDate,
-        limit: 1000,
-        page: 1,
+        weekStart: weekStartDate,
+        canteenId,
+      }),
+      getManagerDraftAssignments({
+        weekStart: weekStartDate,
+        canteenId,
       }),
     ]);
 
     const rows = buildSlotRows(shiftData);
-    const normalizedDraft = normalizeAssignments(draftData, rows);
     const normalizedPublished = normalizeAssignments(publishedData, rows);
+    const normalizedDraft = normalizeAssignments(draftData?.assignments || [], rows);
+
+    const nextDraftId = draftData?.schedule?._id || null;
+    const hasServerDraft = Boolean(nextDraftId);
 
     const displayData = targetMode === "draft"
-      ? (draftData.length ? normalizedDraft : normalizedPublished)
+      ? (hasServerDraft ? normalizedDraft : normalizedPublished)
       : normalizedPublished;
+
+    setCurrentDraftId(nextDraftId);
+    setHasDraftData(hasServerDraft || targetMode === "draft");
 
     setShiftsRaw(shiftData);
     setSlots(displayData.slots);
     setAssignmentsById(displayData.assignmentsById);
-    setHasDraftData(draftData.length > 0);
     setDraftChanges(false);
   };
 
@@ -473,18 +487,40 @@ export default function ManagerSchedulePage() {
 
     if (!assignmentPayload.length) {
       if (!silent) message.info("Không có thay đổi để lưu");
-      return;
+      return null;
     }
 
     setSavingDraft(true);
     try {
-      await saveShiftDraft({
+      const result = await saveShiftDraft({
         weekStart: formatDateISO(weekStart),
         assignments: assignmentPayload,
+        canteenId,
       });
 
-      await refreshAll();
-      if (!silent) message.success("Lưu nháp thành công");
+      const schedule = result?.schedule || null;
+      const savedAssignments = Number(result?.savedAssignments || 0);
+      const ignoredAssignments = Number(result?.ignoredAssignments || 0);
+
+      setCurrentDraftId(schedule?._id || null);
+      setHasDraftData(true);
+      setDraftChanges(false);
+
+      if (!silent) {
+        if (ignoredAssignments > 0) {
+          message.warning(
+            `Lưu nháp thành công: ${savedAssignments} phân công hợp lệ, ${ignoredAssignments} phân công đã qua hoặc đã bắt đầu được bỏ qua.`,
+          );
+        } else {
+          message.success(`Lưu nháp thành công (${savedAssignments} phân công)`);
+        }
+      }
+
+      return {
+        schedule,
+        savedAssignments,
+        ignoredAssignments,
+      };
     } catch (error) {
       message.error(error?.response?.data?.message || "Không thể lưu nháp");
       throw error;
@@ -496,10 +532,11 @@ export default function ManagerSchedulePage() {
   const handleCancelDraft = async () => {
     setCancelingDraft(true);
     try {
-      await cancelShiftDraft({ weekStart: formatDateISO(weekStart) });
+      setCurrentDraftId(null);
+      setHasDraftData(false);
       setMode("published");
       await refreshAll();
-      message.success("Đã hủy nháp tuần hiện tại");
+      message.success("Đã hủy chỉnh sửa nháp");
     } catch (error) {
       message.error(error?.response?.data?.message || "Không thể hủy nháp");
     } finally {
@@ -510,17 +547,39 @@ export default function ManagerSchedulePage() {
   const handlePublish = async () => {
     setPublishing(true);
     try {
+      let draftId = currentDraftId;
+
       if (draftChanges) {
-        await handleSaveDraft({ silent: true });
+        const saveResult = await handleSaveDraft({ silent: true });
+        draftId = saveResult?.schedule?._id || draftId;
+
+        if (Number(saveResult?.ignoredAssignments || 0) > 0) {
+          message.info(
+            `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
+          );
+        }
+      }
+
+      if (!draftId) {
+        const saveResult = await handleSaveDraft({ silent: true });
+        draftId = saveResult?.schedule?._id || null;
+
+        if (Number(saveResult?.ignoredAssignments || 0) > 0) {
+          message.info(
+            `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
+          );
+        }
       }
 
       await publishShiftDraft({
-        weekStart: formatDateISO(weekStart),
+        scheduleId: draftId,
       });
 
+      setCurrentDraftId(null);
+      setHasDraftData(false);
       setMode("published");
       await refreshAll();
-      message.success("Phát hành lịch tuần thành công");
+      message.success("Phát hành lịch tuần thành công. Nhân sự sẽ nhận thông báo lịch mới.");
     } catch (error) {
       message.error(error?.response?.data?.message || "Không thể phát hành lịch");
     } finally {
@@ -528,11 +587,26 @@ export default function ManagerSchedulePage() {
     }
   };
 
-  const handleSwitchMode = (nextMode) => {
+  const confirmDiscardDraftChanges = () => {
+    return new Promise((resolve) => {
+      Modal.confirm({
+        title: "Bỏ thay đổi chưa lưu?",
+        content: "Bạn đang có thay đổi ở bản nháp. Nếu chuyển tab, các thay đổi chưa lưu sẽ bị mất.",
+        okText: "Tiếp tục chuyển",
+        cancelText: "Ở lại",
+        okType: "primary",
+        centered: true,
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  };
+
+  const handleSwitchMode = async (nextMode) => {
     if (nextMode === mode) return;
 
     if (mode === "draft" && draftChanges) {
-      const accepted = window.confirm("Bạn có thay đổi chưa lưu. Chuyển chế độ sẽ bỏ các thay đổi này. Tiếp tục?");
+      const accepted = await confirmDiscardDraftChanges();
       if (!accepted) return;
     }
 
@@ -540,6 +614,7 @@ export default function ManagerSchedulePage() {
   };
 
   const handleEnterEditMode = () => {
+    setHasDraftData(true);
     handleSwitchMode("draft");
   };
 
