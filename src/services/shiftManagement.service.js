@@ -85,8 +85,8 @@ export async function reviewShiftChangeRequest(requestId, status) {
 
 export async function createShiftChangeRequest(payload) {
   const response = await api.post("/shift-change-requests", {
-    type: payload?.type || "drop",
-    ...payload,
+    staffShiftId: payload?.staffShiftId,
+    reason: payload?.reason,
   });
   return response.data?.data?.request;
 }
