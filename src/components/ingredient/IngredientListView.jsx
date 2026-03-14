@@ -70,13 +70,13 @@ export default function IngredientListView({
         },
         sorter: (a, b) => a.stock - b.stock,
       },
-      {
-        title: 'Đơn vị',
-        dataIndex: 'unit',
-        key: 'unit',
-        width: 80,
-        align: 'center',
-      },
+      // {
+      //   title: 'Đơn vị',
+      //   dataIndex: 'unit',
+      //   key: 'unit',
+      //   width: 80,
+      //   align: 'center',
+      // },
       {
         title: 'Ngưỡng cảnh báo',
         dataIndex: 'lowStockThreshold',
