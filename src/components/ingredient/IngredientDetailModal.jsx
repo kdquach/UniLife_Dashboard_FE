@@ -107,6 +107,30 @@ export default function IngredientDetailModal({
               {ingredient.unit}
             </Descriptions.Item>
 
+            <Descriptions.Item label="Giá vốn / đơn vị nhập">
+              {Number(ingredient.costPrice || 0).toLocaleString('vi-VN')} đ /{' '}
+              {ingredient.unit}
+            </Descriptions.Item>
+
+            <Descriptions.Item label="Đơn vị chuẩn quy đổi">
+              {ingredient.standardUnit || 'Không xác định'}
+            </Descriptions.Item>
+
+            <Descriptions.Item label="Hệ số quy đổi">
+              1 {ingredient.unit} ={' '}
+              {Number(ingredient.standardUnitFactor || 1).toLocaleString(
+                'vi-VN'
+              )}{' '}
+              {ingredient.standardUnit || ingredient.unit}
+            </Descriptions.Item>
+
+            <Descriptions.Item label="Chi phí / đơn vị chuẩn">
+              {Number(ingredient.costPerStandardUnit || 0).toLocaleString(
+                'vi-VN'
+              )}{' '}
+              đ / {ingredient.standardUnit || ingredient.unit}
+            </Descriptions.Item>
+
             <Descriptions.Item label="Ngưỡng cảnh báo">
               {ingredient.lowStockThreshold} {ingredient.unit}
             </Descriptions.Item>
