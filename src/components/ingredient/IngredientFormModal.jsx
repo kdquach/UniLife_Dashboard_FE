@@ -1,10 +1,10 @@
 import { Modal, Form, Input, InputNumber, Select, Switch, message } from 'antd';
 import { useEffect } from 'react';
-
-const { TextArea } = Input;
-
-// Danh sách đơn vị hợp lệ (phải khớp với BE)
-const VALID_UNITS = ['kg', 'g', 'lit', 'lít', 'ml', 'cái', 'gói', 'hộp', 'lon'];
+import {
+  VALID_INGREDIENT_UNITS,
+  getDefaultStandardConfig,
+  normalizeUnit,
+} from '@/utils/ingredientCost.util';
 
 // Modal form thêm/sửa nguyên liệu
 export default function IngredientFormModal({
@@ -18,19 +18,78 @@ export default function IngredientFormModal({
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const unitValue = Form.useWatch('unit', form);
+  const costPriceValue = Form.useWatch('costPrice', form);
+  const standardUnitFactorValue = Form.useWatch('standardUnitFactor', form);
+
   // Reset form khi mở/đóng modal hoặc thay đổi initialValues
   useEffect(() => {
     if (open) {
       if (mode === 'edit' && initialValues) {
+        const normalizedUnit = normalizeUnit(initialValues.unit);
+        const defaultStandard = getDefaultStandardConfig(normalizedUnit);
+
         form.setFieldsValue({
           ...initialValues,
+          unit: normalizedUnit,
+          standardUnit: normalizeUnit(
+            initialValues.standardUnit || defaultStandard.standardUnit
+          ),
+          standardUnitFactor:
+            Number(initialValues.standardUnitFactor) > 0
+              ? Number(initialValues.standardUnitFactor)
+              : defaultStandard.standardUnitFactor,
+          costPrice: Number(initialValues.costPrice || 0),
+          costPerStandardUnit: Number(initialValues.costPerStandardUnit || 0),
           categoryId: initialValues.categoryId?._id || initialValues.categoryId,
         });
       } else {
         form.resetFields();
+        form.setFieldsValue({
+          standardUnit: 'g',
+          standardUnitFactor: 1,
+          costPrice: 0,
+          costPerStandardUnit: 0,
+        });
       }
     }
   }, [open, mode, initialValues, form]);
+
+  // Tự động cập nhật đơn vị chuẩn/hệ số theo đơn vị chính khi chưa chỉnh tay
+  useEffect(() => {
+    if (!open || !unitValue || mode !== 'create') {
+      return;
+    }
+
+    const defaultConfig = getDefaultStandardConfig(unitValue);
+    const isStandardUnitTouched = form.isFieldTouched('standardUnit');
+    const isStandardFactorTouched = form.isFieldTouched('standardUnitFactor');
+
+    if (!isStandardUnitTouched) {
+      form.setFieldValue('standardUnit', defaultConfig.standardUnit);
+    }
+
+    if (!isStandardFactorTouched) {
+      form.setFieldValue(
+        'standardUnitFactor',
+        defaultConfig.standardUnitFactor
+      );
+    }
+  }, [form, mode, open, unitValue]);
+
+  // Tự động tính chi phí/đơn vị chuẩn từ giá vốn và hệ số quy đổi
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const costPrice = Number(costPriceValue || 0);
+    const factor = Number(standardUnitFactorValue || 0);
+
+    if (Number.isFinite(costPrice) && Number.isFinite(factor) && factor > 0) {
+      form.setFieldValue('costPerStandardUnit', costPrice / factor);
+    }
+  }, [costPriceValue, form, open, standardUnitFactorValue]);
 
   // Xử lý submit form
   const handleOk = async () => {
@@ -72,6 +131,10 @@ export default function IngredientFormModal({
             stock: 0,
             lowStockThreshold: 10,
             isActive: true,
+            costPrice: 0,
+            standardUnit: 'g',
+            standardUnitFactor: 1,
+            costPerStandardUnit: 0,
           }}
         >
           <Form.Item
@@ -113,7 +176,7 @@ export default function IngredientFormModal({
           >
             <Select
               placeholder="Chọn đơn vị"
-              options={VALID_UNITS.map((unit) => ({
+              options={VALID_INGREDIENT_UNITS.map((unit) => ({
                 value: unit,
                 label: unit,
               }))}
@@ -139,6 +202,77 @@ export default function IngredientFormModal({
               tooltip="Cảnh báo khi tồn kho <= ngưỡng này"
             >
               <InputNumber min={0} style={{ width: '100%' }} placeholder="10" />
+            </Form.Item>
+          </div>
+
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+          >
+            <Form.Item
+              name="costPrice"
+              label="Giá vốn theo đơn vị nhập"
+              tooltip="Ví dụ: 80.000 đ / 1kg"
+              rules={[{ required: true, message: 'Vui lòng nhập giá vốn' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="đ"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="standardUnit"
+              label="Đơn vị chuẩn"
+              rules={[
+                { required: true, message: 'Vui lòng chọn đơn vị chuẩn' },
+              ]}
+            >
+              <Select
+                placeholder="Chọn đơn vị chuẩn"
+                options={[
+                  { value: 'g', label: 'g' },
+                  { value: 'ml', label: 'ml' },
+                  { value: 'cái', label: 'cái' },
+                ]}
+              />
+            </Form.Item>
+          </div>
+
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+          >
+            <Form.Item
+              name="standardUnitFactor"
+              label="Hệ số quy đổi"
+              tooltip="1 đơn vị nhập = bao nhiêu đơn vị chuẩn"
+              rules={[
+                {
+                  required: true,
+                  message: 'Vui lòng nhập hệ số quy đổi',
+                },
+              ]}
+            >
+              <InputNumber
+                min={0.000001}
+                style={{ width: '100%' }}
+                placeholder="1"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="costPerStandardUnit"
+              label="Chi phí / đơn vị chuẩn"
+              tooltip="Tự tính từ Giá vốn và Hệ số quy đổi"
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="đ"
+                disabled
+              />
             </Form.Item>
           </div>
 

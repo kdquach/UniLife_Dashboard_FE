@@ -86,6 +86,28 @@ export default function IngredientListView({
         render: (threshold, record) => `${threshold} ${record.unit}`,
       },
       {
+        title: 'Giá vốn / đơn vị nhập',
+        dataIndex: 'costPrice',
+        key: 'costPrice',
+        width: 170,
+        align: 'right',
+        render: (value, record) =>
+          `${Number(value || 0).toLocaleString('vi-VN')} đ / ${record.unit}`,
+        sorter: (a, b) => Number(a.costPrice || 0) - Number(b.costPrice || 0),
+      },
+      {
+        title: 'Chi phí / đơn vị chuẩn',
+        dataIndex: 'costPerStandardUnit',
+        key: 'costPerStandardUnit',
+        width: 180,
+        align: 'right',
+        render: (value, record) =>
+          `${Number(value || 0).toLocaleString('vi-VN')} đ / ${record.standardUnit || '-'}`,
+        sorter: (a, b) =>
+          Number(a.costPerStandardUnit || 0) -
+          Number(b.costPerStandardUnit || 0),
+      },
+      {
         title: 'Trạng thái',
         dataIndex: 'isActive',
         key: 'isActive',
