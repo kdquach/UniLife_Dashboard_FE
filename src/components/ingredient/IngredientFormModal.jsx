@@ -247,6 +247,7 @@ export default function IngredientFormModal({
               name="standardUnitFactor"
               label="Hệ số quy đổi"
               tooltip="1 đơn vị nhập = bao nhiêu đơn vị chuẩn"
+              extra="Ví dụ: 1kg = 1000g thì nhập 1000; 1 lít = 1000ml thì nhập 1000; 1 cái = 1 cái thì nhập 1"
               rules={[
                 {
                   required: true,
