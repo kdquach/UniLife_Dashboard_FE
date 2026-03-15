@@ -27,17 +27,25 @@ import QRScanScreenPage from '@/pages/staff/QRScanScreen';
 import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
 
 // Manager pages
-import ManagerSchedulePage from '@/pages/manager/ManagerSchedule';
-import ShiftRequestsManagementPage from '@/pages/manager/ShiftRequestsManagement';
-import ProductManagementPage from '@/pages/manager/ProductManagement';
-import IngredientManagementPage from '@/pages/manager/IngredientManagement';
-import RecipeManagementPage from '@/pages/manager/RecipeManagement';
-import InventoryDashboardPage from '@/pages/manager/InventoryDashboard';
-import AssignFoodToMenuPage from '@/pages/manager/AssignFoodToMenu';
-import MenuSchedulesPage from '@/pages/manager/MenuSchedules';
-import MenuManagementPage from '@/pages/manager/MenuManagement';
-import VoucherManagementPage from '@/pages/manager/VoucherManagement';
-import VoucherDetailPage from '@/pages/manager/VoucherDetailPage';
+import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
+import ShiftRequestsManagementPage from "@/pages/manager/ShiftRequestsManagement";
+import ProductManagementPage from "@/pages/manager/ProductManagement";
+import IngredientManagementPage from "@/pages/manager/IngredientManagement";
+import InventoryDashboardPage from "@/pages/manager/InventoryDashboard";
+import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
+import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
+import MenuManagementPage from "@/pages/manager/MenuManagement";
+import CanteenManagementPage from "@/pages/manager/CanteenManagement";
+import FeedbackManagementPage from "@/pages/manager/FeedbackManagement";
+import AuditLogPage from '@/pages/AuditLog';
+import PayrollList from "@/pages/manager/PayrollList";
+import PayrollDetail from "@/pages/manager/PayrollDetail";
+import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
+import StaffManagementPage from "@/pages/manager/StaffManagement";
+import ProfilePage from "@/pages/Profile";
+import IngredientCategoriesPage from "@/pages/IngredientCategories";
+import ProductCategoriesPage from "@/pages/ProductCategories";
+import NotificationPage from "@/pages/notification/NotificationPage";
 
 import ProfilePage from '@/pages/Profile';
 import IngredientCategoriesPage from '@/pages/IngredientCategories';
@@ -166,6 +174,7 @@ export default function App() {
               />
               <Route path="menus" element={<MenuManagementPage />} />
               <Route path="menu-schedules" element={<MenuSchedulesPage />} />
+              <Route path="feedback" element={<FeedbackManagementPage />} />
               <Route path="payroll" element={<PayrollList />} />
               <Route path="payroll/:id" element={<PayrollDetail />} />
               <Route path="salary-rates" element={<SalaryRateManagement />} />

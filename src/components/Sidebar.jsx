@@ -276,7 +276,12 @@ export default function Sidebar({ collapsed }) {
       label: 'Quản lý nhân viên',
     },
     {
-      key: '/manager/categories-group',
+      key: '/manager/feedback',
+      icon: <GIcon name="reviews" />,
+      label: 'Phản hồi khách hàng',
+    },
+    {
+      key: '/categories',
       icon: <GIcon name="category" />,
       label: 'Danh mục',
       children: [
