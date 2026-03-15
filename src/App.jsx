@@ -30,6 +30,7 @@ import AssignFoodToMenuPage from "@/pages/manager/AssignFoodToMenu";
 import MenuSchedulesPage from "@/pages/manager/MenuSchedules";
 import MenuManagementPage from "@/pages/manager/MenuManagement";
 import CanteenManagementPage from "@/pages/manager/CanteenManagement";
+import FeedbackManagementPage from "@/pages/manager/FeedbackManagement";
 import AuditLogPage from '@/pages/AuditLog';
 import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
@@ -146,6 +147,7 @@ export default function App() {
               />
               <Route path="menus" element={<MenuManagementPage />} />
               <Route path="menu-schedules" element={<MenuSchedulesPage />} />
+              <Route path="feedback" element={<FeedbackManagementPage />} />
               <Route path="payroll" element={<PayrollList />} />
               <Route path="payroll/:id" element={<PayrollDetail />} />
               <Route path="salary-rates" element={<SalaryRateManagement />} />
