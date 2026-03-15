@@ -48,12 +48,8 @@ export default function ShiftRequestsManagementPage() {
             },
           },
           {
-            title: "Ca mong muốn",
-            render: (_, row) => {
-              const shift = row.requestedShiftId;
-              if (!shift) return "—";
-              return `${shift.name} (${shift.startTime} - ${shift.endTime})`;
-            },
+            title: "Nội dung yêu cầu",
+            render: () => "Yêu cầu bỏ ca",
           },
           {
             title: "Lý do",

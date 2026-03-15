@@ -1,21 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-import { message, Space } from "antd";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Modal, message, Space } from "antd";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import ScheduleGrid from "@/components/schedule/ScheduleGrid";
 import ScheduleHeader from "@/components/schedule/ScheduleHeader";
 import DraftControls from "@/components/schedule/DraftControls";
-import RightPanel from "@/components/schedule/RightPanel";
+import StaffPlanningPanel from "@/components/schedule/StaffPlanningPanel";
 import {
-  bulkSaveShiftAssignments,
+  getManagerDraftAssignments,
   getManagerAssignments,
   getManagerShifts,
-  getShiftChangeRequests,
   getShiftStaffList,
-  publishShiftAssignments,
-  reviewShiftChangeRequest,
-  removeAssignment,
+  publishShiftDraft,
+  saveShiftDraft,
 } from "@/services/shiftManagement.service";
 import "@/styles/schedule-shared.css";
 
@@ -32,9 +29,20 @@ function buildBadgeId(dateKey, shiftId, staffId) {
   return `cell:${dateKey}:${shiftId}:${staffId}`;
 }
 
+function makeSlotKey(dateKey, shiftId) {
+  return `${dateKey}_${shiftId}`;
+}
+
 const SHIFT_TIME_SLOTS = {
   morning: { key: "morning", label: "Ca sáng", startTime: "06:00", endTime: "12:00" },
   afternoon: { key: "afternoon", label: "Ca chiều", startTime: "12:00", endTime: "18:00" },
+};
+
+const PUBLISHED_STATUS_META = {
+  scheduled: { label: "Chưa vào ca", color: "#64748b" },
+  checked_in: { label: "Đang làm việc", color: "#16a34a" },
+  checked_out: { label: "Đã hoàn thành", color: "#2563eb" },
+  absent: { label: "Vắng mặt", color: "#ef4444" },
 };
 
 function resolveSlotKey(startTime, endTime) {
@@ -95,16 +103,30 @@ function buildSlotRows(shifts = []) {
   return rows;
 }
 
-function mapAssignmentsToGrid(assignments, shiftRows) {
+function resolvePublishedStatus(assignment = {}) {
+  const rawStatus = String(assignment?.status || "").toLowerCase();
+
+  if (["checked_in", "checked_out", "absent", "draft", "assigned", "scheduled"].includes(rawStatus)) {
+    return rawStatus === "assigned" ? "scheduled" : rawStatus;
+  }
+
+  // Hỗ trợ dữ liệu legacy khi trạng thái chưa đồng bộ hoàn toàn.
+  if (assignment?.checkOutTime) return "checked_out";
+  if (assignment?.checkInTime) return "checked_in";
+
+  return "scheduled";
+}
+
+function normalizeAssignments(assignments, shiftRows) {
   const rowIds = new Set(shiftRows.map((item) => item.id));
   const rowBySlot = shiftRows.reduce((acc, item) => {
     acc[item.slotKey] = item;
     return acc;
   }, {});
-  const mapped = {};
+  const slots = {};
+  const assignmentsById = {};
 
   for (const assignment of assignments) {
-    if (!["assigned", "draft", "scheduled"].includes(assignment?.status)) continue;
 
     const dateKey = dayjs(assignment.date).format("YYYY-MM-DD");
     const shift = assignment.shiftId || {};
@@ -122,46 +144,79 @@ function mapAssignmentsToGrid(assignments, shiftRows) {
       targetShiftId = targetRow.id;
     }
 
-    mapped[dateKey] = mapped[dateKey] || {};
-    mapped[dateKey][targetShiftId] = mapped[dateKey][targetShiftId] || [];
+    const assignmentId = String(assignment._id || `${dateKey}_${targetShiftId}_${staffId}`);
+    const slotKey = makeSlotKey(dateKey, targetShiftId);
 
-    const existed = mapped[dateKey][targetShiftId].some((item) => item.id === staffId);
+    if (!slots[slotKey]) {
+      slots[slotKey] = {
+        date: dateKey,
+        shiftId: targetShiftId,
+        assignments: [],
+      };
+    }
+
+    const existed = slots[slotKey].assignments.some((id) => {
+      return assignmentsById[id]?.staffId === staffId;
+    });
     if (existed) continue;
 
-    mapped[dateKey][targetShiftId].push({
-      id: staffId,
+    const normalizedStatus = resolvePublishedStatus(assignment);
+
+    assignmentsById[assignmentId] = {
+      id: assignmentId,
+      assignmentId,
+      staffId,
+      shiftId: targetShiftId,
+      date: dateKey,
       name: staff.fullName || "Nhân viên",
       shiftColor: staff.shiftColor || "var(--primary)",
-      assignmentId: assignment._id,
-      status: assignment.status === "scheduled" ? "assigned" : assignment.status,
-      badgeId: buildBadgeId(dateKey, shiftId, staffId),
-    });
+      status: normalizedStatus,
+      badgeId: buildBadgeId(dateKey, targetShiftId, assignmentId),
+    };
+
+    slots[slotKey].assignments.push(assignmentId);
+  }
+
+  return {
+    slots,
+    assignmentsById,
+  };
+}
+
+function denormalizeToGrid(slots, assignmentsById) {
+  const mapped = {};
+
+  for (const slot of Object.values(slots || {})) {
+    const dateKey = slot.date;
+    const shiftId = slot.shiftId;
+
+    mapped[dateKey] = mapped[dateKey] || {};
+    mapped[dateKey][shiftId] = (slot.assignments || [])
+      .map((assignmentId) => assignmentsById?.[assignmentId])
+      .filter(Boolean)
+      .map((item) => ({
+        id: item.staffId,
+        assignmentId: item.assignmentId,
+        name: item.name,
+        shiftColor: item.shiftColor,
+        status: item.status,
+        badgeId: item.badgeId,
+      }));
   }
 
   return mapped;
 }
 
-function flattenAssignments(assignments) {
-  const payload = [];
-
-  for (const [date, shiftMap] of Object.entries(assignments || {})) {
-    for (const [shiftId, items] of Object.entries(shiftMap || {})) {
-      for (const item of items || []) {
-        payload.push({
-          shiftId,
-          staffId: item.id,
-          date,
-          status: "draft",
-        });
-      }
-    }
-  }
-
-  return payload;
+function flattenNormalized(assignmentsById) {
+  return Object.values(assignmentsById || {}).map((item) => ({
+    shiftId: item.shiftId,
+    staffId: item.staffId,
+    date: item.date,
+    status: "draft",
+  }));
 }
 
 export default function ManagerSchedulePage() {
-  const navigate = useNavigate();
   const { user } = useAuthStore();
   const canteenId = user?.canteenId?._id || user?.canteenId || null;
 
@@ -169,16 +224,21 @@ export default function ManagerSchedulePage() {
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [cancelingDraft, setCancelingDraft] = useState(false);
+  const [mode, setMode] = useState("published");
+  const [hasDraftData, setHasDraftData] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
 
   const [shiftsRaw, setShiftsRaw] = useState([]);
-  const [assignments, setAssignments] = useState({});
-  const [removedAssignmentIds, setRemovedAssignmentIds] = useState([]);
+  const [slots, setSlots] = useState({});
+  const [assignmentsById, setAssignmentsById] = useState({});
   const [draftChanges, setDraftChanges] = useState(false);
+
+  const slotsRef = useRef({});
+  const assignmentsByIdRef = useRef({});
 
   const [staffSearch, setStaffSearch] = useState("");
   const [staffList, setStaffList] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [requestPendingCount, setRequestPendingCount] = useState(0);
 
   const weekStart = useMemo(() => currentWeek.startOf("day"), [currentWeek]);
   const weekEnd = useMemo(() => weekStart.add(6, "day"), [weekStart]);
@@ -204,29 +264,74 @@ export default function ManagerSchedulePage() {
     [staffList],
   );
 
-  const loadWeekData = async () => {
+  const gridAssignments = useMemo(() => {
+    return denormalizeToGrid(slots, assignmentsById);
+  }, [slots, assignmentsById]);
+
+  const publishedStatusStats = useMemo(() => {
+    const counters = {
+      scheduled: 0,
+      checked_in: 0,
+      checked_out: 0,
+      absent: 0,
+      total: 0,
+    };
+
+    for (const item of Object.values(assignmentsById || {})) {
+      if (mode !== "published") continue;
+      if (!item?.status || counters[item.status] === undefined) continue;
+      counters[item.status] += 1;
+      counters.total += 1;
+    }
+
+    return counters;
+  }, [assignmentsById, mode]);
+
+  useEffect(() => {
+    slotsRef.current = slots;
+  }, [slots]);
+
+  useEffect(() => {
+    assignmentsByIdRef.current = assignmentsById;
+  }, [assignmentsById]);
+
+  const loadWeekData = async (targetMode = mode) => {
     if (!canteenId) {
       throw new Error("Tài khoản manager chưa được gán canteen. Vui lòng liên hệ admin.");
     }
 
-    const [shiftData, assignmentData, requestData] = await Promise.all([
+    const weekStartDate = formatDateISO(weekStart);
+
+    const [shiftData, publishedData, draftData] = await Promise.all([
       getManagerShifts({ status: "active", limit: 200, page: 1, canteenId }),
       getManagerAssignments({
-        startDate: formatDateISO(weekStart),
-        endDate: formatDateISO(weekEnd),
-        limit: 500,
-        page: 1,
+        weekStart: weekStartDate,
         canteenId,
       }),
-      getShiftChangeRequests({ status: "pending", canteenId }),
+      getManagerDraftAssignments({
+        weekStart: weekStartDate,
+        canteenId,
+      }),
     ]);
 
     const rows = buildSlotRows(shiftData);
+    const normalizedPublished = normalizeAssignments(publishedData, rows);
+    const normalizedDraft = normalizeAssignments(draftData?.assignments || [], rows);
+
+    const nextDraftId = draftData?.schedule?._id || null;
+    const hasServerDraft = Boolean(nextDraftId);
+
+    const displayData = targetMode === "draft"
+      ? (hasServerDraft ? normalizedDraft : normalizedPublished)
+      : normalizedPublished;
+
+    setCurrentDraftId(nextDraftId);
+    setHasDraftData(hasServerDraft || targetMode === "draft");
 
     setShiftsRaw(shiftData);
-    setAssignments(mapAssignmentsToGrid(assignmentData, rows));
-    setRequests(requestData);
-    setRequestPendingCount(requestData.length);
+    setSlots(displayData.slots);
+    setAssignmentsById(displayData.assignmentsById);
+    setDraftChanges(false);
   };
 
   const loadStaff = async (search = "") => {
@@ -242,8 +347,6 @@ export default function ManagerSchedulePage() {
     try {
       setLoading(true);
       await Promise.all([loadWeekData(), loadStaff(staffSearch)]);
-      setDraftChanges(false);
-      setRemovedAssignmentIds([]);
     } catch (error) {
       message.error(error?.response?.data?.message || "Không tải được dữ liệu phân ca");
     } finally {
@@ -254,7 +357,7 @@ export default function ManagerSchedulePage() {
   useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekStart.valueOf(), canteenId]);
+  }, [weekStart.valueOf(), canteenId, mode]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -268,90 +371,156 @@ export default function ManagerSchedulePage() {
   }, [staffSearch]);
 
   const handleRemove = (staff, dateKey, shiftId) => {
-    if (staff.assignmentId) {
-      setRemovedAssignmentIds((prev) => Array.from(new Set([...prev, staff.assignmentId])));
+    if (mode !== "draft") return;
+
+    const assignmentId = String(staff.assignmentId || "");
+    if (!assignmentId) return;
+
+    const nextAssignments = { ...assignmentsByIdRef.current };
+    const nextSlots = { ...slotsRef.current };
+    const slotKey = makeSlotKey(dateKey, shiftId);
+    const targetSlot = nextSlots[slotKey];
+
+    if (targetSlot) {
+      nextSlots[slotKey] = {
+        ...targetSlot,
+        assignments: (targetSlot.assignments || []).filter((id) => id !== assignmentId),
+      };
     }
 
-    setAssignments((prev) => {
-      const next = { ...prev };
-      next[dateKey] = next[dateKey] || {};
-      next[dateKey][shiftId] = (next[dateKey][shiftId] || []).filter((item) => item.id !== staff.id);
-      return next;
-    });
+    delete nextAssignments[assignmentId];
+
+    setSlots(nextSlots);
+    setAssignmentsById(nextAssignments);
 
     setDraftChanges(true);
   };
 
   const handleGridDragEnd = ({ staff, from, to }) => {
+    if (mode !== "draft") return;
     if (!to?.dateKey || !to?.shiftId) return;
 
     if (from.type === "cell-badge" && from.dateKey === to.dateKey && from.shiftId === to.shiftId) {
       return;
     }
 
-    setAssignments((prev) => {
-      const next = {};
+    const nextAssignments = { ...assignmentsByIdRef.current };
+    const nextSlots = { ...slotsRef.current };
 
-      for (const [date, shiftMap] of Object.entries(prev)) {
-        next[date] = {};
-        for (const [shiftId, cards] of Object.entries(shiftMap || {})) {
-          next[date][shiftId] = [...(cards || [])];
-        }
+    const ensureSlot = (dateKey, shiftId) => {
+      const slotKey = makeSlotKey(dateKey, shiftId);
+      if (!nextSlots[slotKey]) {
+        nextSlots[slotKey] = {
+          date: dateKey,
+          shiftId,
+          assignments: [],
+        };
       }
+      return slotKey;
+    };
 
-      if (from.type === "cell-badge" && from.dateKey && from.shiftId) {
-        next[from.dateKey] = next[from.dateKey] || {};
-        next[from.dateKey][from.shiftId] = (next[from.dateKey][from.shiftId] || []).filter(
-          (item) => item.id !== staff.id,
-        );
+    const targetSlotKey = ensureSlot(to.dateKey, to.shiftId);
+    const targetSlot = nextSlots[targetSlotKey];
 
-        if (staff.assignmentId) {
-          setRemovedAssignmentIds((prevIds) =>
-            Array.from(new Set([...prevIds, staff.assignmentId])),
-          );
-        }
-      }
-
-      next[to.dateKey] = next[to.dateKey] || {};
-      next[to.dateKey][to.shiftId] = next[to.dateKey][to.shiftId] || [];
-
-      const exists = next[to.dateKey][to.shiftId].some((item) => item.id === staff.id);
-      if (!exists) {
-        next[to.dateKey][to.shiftId].push({
-          ...staff,
-          assignmentId: null,
-          status: "draft",
-          badgeId: buildBadgeId(to.dateKey, to.shiftId, staff.id),
-        });
-      }
-
-      return next;
+    const hasSameStaff = (targetSlot.assignments || []).some((id) => {
+      return nextAssignments[id]?.staffId === String(staff.id);
     });
+    if (hasSameStaff) return;
+
+    if (from.type === "panel-staff") {
+      const assignmentId = crypto.randomUUID();
+      nextAssignments[assignmentId] = {
+        id: assignmentId,
+        assignmentId,
+        staffId: String(staff.id),
+        shiftId: String(to.shiftId),
+        date: to.dateKey,
+        name: staff.name || "Nhân viên",
+        shiftColor: staff.shiftColor || "var(--primary)",
+        status: "draft",
+        badgeId: buildBadgeId(to.dateKey, to.shiftId, assignmentId),
+      };
+
+      nextSlots[targetSlotKey] = {
+        ...targetSlot,
+        assignments: [...(targetSlot.assignments || []), assignmentId],
+      };
+    }
+
+    if (from.type === "cell-badge") {
+      const assignmentId = String(staff.assignmentId || "");
+      if (!assignmentId || !nextAssignments[assignmentId]) return;
+
+      if (from.dateKey && from.shiftId) {
+        const sourceSlotKey = makeSlotKey(from.dateKey, from.shiftId);
+        const sourceSlot = nextSlots[sourceSlotKey];
+        if (sourceSlot) {
+          nextSlots[sourceSlotKey] = {
+            ...sourceSlot,
+            assignments: (sourceSlot.assignments || []).filter((id) => id !== assignmentId),
+          };
+        }
+      }
+
+      nextSlots[targetSlotKey] = {
+        ...nextSlots[targetSlotKey],
+        assignments: [...(nextSlots[targetSlotKey].assignments || []), assignmentId],
+      };
+
+      nextAssignments[assignmentId] = {
+        ...nextAssignments[assignmentId],
+        date: to.dateKey,
+        shiftId: String(to.shiftId),
+        status: "draft",
+        badgeId: buildBadgeId(to.dateKey, to.shiftId, assignmentId),
+      };
+    }
+
+    setSlots(nextSlots);
+    setAssignmentsById(nextAssignments);
 
     setDraftChanges(true);
   };
 
   const handleSaveDraft = async ({ silent = false } = {}) => {
-    const assignmentPayload = flattenAssignments(assignments);
-    const deletionIds = [...removedAssignmentIds];
+    const assignmentPayload = flattenNormalized(assignmentsByIdRef.current);
 
-    if (!assignmentPayload.length && !deletionIds.length) {
+    if (!assignmentPayload.length) {
       if (!silent) message.info("Không có thay đổi để lưu");
-      return;
+      return null;
     }
 
     setSavingDraft(true);
     try {
-      if (deletionIds.length) {
-        await Promise.all(deletionIds.map((assignmentId) => removeAssignment(assignmentId)));
+      const result = await saveShiftDraft({
+        weekStart: formatDateISO(weekStart),
+        assignments: assignmentPayload,
+        canteenId,
+      });
+
+      const schedule = result?.schedule || null;
+      const savedAssignments = Number(result?.savedAssignments || 0);
+      const ignoredAssignments = Number(result?.ignoredAssignments || 0);
+
+      setCurrentDraftId(schedule?._id || null);
+      setHasDraftData(true);
+      setDraftChanges(false);
+
+      if (!silent) {
+        if (ignoredAssignments > 0) {
+          message.warning(
+            `Lưu nháp thành công: ${savedAssignments} phân công hợp lệ, ${ignoredAssignments} phân công đã qua hoặc đã bắt đầu được bỏ qua.`,
+          );
+        } else {
+          message.success(`Lưu nháp thành công (${savedAssignments} phân công)`);
+        }
       }
 
-      if (assignmentPayload.length) {
-        await bulkSaveShiftAssignments({ assignments: assignmentPayload });
-      }
-
-      await refreshAll();
-      if (!silent) message.success("Lưu nháp thành công");
+      return {
+        schedule,
+        savedAssignments,
+        ignoredAssignments,
+      };
     } catch (error) {
       message.error(error?.response?.data?.message || "Không thể lưu nháp");
       throw error;
@@ -360,20 +529,57 @@ export default function ManagerSchedulePage() {
     }
   };
 
+  const handleCancelDraft = async () => {
+    setCancelingDraft(true);
+    try {
+      setCurrentDraftId(null);
+      setHasDraftData(false);
+      setMode("published");
+      await refreshAll();
+      message.success("Đã hủy chỉnh sửa nháp");
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Không thể hủy nháp");
+    } finally {
+      setCancelingDraft(false);
+    }
+  };
+
   const handlePublish = async () => {
     setPublishing(true);
     try {
+      let draftId = currentDraftId;
+
       if (draftChanges) {
-        await handleSaveDraft({ silent: true });
+        const saveResult = await handleSaveDraft({ silent: true });
+        draftId = saveResult?.schedule?._id || draftId;
+
+        if (Number(saveResult?.ignoredAssignments || 0) > 0) {
+          message.info(
+            `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
+          );
+        }
       }
 
-      await publishShiftAssignments({
-        startDate: formatDateISO(weekStart),
-        endDate: formatDateISO(weekEnd),
+      if (!draftId) {
+        const saveResult = await handleSaveDraft({ silent: true });
+        draftId = saveResult?.schedule?._id || null;
+
+        if (Number(saveResult?.ignoredAssignments || 0) > 0) {
+          message.info(
+            `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
+          );
+        }
+      }
+
+      await publishShiftDraft({
+        scheduleId: draftId,
       });
 
+      setCurrentDraftId(null);
+      setHasDraftData(false);
+      setMode("published");
       await refreshAll();
-      message.success("Phát hành lịch tuần thành công");
+      message.success("Phát hành lịch tuần thành công. Nhân sự sẽ nhận thông báo lịch mới.");
     } catch (error) {
       message.error(error?.response?.data?.message || "Không thể phát hành lịch");
     } finally {
@@ -381,21 +587,42 @@ export default function ManagerSchedulePage() {
     }
   };
 
-  const handleReviewRequest = async (requestId, status) => {
-    try {
-      await reviewShiftChangeRequest(requestId, status);
-      message.success(status === "approved" ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu");
-      await refreshAll();
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể xử lý yêu cầu");
+  const confirmDiscardDraftChanges = () => {
+    return new Promise((resolve) => {
+      Modal.confirm({
+        title: "Bỏ thay đổi chưa lưu?",
+        content: "Bạn đang có thay đổi ở bản nháp. Nếu chuyển tab, các thay đổi chưa lưu sẽ bị mất.",
+        okText: "Tiếp tục chuyển",
+        cancelText: "Ở lại",
+        okType: "primary",
+        centered: true,
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  };
+
+  const handleSwitchMode = async (nextMode) => {
+    if (nextMode === mode) return;
+
+    if (mode === "draft" && draftChanges) {
+      const accepted = await confirmDiscardDraftChanges();
+      if (!accepted) return;
     }
+
+    setMode(nextMode);
+  };
+
+  const handleEnterEditMode = () => {
+    setHasDraftData(true);
+    handleSwitchMode("draft");
   };
 
   return (
     <div className="schedule-page">
       <Space direction="vertical" size={14} style={{ width: "100%" }}>
         <ScheduleHeader
-          title="Lịch làm việc quản lý"
+          title="Lập lịch làm việc"
           weekLabel={weekLabel}
           onPrevWeek={() => setCurrentWeek((prev) => prev.subtract(7, "day"))}
           onToday={() => setCurrentWeek(dayjs().startOf("week"))}
@@ -403,10 +630,16 @@ export default function ManagerSchedulePage() {
         />
 
         <DraftControls
+          mode={mode}
+          hasDraftData={hasDraftData}
           draftChanges={draftChanges}
           savingDraft={savingDraft}
           publishing={publishing}
+          cancelingDraft={cancelingDraft}
+          onSwitchMode={handleSwitchMode}
+          onEnterEditMode={handleEnterEditMode}
           onSaveDraft={() => handleSaveDraft()}
+          onCancelDraft={handleCancelDraft}
           onPublish={handlePublish}
         />
 
@@ -414,23 +647,57 @@ export default function ManagerSchedulePage() {
           <ScheduleGrid
             weekDates={weekDates}
             shifts={shiftRows}
-            assignments={assignments}
-            editable
+            assignments={gridAssignments}
+            editable={mode === "draft"}
             onDragEnd={handleGridDragEnd}
             onRemove={handleRemove}
             panelRenderer={() => (
-              <RightPanel
+              <StaffPlanningPanel
                 staffSearch={staffSearch}
                 onStaffSearch={setStaffSearch}
                 staffItems={panelStaffItems}
-                requests={requests}
-                requestPendingCount={requestPendingCount}
-                onGoToRequests={() => navigate("/manager/shift-requests")}
-                onApproveRequest={(requestId) => handleReviewRequest(requestId, "approved")}
-                onRejectRequest={(requestId) => handleReviewRequest(requestId, "rejected")}
               />
             )}
           />
+
+          {mode === "published" && (
+            <aside className="right-panel schedule-insight-panel">
+              <div className="schedule-published-insight">
+                <div className="schedule-status-summary-grid">
+                  <div className="schedule-status-summary-item">
+                    <span className="schedule-status-summary-label">Tổng nhân sự tuần</span>
+                    <span className="schedule-status-summary-value">{publishedStatusStats.total}</span>
+                  </div>
+                  <div className="schedule-status-summary-item">
+                    <span className="schedule-status-summary-label">Chưa vào ca</span>
+                    <span className="schedule-status-summary-value">{publishedStatusStats.scheduled}</span>
+                  </div>
+                  <div className="schedule-status-summary-item">
+                    <span className="schedule-status-summary-label">Đang làm việc</span>
+                    <span className="schedule-status-summary-value">{publishedStatusStats.checked_in}</span>
+                  </div>
+                  <div className="schedule-status-summary-item">
+                    <span className="schedule-status-summary-label">Đã hoàn thành</span>
+                    <span className="schedule-status-summary-value">{publishedStatusStats.checked_out}</span>
+                  </div>
+                  <div className="schedule-status-summary-item">
+                    <span className="schedule-status-summary-label">Vắng mặt</span>
+                    <span className="schedule-status-summary-value">{publishedStatusStats.absent}</span>
+                  </div>
+                </div>
+
+                <div className="schedule-status-legend">
+                  <span className="schedule-status-legend-title">Chú thích trạng thái:</span>
+                  {Object.entries(PUBLISHED_STATUS_META).map(([key, meta]) => (
+                    <span key={key} className="schedule-status-legend-item">
+                      <span className="schedule-status-legend-dot" style={{ backgroundColor: meta.color }} />
+                      {meta.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          )}
         </div>
 
         {loading && <div style={{ color: "var(--text-muted)" }}>Đang tải dữ liệu...</div>}

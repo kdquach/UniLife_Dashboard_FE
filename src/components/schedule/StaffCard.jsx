@@ -7,7 +7,7 @@ export default function StaffCard({
   staff,
   draggable,
   dragData,
-  showAvatar = false,
+  showAvatar = true,
   hideAccent = false,
   removable = false,
   onRemove,
@@ -30,8 +30,8 @@ export default function StaffCard({
       ? `${CSS.Translate.toString(transform)} scale(1.08)` 
       : CSS.Translate.toString(transform),
     opacity: isDragging ? 0.95 : 1,
-    boxShadow: isDragging ? "0 8px 20px rgba(79, 70, 229, 0.16)" : "0 1px 2px rgba(15, 23, 42, 0.04)",
-    backgroundColor: isDragging ? "#eef2ff" : "var(--surface)",
+    boxShadow: isDragging ? "0 10px 24px rgba(15, 23, 42, 0.16)" : "0 1px 2px rgba(15, 23, 42, 0.06)",
+    backgroundColor: isDragging ? "var(--primary-soft)" : "#ffffff",
     zIndex: isDragging ? 1000 : 10,
   };
 
@@ -44,14 +44,24 @@ export default function StaffCard({
 
   const normalizedStatus = String(staff?.status || "").toLowerCase();
   const showStatusBadge = Boolean(normalizedStatus);
+  const statusAccentMap = {
+    scheduled: "#64748b",
+    checked_in: "#16a34a",
+    checked_out: "#2563eb",
+    absent: "#ef4444",
+    draft: "#fb923c",
+    assigned: "#94a3b8",
+  };
   const statusLabelMap = {
     assigned: "đã phân công",
-    scheduled: "đã xếp lịch",
+    scheduled: "xếp lịch",
     draft: "nháp",
     checked_in: "đã vào ca",
     checked_out: "đã kết thúc",
+    absent: "vắng mặt",
   };
   const statusLabel = statusLabelMap[normalizedStatus] || normalizedStatus;
+  const accentColor = statusAccentMap[normalizedStatus] || staff.shiftColor || "var(--primary)";
 
   return (
     <Tooltip title={staff.name}>
@@ -67,7 +77,7 @@ export default function StaffCard({
       >
         {!hideAccent && (
           <span
-            style={{ backgroundColor: staff.shiftColor || "var(--primary)" }}
+            style={{ backgroundColor: accentColor }}
             className="staff-card-accent"
           />
         )}

@@ -54,6 +54,11 @@ export default function Sidebar({ collapsed }) {
       label: 'Nguyên liệu',
     },
     {
+      key: '/staff/recipes',
+      icon: <GIcon name="menu_book" />,
+      label: 'Công thức món ăn',
+    },
+    {
       key: '/staff/categories',
       icon: <GIcon name="category" />,
       label: 'Danh mục',
@@ -90,6 +95,47 @@ export default function Sidebar({ collapsed }) {
       icon: <GIcon name="group" />,
       label: 'Người dùng',
     },
+    // {
+    //   key: '/products-group',
+    //   icon: <GIcon name="inventory_2" />,
+    //   label: 'Quản lý sản phẩm',
+    //   children: [
+    //     {
+    //       key: '/products',
+    //       label: 'Danh sách sản phẩm',
+    //     },
+    //     {
+    //       key: '/inventory',
+    //       label: 'Bảng điều khiển tồn kho',
+    //     },
+    //   ],
+    // },
+    {
+      key: '/manager/menu-management-group',
+      icon: <GIcon name="restaurant_menu" />,
+      label: 'Quản lý thực đơn',
+      children: [
+        {
+          key: '/manager/menus',
+          label: 'Danh sách thực đơn',
+        },
+        {
+          key: '/assign-food-menu',
+          label: 'Phân bổ vào thực đơn',
+        },
+      ],
+    },
+    {
+      key: '/manager/menu-scheduling-group',
+      icon: <GIcon name="event_note" />,
+      label: 'Lịch thực đơn',
+      children: [
+        {
+          key: '/manager/menu-schedules',
+          label: 'Lịch áp dụng thực đơn',
+        },
+      ],
+    },
     {
       key: '/categories',
       icon: <GIcon name="category" />,
@@ -111,6 +157,11 @@ export default function Sidebar({ collapsed }) {
       label: 'Đơn hàng',
     },
     {
+      key: '/vouchers',
+      icon: <GIcon name="local_offer" />,
+      label: 'Khuyến mãi',
+    },
+    {
       key: '/canteens',
       icon: <GIcon name="storefront" />,
       label: 'Canteen',
@@ -121,7 +172,7 @@ export default function Sidebar({ collapsed }) {
       label: 'Báo cáo',
     },
     {
-      key: '/audit-logs',
+      key: '/settings',
       icon: <GIcon name="history" />,
       label: 'Nhật ký hệ thống',
     },
@@ -144,8 +195,8 @@ export default function Sidebar({ collapsed }) {
       label: 'Quản lý ca làm việc',
       children: [
         {
-          key: '/manager/schedule',
-          label: 'Lịch làm việc',
+          key: '/manager/schedule-builder',
+          label: 'Lập lịch làm việc',
         },
         {
           key: '/manager/shift-requests',
@@ -172,6 +223,11 @@ export default function Sidebar({ collapsed }) {
       key: '/manager/ingredients',
       icon: <GIcon name="restaurant" />,
       label: 'Nguyên liệu',
+    },
+    {
+      key: '/manager/recipes',
+      icon: <GIcon name="menu_book" />,
+      label: 'Công thức món ăn',
     },
     {
       key: '/manager/menu-management-group',
@@ -243,6 +299,11 @@ export default function Sidebar({ collapsed }) {
       key: '/orders',
       icon: <GIcon name="shopping_cart" />,
       label: 'Đơn hàng',
+    },
+    {
+      key: '/manager/vouchers',
+      icon: <GIcon name="local_offer" />,
+      label: 'Khuyến mãi',
     },
     {
       key: '/reports',

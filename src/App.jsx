@@ -1,24 +1,30 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { ConfigProvider } from "antd";
-import viVN from "antd/locale/vi_VN";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { theme } from "@/config/theme";
-import { useAuthStore } from "@/store/useAuthStore";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { theme } from '@/config/theme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Layouts
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 // Pages
-import LoginPage from "@/pages/Login";
-import DashboardPage from "@/pages/Dashboard";
+import LoginPage from '@/pages/Login';
+import DashboardPage from '@/pages/Dashboard';
 
 // Staff pages
-import StaffSchedulePage from "@/pages/staff/StaffSchedule";
-import StaffAttendancePage from "@/pages/staff/StaffAttendance";
-import PendingPickupOrdersPage from "@/pages/staff/PendingPickupOrders";
-import QRScanScreenPage from "@/pages/staff/QRScanScreen";
-import AttendanceHistoryPage from "@/pages/staff/AttendanceHistory";
+import StaffSchedulePage from '@/pages/staff/StaffSchedule';
+import StaffAttendancePage from '@/pages/staff/StaffAttendance';
+import PendingPickupOrdersPage from '@/pages/staff/PendingPickupOrders';
+import QRScanScreenPage from '@/pages/staff/QRScanScreen';
+import AttendanceHistoryPage from '@/pages/staff/AttendanceHistory';
 
 // Manager pages
 import ManagerSchedulePage from "@/pages/manager/ManagerSchedule";
@@ -41,6 +47,16 @@ import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
 import NotificationPage from "@/pages/notification/NotificationPage";
 
+import ProfilePage from '@/pages/Profile';
+import IngredientCategoriesPage from '@/pages/IngredientCategories';
+import ProductCategoriesPage from '@/pages/ProductCategories';
+import NotificationPage from '@/pages/notification/NotificationPage';
+import CanteenManagementPage from '@/pages/manager/CanteenManagement';
+import AuditLogPage from '@/pages/AuditLog';
+import PayrollList from '@/pages/manager/PayrollList';
+import PayrollDetail from '@/pages/manager/PayrollDetail';
+import SalaryRateManagement from '@/pages/manager/SalaryRateManagement';
+import StaffManagementPage from '@/pages/manager/StaffManagement';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -52,9 +68,9 @@ function ProtectedRoute({ children }) {
   }
 
   if (
-    user?.role === "staff" &&
+    user?.role === 'staff' &&
     user?.forceChangePassword &&
-    !location.pathname.startsWith("/profile")
+    !location.pathname.startsWith('/profile')
   ) {
     return <Navigate to="/profile?forceChangePassword=1" replace />;
   }
@@ -115,6 +131,7 @@ export default function App() {
                 path="ingredients"
                 element={<IngredientManagementPage />}
               />
+              <Route path="recipes" element={<RecipeManagementPage />} />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -128,18 +145,28 @@ export default function App() {
             <Route path="manager">
               <Route
                 index
-                element={<Navigate to="/manager/schedule" replace />}
+                element={<Navigate to="/manager/schedule-builder" replace />}
               />
-              <Route path="schedule" element={<ManagerSchedulePage />} />
+              <Route
+                path="schedule"
+                element={<Navigate to="/manager/schedule-builder" replace />}
+              />
+              <Route
+                path="schedule-builder"
+                element={<ManagerSchedulePage />}
+              />
               <Route
                 path="shift-requests"
                 element={<ShiftRequestsManagementPage />}
               />
               <Route path="products" element={<ProductManagementPage />} />
+              <Route path="vouchers" element={<VoucherManagementPage />} />
+              <Route path="vouchers/:id" element={<VoucherDetailPage />} />
               <Route
                 path="ingredients"
                 element={<IngredientManagementPage />}
               />
+              <Route path="recipes" element={<RecipeManagementPage />} />
               <Route path="inventory" element={<InventoryDashboardPage />} />
               <Route
                 path="assign-food-menu"
@@ -165,6 +192,8 @@ export default function App() {
               element={<ProductCategoriesPage />}
             />
             <Route path="products" element={<ProductManagementPage />} />
+            <Route path="vouchers" element={<VoucherManagementPage />} />
+            <Route path="vouchers/:id" element={<VoucherDetailPage />} />
             <Route path="staff-shifts" element={<ManagerSchedulePage />} />
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationPage />} />
@@ -180,10 +209,7 @@ export default function App() {
               path="orders"
               element={<div>Orders Page - Coming Soon</div>}
             />
-            <Route
-              path="canteens"
-              element={<CanteenManagementPage />}
-            />
+            <Route path="canteens" element={<CanteenManagementPage />} />
             <Route
               path="reports"
               element={<div>Reports Page - Coming Soon</div>}

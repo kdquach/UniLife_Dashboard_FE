@@ -22,7 +22,11 @@ export default function ShiftCell({
   });
 
   return (
-    <div ref={setNodeRef} className={`shift-cell ${isToday ? "today-cell" : ""} ${isOver ? "drag-over" : ""}`}>
+    <div
+      ref={setNodeRef}
+      className={`shift-cell ${isToday ? "today-cell" : ""} ${isOver ? "drag-over" : ""} ${items.length ? "has-items" : "is-empty"}`}
+    >
+      {!items.length && <div className="shift-cell-placeholder">Drag staff here</div>}
 
       {items.map((item) => {
         const canEditItem = editable && ["draft", "assigned", "scheduled"].includes(item.status);
@@ -32,6 +36,7 @@ export default function ShiftCell({
             key={item.badgeId}
             cardId={item.badgeId}
             staff={item}
+            showAvatar={false}
             draggable={canEditItem}
             dragData={{
               type: "cell-badge",
