@@ -42,11 +42,8 @@ export async function markAllNotificationsAsRead() {
 
 export async function getNotificationById(notificationId) {
   if (!notificationId) return null;
-  const response = await api.get("/notifications", {
-    params: { page: 1, limit: 50 },
-  });
-  const list = Array.isArray(response.data?.data) ? response.data.data : [];
-  return list.find((item) => String(item.id || item._id) === String(notificationId)) || null;
+  const response = await api.get(`/notifications/${notificationId}`);
+  return response.data?.data?.notification || null;
 }
 
 export async function sendNotification(payload) {
@@ -57,4 +54,31 @@ export async function sendNotification(payload) {
 export async function createSystemNotification(payload) {
   const response = await api.post("/notifications/system", payload);
   return response.data?.data?.notification || null;
+}
+
+export async function updateSystemNotification(notificationId, payload) {
+  if (!notificationId) return null;
+  const response = await api.patch(`/notifications/system/${notificationId}`, payload);
+  return response.data?.data?.notification || null;
+}
+
+export async function getSystemNotifications(params = {}) {
+  const response = await api.get("/notifications/system", { params });
+  return {
+    items: Array.isArray(response.data?.data) ? response.data.data : [],
+    pagination: response.data?.pagination || null,
+    message: response.data?.message || "",
+  };
+}
+
+export async function getSystemNotificationById(notificationId) {
+  if (!notificationId) return null;
+  const response = await api.get(`/notifications/system/${notificationId}`);
+  return response.data?.data?.notification || null;
+}
+
+export async function deleteSystemNotification(notificationId) {
+  if (!notificationId) return null;
+  const response = await api.delete(`/notifications/system/${notificationId}`);
+  return response.data || null;
 }
