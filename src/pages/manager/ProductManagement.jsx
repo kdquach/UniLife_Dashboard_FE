@@ -49,12 +49,21 @@ export default function ProductManagementPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catResponse, canResponse] = await Promise.all([
+        const [catResult, canResult] = await Promise.allSettled([
           getAllProductCategories({ limit: 1000 }),
           getAllCanteens({ limit: 1000 }),
         ]);
-        setCategories(catResponse?.data || []);
-        setCanteens(canResponse?.data?.canteens || []);
+        // Xử lý từng kết quả độc lập, tránh 1 API lỗi làm hỏng API còn lại
+        if (catResult.status === 'fulfilled') {
+          setCategories(catResult.value?.data || []);
+        } else {
+          console.error('Không thể tải danh mục sản phẩm:', catResult.reason);
+        }
+        if (canResult.status === 'fulfilled') {
+          setCanteens(canResult.value?.data?.canteens || []);
+        } else {
+          console.error('Không thể tải căng tin:', canResult.reason);
+        }
       } catch (error) {
         console.error('Không thể tải dữ liệu:', error);
       }
@@ -116,53 +125,60 @@ export default function ProductManagementPage() {
 
   // Xử lý mở form chỉnh sửa
   const handleEdit = useCallback(
-    (record) => {
+    async (record) => {
+      const detailData = await viewDetail(record);
+      const sourceData = detailData || record;
+      const normalizedRecipe = (sourceData.recipe || []).map((item, index) => ({
+        id: item.id || `${item.ingredientId || 'ingredient'}-${index}`,
+        ...item,
+      }));
+
       setFormMode('edit');
       form.setFieldsValue({
-        canteenId: record.canteenId?._id || record.canteenId,
-        name: record.name,
-        categoryId: record.categoryId?._id || record.categoryId,
-        price: record.price,
-        originalPrice: record.originalPrice,
-        description: record.description,
-        status: record.status,
-        calories: record.calories,
-        preparationTime: record.preparationTime,
-        isPopular: record.isPopular,
-        isNew: record.isNew,
-        stockQuantity: record.stockQuantity,
-        lowStockThreshold: record.lowStockThreshold,
-        recipe: record.recipe || [],
+        canteenId: sourceData.canteenId?._id || sourceData.canteenId,
+        name: sourceData.name,
+        categoryId: sourceData.categoryId?._id || sourceData.categoryId,
+        price: sourceData.price,
+        originalPrice: sourceData.originalPrice,
+        description: sourceData.description,
+        status: sourceData.status,
+        calories: sourceData.calories,
+        preparationTime: sourceData.preparationTime,
+        isPopular: sourceData.isPopular,
+        isNew: sourceData.isNew,
+        stockQuantity: sourceData.stockQuantity,
+        lowStockThreshold: sourceData.lowStockThreshold,
+        recipe: normalizedRecipe,
       });
-      setSelected(record);
+      setSelected(sourceData);
 
       // Chuyển đổi URL ảnh hiện có thành format của Upload component
       const existingImages = [];
 
       console.log(
         'ProductManagement - handleEdit - record.image:',
-        record.image
+        sourceData.image
       );
       console.log(
         'ProductManagement - handleEdit - record.images:',
-        record.images
+        sourceData.images
       );
 
       // Thêm ảnh chính (nếu có)
-      if (record.image) {
+      if (sourceData.image) {
         existingImages.push({
           uid: '-1',
           name: 'image.png',
           status: 'done',
-          url: record.image,
+          url: sourceData.image,
         });
       }
 
       // Thêm các ảnh phụ (loại bỏ trùng với ảnh chính)
-      if (record.images && record.images.length > 0) {
-        record.images.forEach((img, index) => {
+      if (sourceData.images && sourceData.images.length > 0) {
+        sourceData.images.forEach((img, index) => {
           // Chỉ thêm nếu không trùng với ảnh chính
-          if (img !== record.image) {
+          if (img !== sourceData.image) {
             existingImages.push({
               uid: `-${index + 2}`,
               name: `image-${index + 1}.png`,
@@ -185,7 +201,7 @@ export default function ProductManagementPage() {
       setImageList(existingImages);
       setFormOpen(true);
     },
-    [form]
+    [form, viewDetail]
   );
 
   // Xử lý submit form

@@ -22,6 +22,7 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 export default function ProductForm({
+  mode = 'create',
   form,
   categories,
   canteens,
@@ -50,36 +51,58 @@ export default function ProductForm({
 
   // Theo dõi stockQuantity để tự động cập nhật status
   const stockQuantity = Form.useWatch('stockQuantity', form);
+  const currentStatus = Form.useWatch('status', form);
+  const watchedRecipe = Form.useWatch('recipe', form);
+  const isEditMode = mode === 'edit';
 
-  // Tự động chuyển status khi stockQuantity thay đổi
+  const isAvailableMode = currentStatus === 'available';
+  const isUnavailableMode = currentStatus === 'unavailable';
+
+  // Đồng bộ dữ liệu theo trạng thái sản phẩm
   useEffect(() => {
-    // Chỉ áp dụng khi không có recipe
-    if (recipes.length > 0) return;
-
-    const currentStatus = form.getFieldValue('status');
-
-    if (stockQuantity === 0) {
-      // Tự động chuyển sang hết hàng khi stockQuantity = 0
-      if (currentStatus !== 'out_of_stock') {
-        form.setFieldValue('status', 'out_of_stock');
-        console.log(
-          'ProductForm - Auto set status to out_of_stock because stockQuantity = 0'
-        );
+    if (isAvailableMode) {
+      // available: chỉ dùng stock, xóa recipe để tránh gửi dữ liệu dư
+      if (recipes.length > 0) {
+        setRecipes([]);
+        form.setFieldValue('recipe', []);
       }
-    } else if (stockQuantity > 0 && currentStatus === 'out_of_stock') {
-      // Tự động chuyển sang available khi stockQuantity > 0 và đang ở trạng thái hết hàng
+      return;
+    }
+
+    if (isUnavailableMode) {
+      // unavailable: chỉ dùng recipe, không cho quản lý stock
+      form.setFieldValue('stockQuantity', 0);
+    }
+  }, [isAvailableMode, isUnavailableMode, recipes.length, form]);
+
+  // Đồng bộ status theo stock chỉ khi đang ở trạng thái out_of_stock
+  useEffect(() => {
+    const statusValue = form.getFieldValue('status');
+
+    // Không tự động ép về out_of_stock để người dùng luôn chọn được available
+    if (stockQuantity > 0 && statusValue === 'out_of_stock') {
       form.setFieldValue('status', 'available');
       console.log(
         'ProductForm - Auto set status to available because stockQuantity > 0'
       );
     }
-  }, [stockQuantity, recipes.length, form]);
+  }, [stockQuantity, form]);
 
   // Đồng bộ recipes từ form value
   useEffect(() => {
-    const formRecipe = form.getFieldValue('recipe') || [];
-    setRecipes(formRecipe);
-  }, [form]);
+    const formRecipe = Array.isArray(watchedRecipe) ? watchedRecipe : [];
+    const normalizedRecipe = formRecipe.map((item, index) => ({
+      id: item.id || `${item.ingredientId || 'ingredient'}-${index}`,
+      ...item,
+    }));
+
+    setRecipes(normalizedRecipe);
+
+    const hasMissingId = formRecipe.some((item) => !item.id);
+    if (hasMissingId) {
+      form.setFieldValue('recipe', normalizedRecipe);
+    }
+  }, [watchedRecipe, form]);
 
   // Fetch danh sách nguyên liệu
   useEffect(() => {
@@ -249,11 +272,11 @@ export default function ProductForm({
               rules={[
                 {
                   validator: () => {
-                    if (recipes.length > 0) {
-                      // Nếu có recipe, không yêu cầu stockQuantity
+                    if (!isAvailableMode || recipes.length > 0) {
+                      // Chỉ yêu cầu stock khi đang ở trạng thái available
                       return Promise.resolve();
                     }
-                    // Nếu không có recipe, bắt buộc nhập
+                    // available + không có recipe => bắt buộc nhập
                     const value = form.getFieldValue('stockQuantity');
                     if (value === null || value === undefined || value < 0) {
                       return Promise.reject(
@@ -266,7 +289,7 @@ export default function ProductForm({
               ]}
               tooltip={
                 recipes.length === 0
-                  ? "Khi số lượng = 0, trạng thái sẽ tự động chuyển sang 'Hết hàng'"
+                  ? 'Số lượng tồn kho chỉ áp dụng cho sản phẩm bán liền (available)'
                   : ''
               }
             >
@@ -274,7 +297,7 @@ export default function ProductForm({
                 placeholder="Nhập số lượng tồn kho"
                 min={0}
                 style={{ width: '100%' }}
-                disabled={recipes.length > 0}
+                disabled={!isAvailableMode || recipes.length > 0}
               />
             </Form.Item>
 
@@ -306,12 +329,13 @@ export default function ProductForm({
               công thức
             </div>
           ) : (
+            isAvailableMode &&
             stockQuantity === 0 && (
               <div
                 style={{ color: '#ff4d4f', marginTop: '8px', fontSize: '12px' }}
               >
-                <GIcon name="warning" /> Sản phẩm đang hết hàng (số lượng = 0),
-                trạng thái sẽ tự động là "Hết hàng"
+                <GIcon name="warning" /> Số lượng tồn kho đang bằng 0. Bạn có
+                thể chọn trạng thái phù hợp trong mục Cài đặt.
               </div>
             )
           )}
@@ -321,12 +345,14 @@ export default function ProductForm({
     {
       key: 'recipe',
       label: 'Công thức',
+      disabled: !isUnavailableMode,
       children: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <Button
             type="primary"
             icon={<GIcon name="add" />}
             onClick={handleAddRecipe}
+            disabled={!isUnavailableMode}
           >
             Thêm nguyên liệu
           </Button>
@@ -352,7 +378,7 @@ export default function ProductForm({
         form={form}
         layout="vertical"
         initialValues={{
-          status: 'available',
+          status: 'unavailable',
           isPopular: false,
           isNew: true,
           recipe: [],
@@ -583,33 +609,44 @@ export default function ProductForm({
                 label="Trạng thái"
                 style={{ marginBottom: 0 }}
                 tooltip={
-                  stockQuantity === 0 && recipes.length === 0
-                    ? "Trạng thái 'Hết hàng' được tự động áp dụng khi số lượng = 0"
-                    : ''
+                  <div>
+                    <div>
+                      - Bán liền: Sản phẩm bán toàn thời gian, quản lý bằng tồn
+                      kho.
+                    </div>
+                    <div>
+                      - Theo thực đơn ngày: Sản phẩm cần chế biến, quản lý bằng
+                      công thức.
+                    </div>
+                    {isEditMode && (
+                      <div>- Chế độ sửa có thêm: Hết hàng và Ẩn.</div>
+                    )}
+                  </div>
                 }
               >
                 <Select
                   options={[
                     {
-                      label: 'Có sẵn',
+                      label: 'Bán liền (luôn có sẵn)',
                       value: 'available',
-                      disabled: stockQuantity === 0 && recipes.length === 0,
                     },
                     {
-                      label: 'Không có sẵn',
+                      label: 'Theo thực đơn ngày (cần chế biến)',
                       value: 'unavailable',
-                      disabled: stockQuantity === 0 && recipes.length === 0,
                     },
-                    {
-                      label: 'Hết hàng',
-                      value: 'out_of_stock',
-                      disabled: stockQuantity > 0 && recipes.length === 0,
-                    },
-                    {
-                      label: 'Ẩn',
-                      value: 'hidden',
-                      disabled: stockQuantity === 0 && recipes.length === 0,
-                    },
+                    ...(isEditMode
+                      ? [
+                          {
+                            label: 'Hết hàng',
+                            value: 'out_of_stock',
+                            disabled: stockQuantity > 0 && recipes.length === 0,
+                          },
+                          {
+                            label: 'Ẩn',
+                            value: 'hidden',
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </Form.Item>
