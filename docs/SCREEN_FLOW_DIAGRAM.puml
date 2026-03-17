@@ -1,0 +1,111 @@
+@startuml ScreenFlowDiagram
+' Screen Flow Diagram (PlantUML)
+' Rectangle = main screen, Ellipse = popup/modal
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam dpi 150
+
+skinparam rectangle {
+  BackgroundColor #F5F7FA
+  BorderColor #2F3A4A
+  RoundCorner 8
+}
+
+skinparam ellipse {
+  BackgroundColor #FFF7E6
+  BorderColor #D48806
+}
+
+skinparam ArrowColor #4A5568
+skinparam ArrowThickness 1.2
+
+rectangle "Login" as L
+rectangle "Dashboard" as D
+
+rectangle "Payroll Management" as PM
+rectangle "Canteen Schedule" as CS
+rectangle "Feedback Management" as FM
+rectangle "Audit Log" as AL
+rectangle "Inventory Management" as IM
+rectangle "Voucher Management" as VM
+rectangle "Shift Management" as SM
+rectangle "Staff Management" as STM
+
+ellipse "Generate Payroll Dialog" as PM_G
+ellipse "Approve / Pay / Delete Confirmation" as PM_A
+
+ellipse "Audit Log Detail Modal" as AL_D
+ellipse "Delete Old Logs Confirmation" as AL_C
+
+ellipse "Edit Product Modal" as IM_P
+ellipse "Edit Ingredient Modal" as IM_I
+ellipse "Update Ingredient Stock Modal" as IM_S
+
+ellipse "Voucher Form Modal: Create/Edit" as VM_F
+
+ellipse "Discard Unsaved Draft Confirmation" as SM_C
+
+ellipse "Staff Detail Modal" as STM_D
+ellipse "Create Staff Modal" as STM_C
+ellipse "Update Staff Modal" as STM_U
+
+ellipse "Re-order Result Modal" as FM_R
+ellipse "Product Feedback Modal" as FM_F
+
+' Main flow
+L --> D : Submit credentials
+
+D --> PM : Sidebar: Payroll
+D --> CS : Sidebar: Canteen schedule
+D --> IM : Sidebar: Inventory
+D --> VM : Sidebar: Voucher
+D --> SM : Sidebar: Shift
+D --> STM : Sidebar: Staff
+D --> AL : Sidebar: Audit log
+D --> FM : Open order detail / feedback area
+
+' Payroll interactions
+PM --> PM_G : Click "Create payroll"
+PM_G --> PM : Submit payroll period
+PM --> PM_A : Click Approve / Pay / Delete
+PM_A --> PM : Confirm action
+
+' Audit interactions
+AL --> AL_D : Click "View detail"
+AL_D --> AL : Close
+AL --> AL_C : Click "Delete old logs"
+AL_C --> AL : Confirm delete
+
+' Inventory interactions
+IM --> IM_P : Click edit product
+IM_P --> IM : Save product
+IM --> IM_I : Click edit ingredient
+IM_I --> IM : Save ingredient
+IM --> IM_S : Click update stock
+IM_S --> IM : Submit stock change
+
+' Voucher interactions
+VM --> VM_F : Click create/edit voucher
+VM_F --> VM : Save voucher
+
+' Shift interactions
+SM --> SM_C : Switch mode with unsaved changes
+SM_C --> SM : Confirm discard
+
+' Staff interactions
+STM --> STM_D : View staff details
+STM_D --> STM : Close
+STM --> STM_C : Click "Add staff"
+STM_C --> STM : Create account
+STM --> STM_U : Click "Update"
+STM_U --> STM : Save changes
+
+' Feedback interactions
+FM --> FM_R : Click "Re-order"
+FM_R --> FM : Open cart / close
+FM --> FM_F : Click "Rate product"
+FM_F --> FM : Submit feedback
+
+@enduml

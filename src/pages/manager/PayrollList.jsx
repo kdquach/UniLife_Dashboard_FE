@@ -47,7 +47,7 @@ const PayrollList = () => {
   const [filters, setFilters] = useState({
     status: "",
     month: "",
-    year: dayjs().year(),
+    year: "",
   });
 
   useEffect(() => {
@@ -133,6 +133,14 @@ const PayrollList = () => {
     } catch (error) {
       message.error(error.response?.data?.message || "Lỗi khi xóa");
     }
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      status: "",
+      month: "",
+      year: "",
+    });
   };
 
   const hasCurrentPeriodPayroll = () => {
@@ -288,7 +296,7 @@ const PayrollList = () => {
           marginBottom: 24,
         }}
       >
-        <Title level={3}>📊 Quản lý bảng lương</Title>
+        <Title level={3}>Quản lý bảng lương</Title>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -320,7 +328,7 @@ const PayrollList = () => {
           <Col span={6}>
             <Select
               placeholder="Tháng"
-              value={filters.month}
+              value={filters.month || undefined}
               onChange={(value) => setFilters({ ...filters, month: value })}
               style={{ width: "100%" }}
             >
@@ -335,7 +343,7 @@ const PayrollList = () => {
           <Col span={4}>
             <Select
               placeholder="Năm"
-              value={filters.year}
+              value={filters.year || undefined}
               onChange={(value) => setFilters({ ...filters, year: value })}
               style={{ width: "100%" }}
             >
@@ -350,7 +358,7 @@ const PayrollList = () => {
           <Col span={6}>
             <Select
               placeholder="Trạng thái"
-              value={filters.status}
+              value={filters.status || undefined}
               onChange={(value) => setFilters({ ...filters, status: value })}
               style={{ width: "100%" }}
               allowClear
@@ -366,7 +374,7 @@ const PayrollList = () => {
             <Button
               type="primary"
               icon={<ReloadOutlined />}
-              onClick={fetchPayrolls}
+              onClick={handleResetFilters}
             >
               Làm mới
             </Button>
