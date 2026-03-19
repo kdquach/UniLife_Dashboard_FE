@@ -95,6 +95,11 @@ export default function Sidebar({ collapsed }) {
       icon: <GIcon name="group" />,
       label: 'Người dùng',
     },
+    {
+      key: '/permissions',
+      icon: <GIcon name="admin_panel_settings" />,
+      label: 'Phân quyền',
+    },
     // {
     //   key: '/products-group',
     //   icon: <GIcon name="inventory_2" />,
@@ -110,32 +115,32 @@ export default function Sidebar({ collapsed }) {
     //     },
     //   ],
     // },
-    {
-      key: '/manager/menu-management-group',
-      icon: <GIcon name="restaurant_menu" />,
-      label: 'Quản lý thực đơn',
-      children: [
-        {
-          key: '/manager/menus',
-          label: 'Danh sách thực đơn',
-        },
-        {
-          key: '/assign-food-menu',
-          label: 'Phân bổ vào thực đơn',
-        },
-      ],
-    },
-    {
-      key: '/manager/menu-scheduling-group',
-      icon: <GIcon name="event_note" />,
-      label: 'Lịch thực đơn',
-      children: [
-        {
-          key: '/manager/menu-schedules',
-          label: 'Lịch áp dụng thực đơn',
-        },
-      ],
-    },
+    // {
+    //   key: '/manager/menu-management-group',
+    //   icon: <GIcon name="restaurant_menu" />,
+    //   label: 'Quản lý thực đơn',
+    //   children: [
+    //     {
+    //       key: '/manager/menus',
+    //       label: 'Danh sách thực đơn',
+    //     },
+    //     {
+    //       key: '/assign-food-menu',
+    //       label: 'Phân bổ vào thực đơn',
+    //     },
+    //   ],
+    // },
+    // {
+    //   key: '/manager/menu-scheduling-group',
+    //   icon: <GIcon name="event_note" />,
+    //   label: 'Lịch thực đơn',
+    //   children: [
+    //     {
+    //       key: '/manager/menu-schedules',
+    //       label: 'Lịch áp dụng thực đơn',
+    //     },
+    //   ],
+    // },
     {
       key: '/categories',
       icon: <GIcon name="category" />,

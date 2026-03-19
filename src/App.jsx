@@ -42,21 +42,14 @@ import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
 import StaffManagementPage from "@/pages/manager/StaffManagement";
+import RecipeManagementPage from "@/pages/manager/RecipeManagement";
+import VoucherManagementPage from "@/pages/manager/VoucherManagement";
+import VoucherDetailPage from "@/pages/manager/VoucherDetailPage";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
 import NotificationPage from "@/pages/notification/NotificationPage";
-
-import ProfilePage from '@/pages/Profile';
-import IngredientCategoriesPage from '@/pages/IngredientCategories';
-import ProductCategoriesPage from '@/pages/ProductCategories';
-import NotificationPage from '@/pages/notification/NotificationPage';
-import CanteenManagementPage from '@/pages/manager/CanteenManagement';
-import AuditLogPage from '@/pages/AuditLog';
-import PayrollList from '@/pages/manager/PayrollList';
-import PayrollDetail from '@/pages/manager/PayrollDetail';
-import SalaryRateManagement from '@/pages/manager/SalaryRateManagement';
-import StaffManagementPage from '@/pages/manager/StaffManagement';
+import PermissionManagementPage from '@/pages/PermissionManagement';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -73,6 +66,16 @@ function ProtectedRoute({ children }) {
     !location.pathname.startsWith('/profile')
   ) {
     return <Navigate to="/profile?forceChangePassword=1" replace />;
+  }
+
+  return children;
+}
+
+function AdminOnlyRoute({ children }) {
+  const { user } = useAuthStore();
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -198,6 +201,14 @@ export default function App() {
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationPage />} />
             <Route path="audit-logs" element={<AuditLogPage />} />
+            <Route
+              path="permissions"
+              element={
+                <AdminOnlyRoute>
+                  <PermissionManagementPage />
+                </AdminOnlyRoute>
+              }
+            />
 
             {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />

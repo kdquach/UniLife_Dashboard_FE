@@ -51,13 +51,12 @@ export default function FeedbackManagementPage() {
                 setLoading(false);
             }
         },
-        [rating, fromDate, pagination.current, pagination.pageSize]
+        [rating, fromDate, pagination.current, pagination.pageSize, user]
     );
 
     useEffect(() => {
         fetchList(1, pagination.pageSize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rating, fromDate]);
+    }, [rating, fromDate, user]);
 
     const handleTableChange = (pager) => {
         fetchList(pager.current, pager.pageSize)
