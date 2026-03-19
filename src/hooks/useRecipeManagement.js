@@ -62,7 +62,7 @@ export const useRecipeManagement = () => {
     });
   }, [ingredients, normalizeId, selectedProductCanteenId]);
 
-  // Tải danh sách sản phẩm để chọn sản phẩm quản lý công thức
+  // Tải danh sách sản phẩm cần chế biến (status = unavailable)
   const fetchProducts = useCallback(
     async (search = '') => {
       try {
@@ -70,7 +70,7 @@ export const useRecipeManagement = () => {
           page: 1,
           limit: 200,
           search,
-          status: 'available',
+          status: 'unavailable',
         });
 
         setProducts(response?.data || []);
