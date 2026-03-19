@@ -46,8 +46,6 @@ export default function IngredientFormModal({
       } else {
         form.resetFields();
         form.setFieldsValue({
-          standardUnit: 'g',
-          standardUnitFactor: 1,
           costPrice: 0,
           costPerStandardUnit: 0,
         });
@@ -57,7 +55,7 @@ export default function IngredientFormModal({
 
   // Tự động cập nhật đơn vị chuẩn/hệ số theo đơn vị chính khi chưa chỉnh tay
   useEffect(() => {
-    if (!open || !unitValue || mode !== 'create') {
+    if (!open || !unitValue) {
       return;
     }
 
@@ -75,7 +73,7 @@ export default function IngredientFormModal({
         defaultConfig.standardUnitFactor
       );
     }
-  }, [form, mode, open, unitValue]);
+  }, [form, open, unitValue]);
 
   // Tự động tính chi phí/đơn vị chuẩn từ giá vốn và hệ số quy đổi
   useEffect(() => {
@@ -132,8 +130,6 @@ export default function IngredientFormModal({
             lowStockThreshold: 10,
             isActive: true,
             costPrice: 0,
-            standardUnit: 'g',
-            standardUnitFactor: 1,
             costPerStandardUnit: 0,
           }}
         >

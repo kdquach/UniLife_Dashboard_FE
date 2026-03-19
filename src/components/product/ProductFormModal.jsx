@@ -126,6 +126,7 @@ export default function ProductFormModal({
         width={900}
       >
         <ProductForm
+          mode={mode}
           form={form}
           categories={categories}
           canteens={canteens}

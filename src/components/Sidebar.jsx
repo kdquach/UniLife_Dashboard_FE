@@ -18,12 +18,12 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/staff/schedule',
       icon: <GIcon name="calendar_month" />,
-      label: 'Lịch làm việc',
+      label: 'Quản lí lịch làm việc',
     },
     {
       key: '/staff/attendance-group',
       icon: <GIcon name="fingerprint" />,
-      label: 'Chấm công',
+      label: 'Quản lí chấm công',
       children: [
         { key: '/staff/attendance', label: 'Chấm công hôm nay' },
         { key: '/staff/attendance-history', label: 'Lịch sử chấm công' },
@@ -51,17 +51,17 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/staff/ingredients',
       icon: <GIcon name="restaurant" />,
-      label: 'Nguyên liệu',
+      label: 'Quản lí nguyên liệu',
     },
     {
       key: '/staff/recipes',
       icon: <GIcon name="menu_book" />,
-      label: 'Công thức món ăn',
+      label: 'Quản lí công thức món ăn',
     },
     {
       key: '/staff/categories',
       icon: <GIcon name="category" />,
-      label: 'Danh mục',
+      label: 'Quản lí danh mục',
       children: [
         {
           key: '/staff/product-categories',
@@ -76,7 +76,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/staff/orders-group',
       icon: <GIcon name="shopping_cart" />,
-      label: 'Đơn hàng',
+      label: 'Quản lí đơn hàng',
       children: [
         { key: '/staff/orders', label: 'Đơn chờ nhận' },
         { key: '/staff/qr-scan', label: 'Quét QR trả hàng' },
@@ -93,7 +93,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/users',
       icon: <GIcon name="group" />,
-      label: 'Người dùng',
+      label: 'Quản lí người dùng',
     },
     {
       key: '/permissions',
@@ -144,7 +144,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/categories',
       icon: <GIcon name="category" />,
-      label: 'Danh mục',
+      label: 'Quản lí danh mục',
       children: [
         {
           key: '/ingredient-categories',
@@ -157,34 +157,29 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: '/orders',
-      icon: <GIcon name="shopping_cart" />,
-      label: 'Đơn hàng',
-    },
-    {
       key: '/vouchers',
       icon: <GIcon name="local_offer" />,
-      label: 'Khuyến mãi',
+      label: 'Quản lí khuyến mãi',
     },
     {
       key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: 'Canteen',
+      label: 'Quản lí căn tin',
     },
     {
-      key: '/reports',
-      icon: <GIcon name="bar_chart" />,
-      label: 'Báo cáo',
+      key: "/notifications",
+      icon: <GIcon name="campaign" />,
+      label: "Quản lí thông báo",
     },
     {
-      key: '/settings',
+      key: '/audit-logs',
       icon: <GIcon name="history" />,
-      label: 'Nhật ký hệ thống',
+      label: 'Quản lí nhật ký hệ thống',
     },
     {
       key: '/settings',
       icon: <GIcon name="settings" />,
-      label: 'Cài đặt',
+      label: 'Quản lí cài đặt',
     },
   ];
 
@@ -197,7 +192,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager',
       icon: <GIcon name="calendar_month" />,
-      label: 'Quản lý ca làm việc',
+      label: 'Quản lí ca làm việc',
       children: [
         {
           key: '/manager/schedule-builder',
@@ -212,7 +207,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager/products-group',
       icon: <GIcon name="inventory_2" />,
-      label: 'Quản lý sản phẩm',
+      label: 'Quản lí sản phẩm',
       children: [
         {
           key: '/manager/products',
@@ -227,17 +222,17 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager/ingredients',
       icon: <GIcon name="restaurant" />,
-      label: 'Nguyên liệu',
+      label: 'Quản lí nguyên liệu',
     },
     {
       key: '/manager/recipes',
       icon: <GIcon name="menu_book" />,
-      label: 'Công thức món ăn',
+      label: 'Quản lí công thức món ăn',
     },
     {
       key: '/manager/menu-management-group',
       icon: <GIcon name="restaurant_menu" />,
-      label: 'Quản lý thực đơn',
+      label: 'Quản lí thực đơn',
       children: [
         {
           key: '/manager/menus',
@@ -252,7 +247,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager/menu-scheduling-group',
       icon: <GIcon name="event_note" />,
-      label: 'Lịch thực đơn',
+      label: 'Quản lí lịch thực đơn',
       children: [
         {
           key: '/manager/menu-schedules',
@@ -263,7 +258,7 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager/payroll-group',
       icon: <GIcon name="payments" />,
-      label: 'Quản lý lương',
+      label: 'Quản lí lương',
       children: [
         {
           key: '/manager/payroll',
@@ -278,17 +273,17 @@ export default function Sidebar({ collapsed }) {
     {
       key: '/manager/staff',
       icon: <GIcon name="group" />,
-      label: 'Quản lý nhân viên',
+      label: 'Quản lí nhân viên',
     },
     {
       key: '/manager/feedback',
       icon: <GIcon name="reviews" />,
-      label: 'Phản hồi khách hàng',
+      label: 'Quản lí phản hồi khách hàng',
     },
     {
       key: '/categories',
       icon: <GIcon name="category" />,
-      label: 'Danh mục',
+      label: 'Quản lí danh mục',
       children: [
         {
           key: '/ingredient-categories',
@@ -301,29 +296,24 @@ export default function Sidebar({ collapsed }) {
       ],
     },
     {
-      key: '/orders',
-      icon: <GIcon name="shopping_cart" />,
-      label: 'Đơn hàng',
-    },
-    {
       key: '/manager/vouchers',
       icon: <GIcon name="local_offer" />,
-      label: 'Khuyến mãi',
+      label: 'Quản lí khuyến mãi',
     },
     {
-      key: '/reports',
-      icon: <GIcon name="bar_chart" />,
-      label: 'Báo cáo',
+      key: "/notifications",
+      icon: <GIcon name="campaign" />,
+      label: "Quản lí thông báo",
     },
     {
       key: '/audit-logs',
       icon: <GIcon name="history" />,
-      label: 'Nhật ký hệ thống',
+      label: 'Quản lí nhật ký hệ thống',
     },
     {
       key: '/canteens',
       icon: <GIcon name="storefront" />,
-      label: 'Canteen',
+      label: 'Quản lí căn tin',
     },
   ];
 
@@ -362,32 +352,23 @@ export default function Sidebar({ collapsed }) {
 
   return (
     <Sider
+      className='dashboard-sider'
       collapsible
       collapsed={collapsed}
       trigger={null}
       width={260}
       collapsedWidth={84}
-      style={{
-        background: 'transparent',
-      }}
     >
-      <div
-        style={{
-          height: 72,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 16px',
-        }}
-      >
+      <div className='sidebar-logo'>
         {!collapsed && (
-          <img src={logoLg} alt="UniLife Logo" style={{ height: 36 }} />
+          <img src={logoLg} alt='UniLife Logo' className='sidebar-logo-image' />
         )}
         {collapsed && (
-          <img src={logoMd} alt="UniLife Logo" style={{ height: 36 }} />
+          <img src={logoMd} alt='UniLife Logo' className='sidebar-logo-image' />
         )}
       </div>
       <Menu
+        className='sidebar-menu'
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}
@@ -397,13 +378,6 @@ export default function Sidebar({ collapsed }) {
           if (!item?.children) {
             navigate(key);
           }
-        }}
-        style={{
-          borderRight: 0,
-          marginTop: 16,
-          padding: '0 10px',
-          maxHeight: 'calc(100vh - 120px)',
-          overflow: 'auto',
         }}
       />
     </Sider>

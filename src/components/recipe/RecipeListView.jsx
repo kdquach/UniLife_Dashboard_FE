@@ -23,7 +23,7 @@ const { Title, Text } = Typography;
 
 const PRODUCT_STATUS_CONFIG = {
   available: { color: 'success', label: 'Đang bán' },
-  unavailable: { color: 'warning', label: 'Tạm ngưng' },
+  unavailable: { color: 'warning', label: 'Món chế biến' },
   out_of_stock: { color: 'error', label: 'Hết hàng' },
   hidden: { color: 'default', label: 'Đang ẩn' },
 };

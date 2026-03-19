@@ -50,13 +50,13 @@ export default function AssignFoodToMenu() {
     }
   }, [user?.canteenId, fetchMenus]);
 
-  // Fetch danh sách thực phẩm có sẵn
+  // Fetch danh sách thực phẩm cần chế biến để gán vào thực đơn ngày
   useEffect(() => {
     const fetchFoods = async () => {
       setFoodsLoading(true);
       try {
         const response = await getAllProducts({
-          status: 'available',
+          status: 'unavailable',
           canteenId: user?.canteenId,
           limit: 100,
         });

@@ -18,8 +18,8 @@ const { Title, Text } = Typography;
 
 // Cấu hình trạng thái sản phẩm
 const STATUS_CONFIG = {
-  available: { color: 'success', label: 'Có sẵn' },
-  unavailable: { color: 'warning', label: 'Không có sẵn' },
+  available: { color: 'success', label: 'Bán liền' },
+  unavailable: { color: 'warning', label: 'Theo thực đơn ngày' },
   out_of_stock: { color: 'error', label: 'Hết hàng' },
   hidden: { color: 'default', label: 'Ẩn' },
 };
@@ -108,8 +108,8 @@ export default function ProductListView({
           return <Tag color={config.color}>{config.label}</Tag>;
         },
         filters: [
-          { text: 'Có sẵn', value: 'available' },
-          { text: 'Không có sẵn', value: 'unavailable' },
+          { text: 'Bán liền', value: 'available' },
+          { text: 'Theo thực đơn ngày', value: 'unavailable' },
           { text: 'Hết hàng', value: 'out_of_stock' },
           { text: 'Ẩn', value: 'hidden' },
         ],
@@ -248,21 +248,13 @@ export default function ProductListView({
               onChange={onFilterChange}
               options={[
                 { label: 'Tất cả', value: 'all' },
-                { label: 'Có sẵn', value: 'available' },
-                { label: 'Không có sẵn', value: 'unavailable' },
+                { label: 'Bán liền', value: 'available' },
+                { label: 'Theo thực đơn ngày', value: 'unavailable' },
                 { label: 'Hết hàng', value: 'out_of_stock' },
                 { label: 'Ẩn', value: 'hidden' },
               ]}
             />
           )}
-          <Button
-            type="primary"
-            ghost
-            icon={<GIcon name="search" />}
-            onClick={onSearch}
-          >
-            Tìm kiếm
-          </Button>
           <Button
             icon={<GIcon name="help_outline" />}
             onClick={() => setGuideOpen(true)}
@@ -336,35 +328,36 @@ export default function ProductListView({
                 </Space>
               </div>
 
-              {/* Có sẵn */}
+              {/* Bán liền */}
               <div>
                 <Space align="start">
                   <Tag color="success" style={{ marginTop: 4 }}>
-                    Có sẵn
+                    Bán liền
                   </Tag>
                   <div>
-                    <Text strong>Sản phẩm đang bán</Text>
+                    <Text strong>Sản phẩm bán toàn thời gian</Text>
                     <div style={{ color: '#666', marginTop: 4 }}>
-                      • Khách hàng có thể đặt mua sản phẩm này
-                      <br />• Hiển thị trên app khách hàng
-                      <br />• Có đủ nguyên liệu/hàng trong kho
+                      • Sản phẩm hiển thị trên app khách hàng
+                      <br />• Quản lý theo số lượng tồn kho
+                      <br />• Phù hợp với món có thể bán liên tục
                     </div>
                   </div>
                 </Space>
               </div>
 
-              {/* Không có sẵn */}
+              {/* Theo thực đơn ngày */}
               <div>
                 <Space align="start">
                   <Tag color="warning" style={{ marginTop: 4 }}>
-                    Không có sẵn
+                    Theo thực đơn ngày
                   </Tag>
                   <div>
-                    <Text strong>Tạm thời không bán</Text>
+                    <Text strong>Sản phẩm cần chế biến theo menu ngày</Text>
                     <div style={{ color: '#666', marginTop: 4 }}>
-                      • Sản phẩm tạm ngừng kinh doanh
-                      <br />• Không hiển thị cho khách hàng
-                      <br />• Ví dụ: Món theo mùa, tạm ngừng bán
+                      • Dùng cho món được phân bổ trong màn hình Assign Food
+                      <br />• Quản lý bằng công thức, không dùng tồn kho trực
+                      tiếp
+                      <br />• Chỉ xuất hiện cho khách khi có trong thực đơn ngày
                     </div>
                   </div>
                 </Space>
