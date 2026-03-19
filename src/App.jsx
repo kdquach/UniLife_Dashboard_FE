@@ -45,11 +45,14 @@ import PayrollList from "@/pages/manager/PayrollList";
 import PayrollDetail from "@/pages/manager/PayrollDetail";
 import SalaryRateManagement from "@/pages/manager/SalaryRateManagement";
 import StaffManagementPage from "@/pages/manager/StaffManagement";
-
+import RecipeManagementPage from "@/pages/manager/RecipeManagement";
+import VoucherManagementPage from "@/pages/manager/VoucherManagement";
+import VoucherDetailPage from "@/pages/manager/VoucherDetailPage";
 import ProfilePage from "@/pages/Profile";
 import IngredientCategoriesPage from "@/pages/IngredientCategories";
 import ProductCategoriesPage from "@/pages/ProductCategories";
 import NotificationPage from "@/pages/notification/NotificationPage";
+import PermissionManagementPage from '@/pages/PermissionManagement';
 import NotificationReadDetailPage from "@/pages/notification/NotificationReadDetailPage";
 
 // Protected Route Component
@@ -67,6 +70,16 @@ function ProtectedRoute({ children }) {
     !location.pathname.startsWith('/profile')
   ) {
     return <Navigate to="/profile?forceChangePassword=1" replace />;
+  }
+
+  return children;
+}
+
+function AdminOnlyRoute({ children }) {
+  const { user } = useAuthStore();
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -192,6 +205,14 @@ export default function App() {
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="notifications/:id" element={<NotificationReadDetailPage />} />
             <Route path="audit-logs" element={<AuditLogPage />} />
+            <Route
+              path="permissions"
+              element={
+                <AdminOnlyRoute>
+                  <PermissionManagementPage />
+                </AdminOnlyRoute>
+              }
+            />
 
             {/* Placeholder routes */}
             <Route path="users" element={<div>Users Page - Coming Soon</div>} />
