@@ -1,4 +1,4 @@
-import { api } from './axios.config';
+import { api } from "./axios.config";
 
 /**
  * Lấy tất cả căng tin
@@ -6,7 +6,7 @@ import { api } from './axios.config';
  * @returns {Promise} Response chứa danh sách căng tin
  */
 export const getAllCanteens = async (params = {}) => {
-  const response = await api.get('/canteens', { params });
+  const response = await api.get("/canteens", { params });
   return response.data;
 };
 
@@ -26,7 +26,7 @@ export const getCanteenById = async (id) => {
  * @returns {Promise} Response chứa căng tin vừa tạo
  */
 export const createCanteen = async (data) => {
-  const response = await api.post('/canteens', data);
+  const response = await api.post("/canteens", data);
   return response.data;
 };
 
@@ -38,6 +38,17 @@ export const createCanteen = async (data) => {
  */
 export const updateCanteen = async (id, data) => {
   const response = await api.patch(`/canteens/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Duyệt đăng ký căng tin (chỉ admin)
+ * @param {string} id - ID của căng tin
+ * @param {"approve"|"reject"} decision - Quyết định duyệt
+ * @returns {Promise} Response chứa kết quả duyệt
+ */
+export const reviewCanteenRegistration = async (id, decision) => {
+  const response = await api.patch(`/canteens/${id}/review`, { decision });
   return response.data;
 };
 
