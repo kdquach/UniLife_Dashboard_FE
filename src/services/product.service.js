@@ -27,7 +27,7 @@ export const getProductById = async (id) => {
  * @returns {Promise} Response chứa danh sách sản phẩm
  */
 export const getProductsByCanteen = async (canteenId, params = {}) => {
-  const response = await api.get(`/canteens/${canteenId}/products`, { params });
+  const response = await api.get(`/products/canteen/${canteenId}`, { params });
   return response.data;
 };
 

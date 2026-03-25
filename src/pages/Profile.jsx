@@ -30,7 +30,8 @@ export default function ProfilePage() {
   const [infoForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
 
-  const forceChangePassword = Boolean(profile?.forceChangePassword || user?.forceChangePassword);
+  const isPending = profile?.status === "pending" || user?.status === "pending";
+  const forceChangePassword = Boolean(profile?.forceChangePassword || user?.forceChangePassword || isPending);
 
   useEffect(() => {
     fetchMe().catch(() => {});
@@ -117,10 +118,12 @@ export default function ProfilePage() {
       }
 
       await changePassword({ currentPassword, newPassword, confirmPassword });
-      if (user?.forceChangePassword || profile?.forceChangePassword) {
+      const isPending = user?.status === "pending" || profile?.status === "pending" || user?.forceChangePassword || profile?.forceChangePassword;
+      if (isPending) {
         const updatedProfile = {
           ...(profile || user || {}),
           forceChangePassword: false,
+          status: "active",
         };
         updateUser(updatedProfile);
       }
@@ -135,7 +138,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (error && !profile) {
+  if (error && !profile && !forceChangePassword) {
     return (
       <Card>
         {contextHolder}

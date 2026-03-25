@@ -33,3 +33,22 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+// Response Interceptor: Handle Global 401 Force Logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // TC4: Force logout if BE returns 401 (e.g., token invalid or revoked)
+    if (error?.response?.status === 401 && typeof window !== 'undefined') {
+      import('@/store/useAuthStore').then(({ useAuthStore }) => {
+        useAuthStore.getState().clearAuth();
+      }).catch(() => {
+        // Fallback clear
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = '/login';
+      });
+    }
+    return Promise.reject(error);
+  }
+);

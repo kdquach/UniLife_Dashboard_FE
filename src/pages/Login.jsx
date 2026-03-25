@@ -25,8 +25,9 @@ export default function LoginPage() {
 
       setAuth(user, token);
 
-      if (user?.role === "staff" && user?.forceChangePassword) {
-        message.warning("Bạn cần đổi mật khẩu ngay lần đăng nhập đầu tiên");
+      const isPending = user?.status === "pending" || user?.forceChangePassword;
+      if (isPending) {
+        message.warning("Vui lòng đổi mật khẩu để kích hoạt tài khoản hệ thống");
         navigate("/profile?forceChangePassword=1");
         return;
       }
