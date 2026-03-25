@@ -1,7 +1,7 @@
 import { api } from "@/services/axios.config";
 
 export async function getMyProfile() {
-  const response = await api.get("/profile");
+  const response = await api.get("/users/me");
   return response.data;
 }
 

@@ -7,8 +7,6 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getAllProductCategories } from "@/services/productCategory.service";
-import { getAllProducts } from "@/services/product.service";
 import { getAllCanteens } from "@/services/canteen.service";
 import { exportVouchers } from "@/services/voucher.service";
 import { useVoucherManagement } from "@/hooks/useVoucherManagement";
@@ -27,8 +25,6 @@ export default function VoucherManagementPage() {
   const userCanteenId = user?.canteenId?._id || user?.canteenId;
 
   // Metadata states
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
   const [canteens, setCanteens] = useState([]);
 
   // UI States
@@ -63,20 +59,7 @@ export default function VoucherManagementPage() {
   useEffect(() => {
     const fetchMeta = async () => {
       try {
-        const [catRes, prodRes, canRes] = await Promise.all([
-          getAllProductCategories({ limit: 100 }),
-          getAllProducts({ limit: 200, status: "active" }),
-          getAllCanteens({ limit: 50 }),
-        ]);
-        setCategories(
-          catRes?.data?.map((c) => ({ label: c.name, value: c._id })) || [],
-        );
-        setProducts(
-          prodRes?.data?.map((p) => ({
-            label: `${p.name} - ${p.price?.toLocaleString()}đ`,
-            value: p._id,
-          })) || [],
-        );
+        const canRes = await getAllCanteens({ limit: 50 });
         setCanteens(canRes?.data?.canteens || []);
       } catch (error) {
         console.error("Meta fetch error", error);
@@ -252,8 +235,6 @@ export default function VoucherManagementPage() {
         mode={formMode}
         voucherState={formMode === "edit" ? selectedVoucher?.state : null}
         form={form}
-        categories={categories}
-        products={products}
         canteens={canteens}
         managerRole={isManager}
         userCanteenId={userCanteenId}
