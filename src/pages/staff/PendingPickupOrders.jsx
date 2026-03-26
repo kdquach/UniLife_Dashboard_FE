@@ -5,7 +5,12 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import { QRCodeSVG } from "qrcode.react";
 import GIcon from "@/components/GIcon";
-import { getOrders, getOrderDetail } from "@/services/order.service";
+import {
+  getOrders,
+  getOrderDetail,
+  updateOrderStatus,
+  completeOrderById,
+} from "@/services/order.service";
 import { useSocket } from "@/hooks/useSocket";
 import "@/styles/canteenOrders.css";
 
@@ -14,18 +19,41 @@ dayjs.locale("vi");
 
 const TABS = [
   {
-    key: "ready",
-    label: "Chờ nhận",
+    key: "pending",
+    label: "Chờ xác nhận",
     icon: "pending_actions",
+    sort: "-createdAt",
+  },
+  {
+    key: "confirmed",
+    label: "Đã xác nhận",
+    icon: "check_circle",
+    sort: "-createdAt",
+  },
+  {
+    key: "preparing",
+    label: "Đang chuẩn bị",
+    icon: "restaurant",
+    sort: "-createdAt",
+  },
+  {
+    key: "ready",
+    label: "Sẵn sàng",
+    icon: "hourglass_top",
     sort: "preparedAt",
   },
   {
     key: "completed",
     label: "Đã xong",
-    icon: "check_circle",
+    icon: "task_alt",
     sort: "-completedAt",
   },
-  { key: "cancelled", label: "Đã hủy", icon: "cancel", sort: "-cancelledAt" },
+  {
+    key: "cancelled",
+    label: "Đã hủy",
+    icon: "cancel",
+    sort: "-cancelledAt",
+  },
 ];
 
 const STATUS_LABEL = {
@@ -70,7 +98,7 @@ function getCustomerName(user) {
 }
 
 export default function PendingPickupOrders() {
-  const [activeTab, setActiveTab] = useState("ready");
+  const [activeTab, setActiveTab] = useState("pending");
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -80,6 +108,7 @@ export default function PendingPickupOrders() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const [detailModal, setDetailModal] = useState({
     open: false,
     order: null,
@@ -157,6 +186,73 @@ export default function PendingPickupOrders() {
   );
 
   const { isConnected } = useSocket(handleOrderStatusChanged);
+
+  const applyUpdatedOrderToState = useCallback(
+    (updatedOrder) => {
+      if (!updatedOrder?._id) return;
+
+      setOrders((prev) =>
+        prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)),
+      );
+
+      setDetailModal((prev) => {
+        if (!prev?.open || !prev?.order?._id) return prev;
+        if (prev.order._id !== updatedOrder._id) return prev;
+        return { ...prev, order: updatedOrder };
+      });
+    },
+    [setOrders, setDetailModal],
+  );
+
+  const handleChangeStatus = useCallback(
+    async (order, nextStatus) => {
+      if (!order?._id) return;
+      if (!nextStatus) return;
+
+      // Avoid double submit
+      if (statusUpdating) return;
+      setStatusUpdating(true);
+
+      try {
+        let res;
+        if (nextStatus === "completed") {
+          // Prefer the dedicated complete endpoint to record scannedBy/scannedAt
+          res = await completeOrderById(order._id);
+        } else {
+          res = await updateOrderStatus(order._id, nextStatus);
+        }
+
+        const updatedOrder = res?.data?.order || res?.data || null;
+        if (!updatedOrder?._id) {
+          antdMessage.success("Cập nhật trạng thái thành công");
+        } else {
+          applyUpdatedOrderToState(updatedOrder);
+          antdMessage.success(
+            `Đã chuyển trạng thái sang "${STATUS_LABEL[updatedOrder.status] || updatedOrder.status}"`,
+          );
+
+          // If order leaves current tab, refresh list + close modal
+          if (updatedOrder.status !== activeTab) {
+            setDetailModal({ open: false, order: null, loading: false });
+            fetchOrders(pagination.page);
+          }
+        }
+      } catch (err) {
+        antdMessage.error(
+          err?.response?.data?.message || "Không thể cập nhật trạng thái đơn",
+        );
+      } finally {
+        setStatusUpdating(false);
+      }
+    },
+    [
+      activeTab,
+      applyUpdatedOrderToState,
+      fetchOrders,
+      pagination.page,
+      statusUpdating,
+    ],
+  );
 
   // Open detail modal
   const openDetail = async (orderId) => {
@@ -377,6 +473,8 @@ export default function PendingPickupOrders() {
         ) : detailModal.order ? (
           <OrderDetail
             order={detailModal.order}
+            statusUpdating={statusUpdating}
+            onChangeStatus={handleChangeStatus}
             onClose={() =>
               setDetailModal({ open: false, order: null, loading: false })
             }
@@ -390,7 +488,7 @@ export default function PendingPickupOrders() {
 /* ======================================
    Order Detail Component (Modal body)
    ====================================== */
-function OrderDetail({ order, onClose }) {
+function OrderDetail({ order, onClose, onChangeStatus, statusUpdating }) {
   const heroClass =
     order.status === "completed"
       ? "co-dm-hero--completed"
@@ -411,6 +509,37 @@ function OrderDetail({ order, onClose }) {
       : order.status === "cancelled"
         ? "cancel"
         : "pending_actions";
+
+  const actions = (() => {
+    if (order.status === "cancelled" || order.status === "completed") return [];
+
+    // Minimal, linear transitions
+    if (order.status === "pending") {
+      return [
+        { key: "confirmed", label: "Xác nhận", icon: "check_circle" },
+        { key: "cancelled", label: "Hủy", icon: "cancel" },
+      ];
+    }
+    if (order.status === "confirmed") {
+      return [
+        { key: "preparing", label: "Bắt đầu chuẩn bị", icon: "restaurant" },
+        { key: "cancelled", label: "Hủy", icon: "cancel" },
+      ];
+    }
+    if (order.status === "preparing") {
+      return [
+        { key: "ready", label: "Đánh dấu sẵn sàng", icon: "hourglass_top" },
+        { key: "cancelled", label: "Hủy", icon: "cancel" },
+      ];
+    }
+    if (order.status === "ready") {
+      return [
+        { key: "completed", label: "Hoàn thành", icon: "task_alt" },
+      ];
+    }
+
+    return [];
+  })();
 
   return (
     <div className="co-dm">
@@ -504,6 +633,32 @@ function OrderDetail({ order, onClose }) {
         </div>
       </div>
 
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div className="co-dm-section">
+          <div className="co-dm-section__title">Xử lý đơn</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {actions.map((a) => (
+              <button
+                key={a.key}
+                className={a.key === "cancelled" ? "co-btn-outline" : "co-btn-primary"}
+                disabled={statusUpdating}
+                onClick={() => onChangeStatus?.(order, a.key)}
+                type="button"
+              >
+                <GIcon name={a.icon} />
+                {statusUpdating ? "Đang xử lý..." : a.label}
+              </button>
+            ))}
+          </div>
+          {order.status === "ready" && (
+            <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
+              Tip: Bạn cũng có thể hoàn thành đơn bằng màn “Quét QR”.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Timestamps */}
       <div className="co-dm-section">
         <div className="co-dm-section__title">Thời gian</div>
@@ -562,8 +717,8 @@ function OrderDetail({ order, onClose }) {
                 <span className="co-dm-info-row__value">
                   {order.pickupQRCode.expireAt
                     ? dayjs(order.pickupQRCode.expireAt).format(
-                        "HH:mm DD/MM/YYYY",
-                      )
+                      "HH:mm DD/MM/YYYY",
+                    )
                     : "—"}
                 </span>
               </div>
