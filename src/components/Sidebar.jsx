@@ -1,9 +1,9 @@
-import { Layout, Menu } from 'antd';
-import { useNavigate, useLocation } from 'react-router-dom';
-import logoLg from '@/assets/images/logo-lg.png';
-import logoMd from '@/assets/images/logo-md.png';
-import GIcon from '@/components/GIcon';
-import { useAuthStore } from '@/store/useAuthStore';
+import { Layout, Menu } from "antd";
+import { useNavigate, useLocation } from "react-router-dom";
+import logoLg from "@/assets/images/logo-lg.png";
+import logoMd from "@/assets/images/logo-md.png";
+import GIcon from "@/components/GIcon";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const { Sider } = Layout;
 
@@ -16,89 +16,89 @@ export default function Sidebar({ collapsed }) {
 
   const staffMenuItems = [
     {
-      key: '/staff/schedule',
+      key: "/staff/schedule",
       icon: <GIcon name="calendar_month" />,
-      label: 'Quản lí lịch làm việc',
+      label: "Quản lí lịch làm việc",
     },
     {
-      key: '/staff/attendance-group',
+      key: "/staff/attendance-group",
       icon: <GIcon name="fingerprint" />,
-      label: 'Quản lí chấm công',
+      label: "Quản lí chấm công",
       children: [
-        { key: '/staff/attendance', label: 'Chấm công hôm nay' },
-        { key: '/staff/attendance-history', label: 'Lịch sử chấm công' },
+        { key: "/staff/attendance", label: "Chấm công hôm nay" },
+        { key: "/staff/attendance-history", label: "Lịch sử chấm công" },
       ],
     },
     {
-      key: '/staff/products-group',
+      key: "/staff/products-group",
       icon: <GIcon name="inventory_2" />,
-      label: 'Quản lý sản phẩm',
+      label: "Quản lý sản phẩm",
       children: [
         {
-          key: '/staff/products',
-          label: 'Danh sách sản phẩm',
+          key: "/staff/products",
+          label: "Danh sách sản phẩm",
         },
         {
-          key: '/staff/inventory',
-          label: 'Bảng điều khiển tồn kho',
+          key: "/staff/inventory",
+          label: "Bảng điều khiển tồn kho",
         },
         {
-          key: '/staff/assign-food-menu',
-          label: 'Phân bổ vào thực đơn',
+          key: "/staff/assign-food-menu",
+          label: "Phân bổ vào thực đơn",
         },
       ],
     },
     {
-      key: '/staff/ingredients',
+      key: "/staff/ingredients",
       icon: <GIcon name="restaurant" />,
-      label: 'Quản lí nguyên liệu',
+      label: "Quản lí nguyên liệu",
     },
     {
-      key: '/staff/recipes',
+      key: "/staff/recipes",
       icon: <GIcon name="menu_book" />,
-      label: 'Quản lí công thức món ăn',
+      label: "Quản lí công thức món ăn",
     },
     {
-      key: '/staff/categories',
+      key: "/staff/categories",
       icon: <GIcon name="category" />,
-      label: 'Quản lí danh mục',
+      label: "Quản lí danh mục",
       children: [
         {
-          key: '/staff/product-categories',
-          label: 'Danh mục sản phẩm',
+          key: "/staff/product-categories",
+          label: "Danh mục sản phẩm",
         },
         {
-          key: '/staff/ingredient-categories',
-          label: 'Danh mục nguyên liệu',
+          key: "/staff/ingredient-categories",
+          label: "Danh mục nguyên liệu",
         },
       ],
     },
     {
-      key: '/staff/orders-group',
+      key: "/staff/orders-group",
       icon: <GIcon name="shopping_cart" />,
-      label: 'Quản lí đơn hàng',
+      label: "Quản lí đơn hàng",
       children: [
-        { key: '/staff/orders', label: 'Đơn chờ nhận' },
-        { key: '/staff/qr-scan', label: 'Quét QR trả hàng' },
+        { key: "/staff/orders", label: "Đơn chờ nhận" },
+        { key: "/staff/qr-scan", label: "Quét QR trả hàng" },
       ],
     },
   ];
 
   const adminMenuItems = [
     {
-      key: '/',
+      key: "/",
       icon: <GIcon name="space_dashboard" />,
-      label: 'Tổng quan',
+      label: "Tổng quan",
     },
     {
-      key: '/users',
+      key: "/users",
       icon: <GIcon name="group" />,
-      label: 'Quản lí người dùng',
+      label: "Quản lí người dùng",
     },
     {
-      key: '/permissions',
+      key: "/permissions",
       icon: <GIcon name="admin_panel_settings" />,
-      label: 'Phân quyền',
+      label: "Phân quyền",
     },
     // {
     //   key: '/products-group',
@@ -142,29 +142,34 @@ export default function Sidebar({ collapsed }) {
     //   ],
     // },
     {
-      key: '/categories',
+      key: "/categories",
       icon: <GIcon name="category" />,
-      label: 'Quản lí danh mục',
+      label: "Quản lí danh mục",
       children: [
         {
-          key: '/ingredient-categories',
-          label: 'Nhóm nguyên liệu',
+          key: "/ingredient-categories",
+          label: "Nhóm nguyên liệu",
         },
         {
-          key: '/product-categories',
-          label: 'Danh mục sản phẩm',
+          key: "/product-categories",
+          label: "Danh mục sản phẩm",
         },
       ],
     },
     {
-      key: '/vouchers',
+      key: "/vouchers",
       icon: <GIcon name="local_offer" />,
-      label: 'Quản lí khuyến mãi',
+      label: "Quản lí khuyến mãi",
     },
     {
-      key: '/canteens',
+      key: "/canteens",
       icon: <GIcon name="storefront" />,
-      label: 'Quản lí căn tin',
+      label: "Quản lí căn tin",
+    },
+    {
+      key: "/banners",
+      icon: <GIcon name="photo" />,
+      label: "Quản lí banner",
     },
     {
       key: "/notifications",
@@ -172,133 +177,133 @@ export default function Sidebar({ collapsed }) {
       label: "Quản lí thông báo",
     },
     {
-      key: '/audit-logs',
+      key: "/audit-logs",
       icon: <GIcon name="history" />,
-      label: 'Quản lí nhật ký hệ thống',
+      label: "Quản lí nhật ký hệ thống",
     },
     {
-      key: '/settings',
+      key: "/settings",
       icon: <GIcon name="settings" />,
-      label: 'Quản lí cài đặt',
+      label: "Quản lí cài đặt",
     },
   ];
 
   const managerMenuItems = [
     {
-      key: '/',
+      key: "/",
       icon: <GIcon name="space_dashboard" />,
-      label: 'Tổng quan',
+      label: "Tổng quan",
     },
     {
-      key: '/manager',
+      key: "/manager",
       icon: <GIcon name="calendar_month" />,
-      label: 'Quản lí ca làm việc',
+      label: "Quản lí ca làm việc",
       children: [
         {
-          key: '/manager/schedule-builder',
-          label: 'Lập lịch làm việc',
+          key: "/manager/schedule-builder",
+          label: "Lập lịch làm việc",
         },
         {
-          key: '/manager/shift-requests',
-          label: 'Yêu cầu đổi ca',
+          key: "/manager/shift-requests",
+          label: "Yêu cầu đổi ca",
         },
       ],
     },
     {
-      key: '/manager/products-group',
+      key: "/manager/products-group",
       icon: <GIcon name="inventory_2" />,
-      label: 'Quản lí sản phẩm',
+      label: "Quản lí sản phẩm",
       children: [
         {
-          key: '/manager/products',
-          label: 'Danh sách sản phẩm',
+          key: "/manager/products",
+          label: "Danh sách sản phẩm",
         },
         {
-          key: '/manager/inventory',
-          label: 'Bảng điều khiển tồn kho',
+          key: "/manager/inventory",
+          label: "Bảng điều khiển tồn kho",
         },
       ],
     },
     {
-      key: '/manager/ingredients',
+      key: "/manager/ingredients",
       icon: <GIcon name="restaurant" />,
-      label: 'Quản lí nguyên liệu',
+      label: "Quản lí nguyên liệu",
     },
     {
-      key: '/manager/recipes',
+      key: "/manager/recipes",
       icon: <GIcon name="menu_book" />,
-      label: 'Quản lí công thức món ăn',
+      label: "Quản lí công thức món ăn",
     },
     {
-      key: '/manager/menu-management-group',
+      key: "/manager/menu-management-group",
       icon: <GIcon name="restaurant_menu" />,
-      label: 'Quản lí thực đơn',
+      label: "Quản lí thực đơn",
       children: [
         {
-          key: '/manager/menus',
-          label: 'Danh sách thực đơn',
+          key: "/manager/menus",
+          label: "Danh sách thực đơn",
         },
         {
-          key: '/manager/assign-food-menu',
-          label: 'Phân bổ vào thực đơn',
+          key: "/manager/assign-food-menu",
+          label: "Phân bổ vào thực đơn",
         },
       ],
     },
     {
-      key: '/manager/menu-scheduling-group',
+      key: "/manager/menu-scheduling-group",
       icon: <GIcon name="event_note" />,
-      label: 'Quản lí lịch thực đơn',
+      label: "Quản lí lịch thực đơn",
       children: [
         {
-          key: '/manager/menu-schedules',
-          label: 'Lịch áp dụng thực đơn',
+          key: "/manager/menu-schedules",
+          label: "Lịch áp dụng thực đơn",
         },
       ],
     },
     {
-      key: '/manager/payroll-group',
+      key: "/manager/payroll-group",
       icon: <GIcon name="payments" />,
-      label: 'Quản lí lương',
+      label: "Quản lí lương",
       children: [
         {
-          key: '/manager/payroll',
-          label: 'Bảng lương',
+          key: "/manager/payroll",
+          label: "Bảng lương",
         },
         {
-          key: '/manager/salary-rates',
-          label: 'Cấu hình lương',
+          key: "/manager/salary-rates",
+          label: "Cấu hình lương",
         },
       ],
     },
     {
-      key: '/manager/staff',
+      key: "/manager/staff",
       icon: <GIcon name="group" />,
-      label: 'Quản lí nhân viên',
+      label: "Quản lí nhân viên",
     },
     {
-      key: '/manager/feedback',
+      key: "/manager/feedback",
       icon: <GIcon name="reviews" />,
-      label: 'Quản lí phản hồi khách hàng',
+      label: "Quản lí phản hồi khách hàng",
     },
     {
-      key: '/categories',
+      key: "/categories",
       icon: <GIcon name="category" />,
-      label: 'Quản lí danh mục',
+      label: "Quản lí danh mục",
       children: [
         {
-          key: '/ingredient-categories',
-          label: 'Nhóm nguyên liệu',
+          key: "/ingredient-categories",
+          label: "Nhóm nguyên liệu",
         },
         {
-          key: '/product-categories',
-          label: 'Danh mục sản phẩm',
+          key: "/product-categories",
+          label: "Danh mục sản phẩm",
         },
       ],
     },
     {
-      key: '/manager/vouchers',
+      key: "/manager/vouchers",
       icon: <GIcon name="local_offer" />,
-      label: 'Quản lí khuyến mãi',
+      label: "Quản lí khuyến mãi",
     },
     {
       key: "/notifications",
@@ -306,14 +311,14 @@ export default function Sidebar({ collapsed }) {
       label: "Quản lí thông báo",
     },
     {
-      key: '/audit-logs',
+      key: "/audit-logs",
       icon: <GIcon name="history" />,
-      label: 'Quản lí nhật ký hệ thống',
+      label: "Quản lí nhật ký hệ thống",
     },
     {
-      key: '/canteens',
+      key: "/canteens",
       icon: <GIcon name="storefront" />,
-      label: 'Quản lí căn tin',
+      label: "Quản lí căn tin",
     },
   ];
 
@@ -342,9 +347,9 @@ export default function Sidebar({ collapsed }) {
 
   const selectedKey = (() => {
     const path = location.pathname;
-    if (path === '/staff') return '/staff/schedule';
-    if (path.startsWith('/staff/')) {
-      const parts = path.split('/');
+    if (path === "/staff") return "/staff/schedule";
+    if (path.startsWith("/staff/")) {
+      const parts = path.split("/");
       return `/${parts[1]}/${parts[2]}`;
     }
     return path;
@@ -352,23 +357,23 @@ export default function Sidebar({ collapsed }) {
 
   return (
     <Sider
-      className='dashboard-sider'
+      className="dashboard-sider"
       collapsible
       collapsed={collapsed}
       trigger={null}
       width={260}
       collapsedWidth={84}
     >
-      <div className='sidebar-logo'>
+      <div className="sidebar-logo">
         {!collapsed && (
-          <img src={logoLg} alt='UniLife Logo' className='sidebar-logo-image' />
+          <img src={logoLg} alt="UniLife Logo" className="sidebar-logo-image" />
         )}
         {collapsed && (
-          <img src={logoMd} alt='UniLife Logo' className='sidebar-logo-image' />
+          <img src={logoMd} alt="UniLife Logo" className="sidebar-logo-image" />
         )}
       </div>
       <Menu
-        className='sidebar-menu'
+        className="sidebar-menu"
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}

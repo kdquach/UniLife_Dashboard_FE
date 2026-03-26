@@ -51,6 +51,7 @@ import ProductCategoriesPage from "@/pages/ProductCategories";
 import NotificationPage from "@/pages/notification/NotificationPage";
 import PermissionManagementPage from "@/pages/PermissionManagement";
 import NotificationReadDetailPage from "@/pages/notification/NotificationReadDetailPage";
+import BannerGovernancePage from "@/pages/admin/BannerGovernance";
 import SystemUserManagementPage from "@/pages/SystemUserManagement";
 
 // Protected Route Component
@@ -64,6 +65,8 @@ function ProtectedRoute({ children }) {
 
   const isPending = user?.status === "pending" || user?.forceChangePassword;
   if (
+    user?.role === "staff" &&
+    user?.forceChangePassword &&
     isPending &&
     !location.pathname.startsWith("/profile")
   ) {
@@ -229,6 +232,14 @@ export default function App() {
               element={<div>Orders Page - Coming Soon</div>}
             />
             <Route path="canteens" element={<CanteenManagementPage />} />
+            <Route
+              path="banners"
+              element={
+                <AdminOnlyRoute>
+                  <BannerGovernancePage />
+                </AdminOnlyRoute>
+              }
+            />
             <Route
               path="reports"
               element={<div>Reports Page - Coming Soon</div>}
