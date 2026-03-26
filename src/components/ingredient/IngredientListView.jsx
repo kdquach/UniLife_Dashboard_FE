@@ -61,10 +61,11 @@ export default function IngredientListView({
         width: 100,
         align: 'right',
         render: (stock, record) => {
-          const isLow = stock <= record.lowStockThreshold;
+          const numericStock = Number(stock || 0);
+          const isLow = numericStock <= record.lowStockThreshold;
           return (
             <Tag color={isLow ? 'red' : 'green'}>
-              {stock} {record.unit}
+              {numericStock.toFixed(2)} {record.unit}
             </Tag>
           );
         },
