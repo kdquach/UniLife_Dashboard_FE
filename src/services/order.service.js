@@ -53,3 +53,12 @@ export async function getOrderByQR(code) {
   const res = await api.get(`/orders/qr/${encodeURIComponent(code)}`);
   return res.data;
 }
+
+/**
+ * PATCH /orders/:id/complete
+ * Hoàn thành đơn hàng theo id (dành cho staff, dùng endpoint chuyên biệt).
+ */
+export async function completeOrderById(id) {
+  const res = await api.patch(`/orders/${id}/complete`);
+  return res.data;
+}
