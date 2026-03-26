@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Form,
@@ -15,6 +15,8 @@ import {
   Alert,
   Divider,
 } from "antd";
+import { getActiveProductCategories } from "@/services/productCategory.service";
+import { getProductsByCanteen } from "@/services/product.service";
 
 const { TextArea } = Input;
 
@@ -23,8 +25,6 @@ export default function VoucherFormModal({
   mode, // 'create', 'edit'
   voucherState, // if edit, need to know state to disable fields
   form,
-  categories,
-  products,
   canteens,
   managerRole,
   userCanteenId,
@@ -41,11 +41,78 @@ export default function VoucherFormModal({
   const canEditBase =
     !isEdit || voucherState === "Draft" || voucherState === "Upcoming";
 
+  const [localCategories, setLocalCategories] = useState([]);
+  const [localProducts, setLocalProducts] = useState([]);
+
+  // Lắng nghe sự thay đổi của canteen_ids một cách an toàn
+  const selectedCanteenIds = Form.useWatch("canteen_ids", form);
+
   useEffect(() => {
     if (open && mode === "create" && managerRole && userCanteenId) {
       form.setFieldsValue({ scope: "Branch", canteen_ids: [userCanteenId] });
     }
   }, [open, mode, managerRole, userCanteenId, form]);
+
+  useEffect(() => {
+    const fetchDynamicData = async () => {
+      // Lấy định dạng ID chuẩn nhất (hỗ trợ cả mảng object lẫn mảng string)
+      let selectedCanteensList = Array.isArray(selectedCanteenIds) ? selectedCanteenIds : (selectedCanteenIds ? [selectedCanteenIds] : []);
+      
+      if (open && selectedCanteensList.length > 0) {
+        let canteenId = selectedCanteensList[0];
+        // Nếu canteenId là object thì bóc tách id ra
+        if (typeof canteenId === 'object' && canteenId !== null) {
+          canteenId = canteenId._id || canteenId.id;
+        }
+
+        try {
+          const [catRes, prodRes] = await Promise.all([
+            getActiveProductCategories(),
+            getProductsByCanteen(canteenId, { limit: 200, status: "active" }),
+          ]);
+
+          console.log("[DEBUG] catRes:", catRes);
+          console.log("[DEBUG] prodRes:", prodRes);
+
+          // Đã sửa lại thứ tự ưu tiên trích xuất mảng để tránh lấy nhầm Object
+          const extractArray = (res, keys) => {
+            if (Array.isArray(res)) return res;
+            if (res?.data && Array.isArray(res.data)) return res.data;
+            for (const key of keys) {
+              if (res?.[key] && Array.isArray(res[key])) return res[key];
+              if (res?.data?.[key] && Array.isArray(res.data[key])) return res.data[key];
+            }
+            return [];
+          };
+
+          const catList = extractArray(catRes, ['categories', 'category_ids']);
+          const prodList = extractArray(prodRes, ['products', 'items', 'product_ids']);
+
+          console.log("[DEBUG] Extract catList:", catList);
+          console.log("[DEBUG] Extract prodList:", prodList);
+
+          setLocalCategories(
+            catList?.map((c) => ({ 
+              label: c.name || c.title, 
+              value: c._id || c.id || c.categoryId || c.categoryIds || c.category_ids || c._ids || c.ids 
+            })) || []
+          );
+          setLocalProducts(
+            prodList?.map((p) => ({
+              label: `${p.name || p.title} - ${p.price?.toLocaleString() || 0}đ`,
+              value: p._id || p.id || p.productId || p.productIds || p.product_ids || p._ids || p.ids,
+            })) || []
+          );
+        } catch (error) {
+          console.error("Failed to fetch dynamic meta for canteen:", error);
+        }
+      } else {
+        setLocalCategories([]);
+        setLocalProducts([]);
+      }
+    };
+    fetchDynamicData();
+  }, [open, selectedCanteenIds]);
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -329,7 +396,7 @@ export default function VoucherFormModal({
                       <Select
                         mode="multiple"
                         disabled={!canEditBase}
-                        options={categories}
+                        options={localCategories}
                       />
                     </Form.Item>
                   </Col>
@@ -346,7 +413,7 @@ export default function VoucherFormModal({
                       <Select
                         mode="multiple"
                         disabled={!canEditBase}
-                        options={products}
+                        options={localProducts}
                       />
                     </Form.Item>
                   </Col>

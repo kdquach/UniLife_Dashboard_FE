@@ -40,6 +40,7 @@ export const STATUS_LABELS = {
 // User Roles
 export const USER_ROLES = {
   admin: "Quản trị viên",
+  canteen_owner: "Chủ căng tin",
   manager: "Quản lý",
   staff: "Nhân viên",
   customer: "Khách hàng",

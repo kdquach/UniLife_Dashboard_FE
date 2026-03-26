@@ -52,6 +52,7 @@ import NotificationPage from "@/pages/notification/NotificationPage";
 import PermissionManagementPage from "@/pages/PermissionManagement";
 import NotificationReadDetailPage from "@/pages/notification/NotificationReadDetailPage";
 import BannerGovernancePage from "@/pages/admin/BannerGovernance";
+import SystemUserManagementPage from "@/pages/SystemUserManagement";
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -62,9 +63,11 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  const isPending = user?.status === "pending" || user?.forceChangePassword;
   if (
     user?.role === "staff" &&
     user?.forceChangePassword &&
+    isPending &&
     !location.pathname.startsWith("/profile")
   ) {
     return <Navigate to="/profile?forceChangePassword=1" replace />;
@@ -215,8 +218,11 @@ export default function App() {
               }
             />
 
-            {/* Placeholder routes */}
-            <Route path="users" element={<div>Users Page - Coming Soon</div>} />
+            {/* System User Management – accessible by admin, canteen_owner, manager */}
+            <Route
+              path="users"
+              element={<SystemUserManagementPage />}
+            />
             <Route
               path="categories"
               element={<div>Categories Page - Coming Soon</div>}
