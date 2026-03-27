@@ -33,7 +33,18 @@ export default function LoginPage() {
       }
 
       message.success("Đăng nhập thành công!");
-      navigate(user?.role === "staff" ? "/staff/schedule" : "/");
+
+      if (user?.role === "staff") {
+        navigate("/staff/schedule");
+        return;
+      }
+
+      if (user?.role === "admin") {
+        navigate("/users");
+        return;
+      }
+
+      navigate("/");
     } catch (err) {
       message.error(err?.response?.data?.message || "Đăng nhập thất bại!");
     }
