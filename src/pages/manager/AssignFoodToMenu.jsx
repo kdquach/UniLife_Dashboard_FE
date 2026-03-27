@@ -42,6 +42,11 @@ export default function AssignFoodToMenu() {
     handlePreview,
   } = useAssignFoodToMenu();
 
+  const selectedFoodsTotalPrice = selectedFoods.reduce(
+    (sum, food) => sum + (Number(food?.price) || 0),
+    0
+  );
+
   // Fetch thực đơn khi component mount
   useEffect(() => {
     if (user?.canteenId) {
@@ -180,6 +185,7 @@ export default function AssignFoodToMenu() {
                 <AssignActions
                   selectedMenu={selectedMenu}
                   selectedFoodsCount={selectedFoods.length}
+                  selectedFoodsTotalPrice={selectedFoodsTotalPrice}
                   loading={loading}
                   onAssign={handleAssignFoods}
                   onPublish={handlePublish}

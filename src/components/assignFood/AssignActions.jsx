@@ -14,6 +14,7 @@ import GIcon from '@/components/GIcon';
 export default function AssignActions({
   selectedMenu,
   selectedFoodsCount,
+  selectedFoodsTotalPrice = 0,
   loading,
   onAssign,
   onPublish,
@@ -59,9 +60,7 @@ export default function AssignActions({
           <Col xs={24} sm={12} md={8}>
             <Statistic
               title="Thực đơn được chọn"
-              value={
-                selectedMenu?.name || '---'
-              }
+              value={selectedMenu?.name || '---'}
               prefix={<GIcon name="calendar_today" />}
             />
           </Col>
@@ -79,7 +78,7 @@ export default function AssignActions({
           <Col xs={24} sm={12} md={8}>
             <Statistic
               title="Tổng giá trị"
-              value={selectedFoodsCount > 0 ? '---' : '0'}
+              value={selectedFoodsCount > 0 ? selectedFoodsTotalPrice : 0}
               suffix="đ"
               valueStyle={{ fontSize: '16px' }}
             />
