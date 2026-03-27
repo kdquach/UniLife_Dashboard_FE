@@ -38,15 +38,21 @@ const TABS = [
   },
   {
     key: "ready",
-    label: "Sẵn sàng",
+    label: "Đã chuẩn bị",
     icon: "hourglass_top",
     sort: "preparedAt",
   },
   {
     key: "completed",
-    label: "Đã xong",
-    icon: "task_alt",
+    label: "Chờ nhận",
+    icon: "qr_code",
     sort: "-completedAt",
+  },
+  {
+    key: "received",
+    label: "Đã nhận",
+    icon: "task_alt",
+    sort: "-receivedAt",
   },
   {
     key: "cancelled",
@@ -60,8 +66,9 @@ const STATUS_LABEL = {
   pending: "Chờ xác nhận",
   confirmed: "Đã xác nhận",
   preparing: "Đang chuẩn bị",
-  ready: "Sẵn sàng",
-  completed: "Đã hoàn thành",
+  ready: "Đã chuẩn bị",
+  completed: "Chờ nhận",
+  received: "Đã nhận",
   cancelled: "Đã hủy",
 };
 
@@ -206,43 +213,58 @@ export default function PendingPickupOrders() {
 
   const handleChangeStatus = useCallback(
     async (order, nextStatus) => {
-      if (!order?._id) return;
-      if (!nextStatus) return;
+      if (!order?._id || !nextStatus) return;
 
-      // Avoid double submit
-      if (statusUpdating) return;
-      setStatusUpdating(true);
+      const executeUpdate = async () => {
+        // Avoid double submit
+        if (statusUpdating) return;
+        setStatusUpdating(true);
 
-      try {
-        let res;
-        if (nextStatus === "completed") {
-          // Prefer the dedicated complete endpoint to record scannedBy/scannedAt
-          res = await completeOrderById(order._id);
-        } else {
-          res = await updateOrderStatus(order._id, nextStatus);
-        }
-
-        const updatedOrder = res?.data?.order || res?.data || null;
-        if (!updatedOrder?._id) {
-          antdMessage.success("Cập nhật trạng thái thành công");
-        } else {
-          applyUpdatedOrderToState(updatedOrder);
-          antdMessage.success(
-            `Đã chuyển trạng thái sang "${STATUS_LABEL[updatedOrder.status] || updatedOrder.status}"`,
-          );
-
-          // If order leaves current tab, refresh list + close modal
-          if (updatedOrder.status !== activeTab) {
-            setDetailModal({ open: false, order: null, loading: false });
-            fetchOrders(pagination.page);
+        try {
+          let res;
+          if (nextStatus === "completed") {
+            // Prefer the dedicated complete endpoint to record scannedBy/scannedAt
+            res = await completeOrderById(order._id);
+          } else {
+            res = await updateOrderStatus(order._id, nextStatus);
           }
+
+          const updatedOrder = res?.data?.order || res?.data || null;
+          if (!updatedOrder?._id) {
+            antdMessage.success("Cập nhật trạng thái thành công");
+          } else {
+            applyUpdatedOrderToState(updatedOrder);
+            antdMessage.success(
+              `Đã chuyển trạng thái sang "${STATUS_LABEL[updatedOrder.status] || updatedOrder.status}"`,
+            );
+
+            // If order leaves current tab, refresh list + close modal
+            if (updatedOrder.status !== activeTab) {
+              setDetailModal({ open: false, order: null, loading: false });
+              fetchOrders(pagination.page);
+            }
+          }
+        } catch (err) {
+          antdMessage.error(
+            err?.response?.data?.message || "Không thể cập nhật trạng thái đơn",
+          );
+        } finally {
+          setStatusUpdating(false);
         }
-      } catch (err) {
-        antdMessage.error(
-          err?.response?.data?.message || "Không thể cập nhật trạng thái đơn",
-        );
-      } finally {
-        setStatusUpdating(false);
+      };
+
+      if (nextStatus === "cancelled") {
+        Modal.confirm({
+          title: "Xác nhận hủy đơn hàng",
+          content: `Bạn có chắc chắn muốn hủy đơn hàng #${order.orderNumber}?`,
+          okText: "Xác nhận hủy",
+          okType: "danger",
+          cancelText: "Quay lại",
+          centered: true,
+          onOk: executeUpdate,
+        });
+      } else {
+        await executeUpdate();
       }
     },
     [
@@ -417,8 +439,21 @@ export default function PendingPickupOrders() {
                   </span>
                 </div>
 
-                {order.status === "ready" && (
-                  <div className="co-card__actions">
+                {(order.status === "ready" || order.status === "pending" || order.status === "confirmed") && (
+                  <div className="co-card__actions" style={{ justifyContent: "flex-end" }}>
+                    {(order.status === "pending" || order.status === "confirmed") && (
+                      <button
+                        className="co-btn-danger"
+                        disabled={statusUpdating}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleChangeStatus(order, "cancelled");
+                        }}
+                      >
+                        <GIcon name="cancel" />
+                        Hủy đơn
+                      </button>
+                    )}
                     <button
                       className="co-btn-outline"
                       onClick={(e) => {
@@ -473,8 +508,6 @@ export default function PendingPickupOrders() {
         ) : detailModal.order ? (
           <OrderDetail
             order={detailModal.order}
-            statusUpdating={statusUpdating}
-            onChangeStatus={handleChangeStatus}
             onClose={() =>
               setDetailModal({ open: false, order: null, loading: false })
             }
@@ -488,58 +521,33 @@ export default function PendingPickupOrders() {
 /* ======================================
    Order Detail Component (Modal body)
    ====================================== */
-function OrderDetail({ order, onClose, onChangeStatus, statusUpdating }) {
+function OrderDetail({ order, onClose }) {
   const heroClass =
     order.status === "completed"
       ? "co-dm-hero--completed"
-      : order.status === "cancelled"
-        ? "co-dm-hero--cancelled"
-        : "";
+      : order.status === "received"
+        ? "co-dm-hero--received"
+        : order.status === "cancelled"
+          ? "co-dm-hero--cancelled"
+          : "";
 
   const iconClass =
     order.status === "completed"
       ? "co-dm-hero__icon--completed"
-      : order.status === "cancelled"
-        ? "co-dm-hero__icon--cancelled"
-        : "co-dm-hero__icon--ready";
+      : order.status === "received"
+        ? "co-dm-hero__icon--received"
+        : order.status === "cancelled"
+          ? "co-dm-hero__icon--cancelled"
+          : "co-dm-hero__icon--ready";
 
   const iconName =
-    order.status === "completed"
-      ? "check_circle"
-      : order.status === "cancelled"
-        ? "cancel"
-        : "pending_actions";
-
-  const actions = (() => {
-    if (order.status === "cancelled" || order.status === "completed") return [];
-
-    // Minimal, linear transitions
-    if (order.status === "pending") {
-      return [
-        { key: "confirmed", label: "Xác nhận", icon: "check_circle" },
-        { key: "cancelled", label: "Hủy", icon: "cancel" },
-      ];
-    }
-    if (order.status === "confirmed") {
-      return [
-        { key: "preparing", label: "Bắt đầu chuẩn bị", icon: "restaurant" },
-        { key: "cancelled", label: "Hủy", icon: "cancel" },
-      ];
-    }
-    if (order.status === "preparing") {
-      return [
-        { key: "ready", label: "Đánh dấu sẵn sàng", icon: "hourglass_top" },
-        { key: "cancelled", label: "Hủy", icon: "cancel" },
-      ];
-    }
-    if (order.status === "ready") {
-      return [
-        { key: "completed", label: "Hoàn thành", icon: "task_alt" },
-      ];
-    }
-
-    return [];
-  })();
+    order.status === "received"
+      ? "task_alt"
+      : order.status === "completed"
+        ? "qr_code"
+        : order.status === "cancelled"
+          ? "cancel"
+          : "pending_actions";
 
   return (
     <div className="co-dm">
@@ -633,31 +641,7 @@ function OrderDetail({ order, onClose, onChangeStatus, statusUpdating }) {
         </div>
       </div>
 
-      {/* Actions */}
-      {actions.length > 0 && (
-        <div className="co-dm-section">
-          <div className="co-dm-section__title">Xử lý đơn</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {actions.map((a) => (
-              <button
-                key={a.key}
-                className={a.key === "cancelled" ? "co-btn-outline" : "co-btn-primary"}
-                disabled={statusUpdating}
-                onClick={() => onChangeStatus?.(order, a.key)}
-                type="button"
-              >
-                <GIcon name={a.icon} />
-                {statusUpdating ? "Đang xử lý..." : a.label}
-              </button>
-            ))}
-          </div>
-          {order.status === "ready" && (
-            <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
-              Tip: Bạn cũng có thể hoàn thành đơn bằng màn “Quét QR”.
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* Timestamps */}
       <div className="co-dm-section">
@@ -681,6 +665,14 @@ function OrderDetail({ order, onClose, onChangeStatus, statusUpdating }) {
             <span className="co-dm-info-row__label">Hoàn thành</span>
             <span className="co-dm-info-row__value">
               {dayjs(order.completedAt).format("HH:mm DD/MM/YYYY")}
+            </span>
+          </div>
+        )}
+        {order.receivedAt && (
+          <div className="co-dm-info-row">
+            <span className="co-dm-info-row__label">Đã nhận lúc</span>
+            <span className="co-dm-info-row__value">
+              {dayjs(order.receivedAt).format("HH:mm DD/MM/YYYY")}
             </span>
           </div>
         )}

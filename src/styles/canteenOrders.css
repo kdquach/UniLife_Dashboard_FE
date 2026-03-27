@@ -215,13 +215,28 @@
   transform: translateY(-1px);
 }
 
+.co-card--pending {
+  border-left: 4px solid #f97316;
+}
+
+.co-card--confirmed {
+  border-left: 4px solid #3b82f6;
+}
+
+.co-card--preparing {
+  border-left: 4px solid #f59e0b;
+}
+
 .co-card--ready {
   border-left: 4px solid #22c55e;
 }
 
 .co-card--completed {
-  border-left: 4px solid #9ca3af;
-  opacity: 0.85;
+  border-left: 4px solid #0ea5e9;
+}
+
+.co-card--received {
+  border-left: 4px solid #22c55e;
 }
 
 .co-card--cancelled {
@@ -319,9 +334,15 @@
 }
 
 .co-badge--completed {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.co-badge--received {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
 }
 
 .co-badge--cancelled {
@@ -398,6 +419,34 @@
   border-color: #ff5532;
   color: #ff5532;
   background: #fff7f5;
+}
+
+.co-btn-danger {
+  background: #ef4444;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.co-btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.co-btn-danger:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.co-btn-danger:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
 }
 
 /* ---------- Empty State ---------- */
@@ -481,8 +530,13 @@
 }
 
 .co-dm-hero--completed {
-  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
-  border-bottom-color: #e5e7eb;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-bottom-color: #7dd3fc;
+}
+
+.co-dm-hero--received {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-bottom-color: #6ee7b7;
 }
 
 .co-dm-hero--cancelled {
@@ -507,7 +561,11 @@
 }
 
 .co-dm-hero__icon--completed {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.co-dm-hero__icon--received {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .co-dm-hero__icon--cancelled {
