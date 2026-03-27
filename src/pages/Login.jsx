@@ -1,14 +1,42 @@
 import { Form, Input, Button, Card, message } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import logoLg from "@/assets/images/logo-lg.png";
 import GIcon from "@/components/GIcon";
 import { login } from "@/services/auth.service";
 
+const SESSION_EXPIRED_REASON = "session_expired";
+const SESSION_EXPIRED_FLAG = "unilife_session_expired";
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuth } = useAuthStore();
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const reason = params.get("reason");
+
+    if (reason !== SESSION_EXPIRED_REASON) return;
+
+    const hasFlag = sessionStorage.getItem(SESSION_EXPIRED_FLAG);
+    if (hasFlag) {
+      message.warning("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      sessionStorage.removeItem(SESSION_EXPIRED_FLAG);
+    }
+
+    params.delete("reason");
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: "/login",
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true }
+    );
+  }, [location.search, navigate]);
 
   const handleLogin = async (values) => {
     try {

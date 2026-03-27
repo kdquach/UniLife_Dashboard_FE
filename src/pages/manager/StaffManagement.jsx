@@ -2,19 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
-  Col,
   Descriptions,
   Dropdown,
   Form,
   Input,
   Modal,
-  Row,
   Select,
   Space,
-  Table,
   Tag,
 } from "antd";
 import GIcon from "@/components/GIcon";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 import {
   DEFAULT_PAGE_SIZE,
   STAFF_GENDER_OPTIONS,
@@ -223,8 +221,8 @@ export default function StaffManagementPage() {
         )}
       >
         <Space direction="vertical" size={12} style={{ width: "100%" }}>
-          <Row gutter={[12, 12]}>
-            <Col xs={24} md={8}>
+          <div className="dashboard-filter-bar">
+            <div className="dashboard-filter-item dashboard-filter-item--grow">
               <Input
                 value={searchText}
                 placeholder="Tìm theo tên, email, số điện thoại"
@@ -232,29 +230,29 @@ export default function StaffManagementPage() {
                 onPressEnter={handleApplyFilters}
                 allowClear
               />
-            </Col>
-            <Col xs={24} md={5}>
+            </div>
+            <div className="dashboard-filter-item">
               <Select
                 value={filters.status}
                 style={{ width: "100%" }}
                 options={STAFF_STATUS_FILTER_OPTIONS}
                 onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
               />
-            </Col>
-            <Col xs={24} md={5}>
+            </div>
+            <div className="dashboard-filter-item">
               <Select
                 value={filters.gender}
                 style={{ width: "100%" }}
                 options={[{ value: "all", label: "Tất cả giới tính" }, ...STAFF_GENDER_OPTIONS]}
                 onChange={(value) => setFilters((prev) => ({ ...prev, gender: value }))}
               />
-            </Col>
-            <Col xs={24} md={6}>
+            </div>
+            <div className="dashboard-filter-actions">
               <Button style={{ width: "100%" }} onClick={handleApplyFilters}>
                 Lọc
               </Button>
-            </Col>
-          </Row>
+            </div>
+          </div>
 
           <Row>
             <Col>
@@ -264,11 +262,12 @@ export default function StaffManagementPage() {
             </Col>
           </Row>
 
-          <Table
+          <ResponsiveDataTable
             rowKey="_id"
             loading={loading}
             columns={columns}
             dataSource={items}
+            mobileFields={["fullName", "status", "phone", "action"]}
             pagination={{
               current: pagination.current,
               pageSize: pagination.pageSize,

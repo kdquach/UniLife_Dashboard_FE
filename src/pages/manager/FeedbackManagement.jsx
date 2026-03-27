@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
-import { Card, Table, Space, Button, Select, Input, Rate, DatePicker, Drawer, Typography, Form, message, Modal } from "antd";
+import { Card, Space, Button, Select, Input, Rate, DatePicker, Drawer, Typography, Form, message, Modal } from "antd";
 import dayjs from "dayjs";
 import { getFeedbackList, getFeedbackById, getFeedbackReplies, createFeedbackReply, updateFeedbackReply, deleteFeedbackReply } from "@/services/feedback.service";
 import { useAuthStore } from "@/store/useAuthStore";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 
@@ -175,42 +176,42 @@ export default function FeedbackManagementPage() {
 
     const columns = [
         {
-            title: "Customer",
+            title: "Khách hàng",
             dataIndex: ["userId", "fullName"],
             key: "customerName",
             render: (_, record) => record.userId?.fullName || "Anonymous",
         },
         {
-            title: "Product",
+            title: "Sản phẩm",
             dataIndex: ["productId", "name"],
             key: "productName",
             render: (_, record) => record.productId?.name || "(Unknown product)",
         },
         {
-            title: "Rating",
+            title: "Đánh giá",
             dataIndex: "rating",
             key: "rating",
             render: (value) => <Rate disabled defaultValue={Number(value) || 0} />,
         },
         {
-            title: "Comment",
+            title: "Nội dung",
             dataIndex: "comment",
             key: "comment",
             ellipsis: true,
             render: (text) => text || "(No comment)",
         },
         {
-            title: "Created At",
+            title: "Thời gian tạo",
             dataIndex: "createdAt",
             key: "createdAt",
             render: (value) => (value ? dayjs(value).format("DD/MM/YYYY HH:mm") : ""),
         },
         {
-            title: "Action",
+            title: "Thao tác",
             key: "action",
             render: (_, record) => (
                 <Button type="link" onClick={() => openDetail(record)}>
-                    View / Reply
+                    Xem / Trả lời
                 </Button>
             ),
         },
@@ -218,33 +219,45 @@ export default function FeedbackManagementPage() {
 
     return (
         <Card title="Customer Feedback" bordered={false}>
-            <Space style={{ marginBottom: 16 }} wrap>
-                <Select
-                    allowClear
-                    placeholder="Rating"
-                    style={{ width: 160 }}
-                    value={rating}
-                    onChange={setRating}
-                    options={[
-                        { label: "All", value: undefined },
-                        { label: <Rate disabled defaultValue={1} />, value: 1 },
-                        { label: <Rate disabled defaultValue={2} />, value: 2 },
-                        { label: <Rate disabled defaultValue={3} />, value: 3 },
-                        { label: <Rate disabled defaultValue={4} />, value: 4 },
-                        { label: <Rate disabled defaultValue={5} />, value: 5 },
-                    ]}
-                />
-                <DatePicker value={fromDate} onChange={setFromDate} />
-                <Button onClick={() => fetchList(1, pagination.pageSize)}>Refresh</Button>
-            </Space>
+            <div className="dashboard-filter-bar" style={{ marginBottom: 16 }}>
+                <div className="dashboard-filter-item">
+                    <Select
+                        allowClear
+                        placeholder="Rating"
+                        style={{ width: "100%" }}
+                        value={rating}
+                        onChange={setRating}
+                        options={[
+                            { label: "All", value: undefined },
+                            { label: <Rate disabled defaultValue={1} />, value: 1 },
+                            { label: <Rate disabled defaultValue={2} />, value: 2 },
+                            { label: <Rate disabled defaultValue={3} />, value: 3 },
+                            { label: <Rate disabled defaultValue={4} />, value: 4 },
+                            { label: <Rate disabled defaultValue={5} />, value: 5 },
+                        ]}
+                    />
+                </div>
+                <div className="dashboard-filter-item">
+                    <DatePicker value={fromDate} onChange={setFromDate} style={{ width: "100%" }} />
+                </div>
+                <div className="dashboard-filter-actions">
+                    <Button onClick={() => fetchList(1, pagination.pageSize)}>Refresh</Button>
+                </div>
+            </div>
 
-            <Table
+            <ResponsiveDataTable
                 rowKey={(record) => record._id || record.id}
                 loading={loading}
                 columns={columns}
                 dataSource={items}
                 pagination={pagination}
                 onChange={handleTableChange}
+                mobileFields={[
+                    "customerName",
+                    "rating",
+                    "comment",
+                    "action",
+                ]}
             />
 
             <Drawer
