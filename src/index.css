@@ -51,7 +51,15 @@
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.03);
   --shadow-surface: 0 8px 30px rgba(0, 0, 0, 0.04);
 
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -66,7 +74,11 @@
 
 /* Google Material Symbols (Rounded) */
 .material-symbols-rounded {
-  font-variation-settings: "FILL"0, "wght"500, "GRAD"0, "opsz"24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
   display: inline-block;
   line-height: 1;
   user-select: none;
@@ -74,7 +86,11 @@
 }
 
 .material-symbols-rounded.fill {
-  font-variation-settings: "FILL"1, "wght"600, "GRAD"0, "opsz"24;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 600,
+    "GRAD" 0,
+    "opsz" 24;
 }
 
 * {
@@ -88,7 +104,15 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: var(--app-bg);
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -312,7 +336,9 @@ body {
   background: rgba(255, 255, 255, 0.85);
   color: var(--text-muted);
   box-shadow: var(--shadow-card);
-  transition: background 0.16s ease, color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
   cursor: pointer;
 }
 
@@ -493,12 +519,30 @@ body {
   flex-shrink: 0;
 }
 
-.nd-icon-system { background: #f0f9ff; color: #0369a1; }
-.nd-icon-order { background: #ecfdf3; color: #166534; }
-.nd-icon-shift { background: #eef2ff; color: #4338ca; }
-.nd-icon-salary { background: #ecfeff; color: #155e75; }
-.nd-icon-feedback { background: #fff7ed; color: #9a3412; }
-.nd-icon-promotion { background: #fffbeb; color: #b45309; }
+.nd-icon-system {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+.nd-icon-order {
+  background: #ecfdf3;
+  color: #166534;
+}
+.nd-icon-shift {
+  background: #eef2ff;
+  color: #4338ca;
+}
+.nd-icon-salary {
+  background: #ecfeff;
+  color: #155e75;
+}
+.nd-icon-feedback {
+  background: #fff7ed;
+  color: #9a3412;
+}
+.nd-icon-promotion {
+  background: #fffbeb;
+  color: #b45309;
+}
 
 .nd-item-body {
   min-width: 0;
@@ -564,4 +608,67 @@ body {
   padding: 6px 12px;
   background: #f8fafc;
   color: var(--text-muted);
+}
+
+/* Payroll Generate Dialog */
+.payroll-generate-modal .ant-modal-content {
+  border-radius: 16px;
+}
+
+.payroll-generate-modal .ant-modal-header {
+  margin-bottom: 16px;
+}
+
+.payroll-generate-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payroll-generate-modal-title-icon {
+  color: var(--info);
+  font-size: 18px;
+}
+
+.payroll-generate-guide {
+  border: 1px solid #d8e9ff;
+  background: #f5faff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.payroll-generate-guide-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #0f5fbf;
+}
+
+.payroll-generate-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text);
+}
+
+.payroll-generate-guide-item .anticon {
+  margin-top: 3px;
+  color: #2e7d32;
+}
+
+.payroll-generate-period-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 14px;
+}
+
+.payroll-generate-note-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.payroll-generate-note-list li {
+  margin-bottom: 4px;
 }
