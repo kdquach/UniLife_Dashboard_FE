@@ -99,7 +99,7 @@ export default function QRScanScreen() {
       const order = res?.data?.order;
       setResult({
         type: "success",
-        title: res?.message || "Xác nhận trả hàng thành công",
+        title: res?.message || "Xác nhận nhận hàng thành công",
         order,
       });
     } catch (err) {
@@ -142,7 +142,7 @@ export default function QRScanScreen() {
       const order = res?.data?.order;
       setResult({
         type: "success",
-        title: res?.message || "Xác nhận trả hàng thành công",
+        title: res?.message || "Xác nhận nhận hàng thành công",
         order,
       });
       setManualCode("");
@@ -316,9 +316,11 @@ export default function QRScanScreen() {
                 <div className="co-result__row">
                   <span className="co-result__label">Trạng thái</span>
                   <span className="co-result__value">
-                    {result.order.status === "completed"
-                      ? "✅ Đã hoàn thành"
-                      : result.order.status}
+                    {result.order.status === "received"
+                      ? "✅ Đã nhận hàng"
+                      : result.order.status === "completed"
+                        ? "✅ Đã sẵn sàng"
+                        : result.order.status}
                   </span>
                 </div>
               </>
