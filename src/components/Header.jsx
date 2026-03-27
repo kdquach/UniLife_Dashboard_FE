@@ -7,7 +7,7 @@ import NotificationCenter from "@/components/NotificationCenter";
 
 const { Header: AntHeader } = Layout;
 
-export default function Header({ collapsed, onToggle }) {
+export default function Header({ collapsed, onToggle, isMobile = false }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -51,15 +51,16 @@ export default function Header({ collapsed, onToggle }) {
   return (
     <AntHeader
       style={{
-        padding: "0 24px",
+        padding: isMobile ? "0 12px" : "0 24px",
         background: "transparent",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 8,
       }}
     >
       {contextHolder}
-      <Space size="middle" style={{ flex: 1 }}>
+      <Space size={isMobile ? 8 : "middle"} style={{ flex: 1, minWidth: 0 }}>
         <Button
           type="text"
           icon={<GIcon name={collapsed ? "menu_open" : "menu"} />}
@@ -78,7 +79,8 @@ export default function Header({ collapsed, onToggle }) {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           style={{
-            maxWidth: 520,
+            width: "100%",
+            maxWidth: isMobile ? "100%" : 520,
             height: 44,
             borderRadius: 14,
             background: "rgba(245,246,248,0.9)",
@@ -86,7 +88,7 @@ export default function Header({ collapsed, onToggle }) {
         />
       </Space>
 
-      <Space size="middle">
+      <Space size={isMobile ? 8 : "middle"}>
         <NotificationCenter />
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">

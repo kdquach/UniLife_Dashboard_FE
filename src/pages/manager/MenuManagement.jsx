@@ -5,7 +5,6 @@ import {
     Col,
     Input,
     Button,
-    Table,
     Tag,
     Space,
     Modal,
@@ -16,6 +15,7 @@ import dayjs from 'dayjs';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useMenuManagement } from '@/hooks/useMenuManagement';
 import GIcon from '@/components/GIcon';
+import ResponsiveDataTable from '@/components/ResponsiveDataTable';
 import { DATE_FORMAT } from '@/config/constants';
 import { useGlobalSearchStore } from '@/store/useGlobalSearchStore';
 import '@/styles/menu-management.css';
@@ -328,17 +328,10 @@ const MenuManagementPage = () => {
                 </Row>
 
                 <Card title="Danh sách thực đơn" bodyStyle={{ paddingTop: 8 }}>
-                    <Space
-                        style={{
-                            marginBottom: 16,
-                            width: '100%',
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                        }}
-                    >
-                        <Space wrap>
+                    <div className="dashboard-filter-bar" style={{ marginBottom: 16 }}>
+                        <div className="dashboard-filter-item">
                             <Select
-                                style={{ minWidth: 180 }}
+                                style={{ width: '100%' }}
                                 value={statusFilter}
                                 onChange={(value) => setStatusFilter(value)}
                                 options={[
@@ -348,20 +341,23 @@ const MenuManagementPage = () => {
                                     { value: 'inactive', label: 'Ngưng sử dụng' },
                                 ]}
                             />
+                        </div>
+                        <div className="dashboard-filter-item">
                             <DatePicker
                                 allowClear
                                 value={appliedDateFilter}
                                 onChange={(value) => setAppliedDateFilter(value)}
                                 placeholder="Lọc theo ngày áp dụng"
                                 format={DATE_FORMAT}
-                                style={{ minWidth: 180 }}
+                                style={{ width: '100%' }}
                             />
-                        </Space>
-                    </Space>
-                    <Table
+                        </div>
+                    </div>
+                    <ResponsiveDataTable
                         loading={loading}
                         columns={columns}
                         dataSource={dataSource}
+                        mobileFields={['name', 'status', 'appliedDateText']}
                         pagination={{
                             current: pagination.current,
                             pageSize: pagination.pageSize,

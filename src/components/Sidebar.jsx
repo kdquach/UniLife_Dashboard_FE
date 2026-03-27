@@ -1,4 +1,4 @@
-import { Layout, Menu } from 'antd';
+import { Drawer, Layout, Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoLg from '@/assets/images/logo-lg.png';
 import logoMd from '@/assets/images/logo-md.png';
@@ -7,7 +7,12 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 const { Sider } = Layout;
 
-export default function Sidebar({ collapsed }) {
+export default function Sidebar({
+  collapsed,
+  isMobile = false,
+  mobileOpen = false,
+  onCloseMobile,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
@@ -295,6 +300,50 @@ export default function Sidebar({ collapsed }) {
     return path;
   })();
 
+  const handleMenuClick = ({ key }) => {
+    const item = findMenuItemByKey(menuItems, key);
+    if (!item?.children) {
+      navigate(key);
+      if (isMobile) {
+        onCloseMobile?.();
+      }
+    }
+  };
+
+  const menuNode = (
+    <>
+      <div className="sidebar-logo">
+        {isMobile || !collapsed ? (
+          <img src={logoLg} alt="UniLife Logo" className="sidebar-logo-image" />
+        ) : (
+          <img src={logoMd} alt="UniLife Logo" className="sidebar-logo-image" />
+        )}
+      </div>
+      <Menu
+        className="sidebar-menu"
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={menuItems}
+        onClick={handleMenuClick}
+      />
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer
+        open={mobileOpen}
+        onClose={onCloseMobile}
+        placement="left"
+        width={280}
+        className="dashboard-mobile-drawer"
+        bodyStyle={{ padding: 0 }}
+      >
+        {menuNode}
+      </Drawer>
+    );
+  }
+
   return (
     <Sider
       className="dashboard-sider"
@@ -304,27 +353,7 @@ export default function Sidebar({ collapsed }) {
       width={260}
       collapsedWidth={84}
     >
-      <div className="sidebar-logo">
-        {!collapsed && (
-          <img src={logoLg} alt="UniLife Logo" className="sidebar-logo-image" />
-        )}
-        {collapsed && (
-          <img src={logoMd} alt="UniLife Logo" className="sidebar-logo-image" />
-        )}
-      </div>
-      <Menu
-        className="sidebar-menu"
-        mode="inline"
-        selectedKeys={[selectedKey]}
-        items={menuItems}
-        onClick={({ key }) => {
-          // Kiểm tra nếu item có children thì không navigate (chỉ toggle expand/collapse)
-          const item = findMenuItemByKey(menuItems, key);
-          if (!item?.children) {
-            navigate(key);
-          }
-        }}
-      />
+      {menuNode}
     </Sider>
   );
 }

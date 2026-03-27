@@ -1,6 +1,7 @@
-import { Button, Card, Select, Space, Table, Tag } from "antd";
+import { Button, Card, Select, Space, Tag } from "antd";
 import dayjs from "dayjs";
 import { useShiftRequestsManagement } from "@/hooks/useShiftRequestsManagement";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 
 export default function ShiftRequestsManagementPage() {
   const {
@@ -12,13 +13,12 @@ export default function ShiftRequestsManagementPage() {
   } = useShiftRequestsManagement();
 
   return (
-    <Card
-      title="Quản lý yêu cầu đổi ca"
-      extra={(
-        <Space>
+    <Card title="Quản lý yêu cầu đổi ca">
+      <div className="dashboard-filter-bar" style={{ marginBottom: 16 }}>
+        <div className="dashboard-filter-item">
           <Select
             value={statusFilter}
-            style={{ width: 160 }}
+            style={{ width: "100%" }}
             onChange={setStatusFilter}
             options={[
               { value: "all", label: "Tất cả" },
@@ -27,20 +27,28 @@ export default function ShiftRequestsManagementPage() {
               { value: "rejected", label: "Đã từ chối" },
             ]}
           />
-        </Space>
-      )}
-    >
-      <Table
+        </div>
+      </div>
+
+      <ResponsiveDataTable
         rowKey="_id"
         loading={loading}
         dataSource={requests}
+        mobileFields={[
+          "staff",
+          "status",
+          "currentShift",
+          "action",
+        ]}
         columns={[
           {
             title: "Nhân viên",
+            key: "staff",
             render: (_, row) => row.staffId?.fullName || "—",
           },
           {
             title: "Ca hiện tại",
+            key: "currentShift",
             render: (_, row) => {
               const oldShift = row.staffShiftId?.shiftId;
               if (!oldShift) return "—";
@@ -49,14 +57,17 @@ export default function ShiftRequestsManagementPage() {
           },
           {
             title: "Nội dung yêu cầu",
+            key: "requestType",
             render: () => "Yêu cầu bỏ ca",
           },
           {
             title: "Lý do",
             dataIndex: "reason",
+            key: "reason",
           },
           {
             title: "Trạng thái",
+            key: "status",
             render: (_, row) => {
               const color =
                 row.status === "approved"
@@ -75,14 +86,17 @@ export default function ShiftRequestsManagementPage() {
           },
           {
             title: "Thời gian tạo",
+            key: "createdAt",
             render: (_, row) => dayjs(row.createdAt).format("DD/MM/YYYY HH:mm"),
           },
           {
             title: "Thời gian xử lý",
+            key: "reviewedAt",
             render: (_, row) => (row.reviewedAt ? dayjs(row.reviewedAt).format("DD/MM/YYYY HH:mm") : "—"),
           },
           {
             title: "Thao tác",
+            key: "action",
             render: (_, row) => (
               <Space>
                 <Button

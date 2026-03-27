@@ -559,21 +559,21 @@ export default function AttendanceHistory() {
       </div>
 
       {/* Filters bar: DatePicker + Status */}
-      <div className="att-filters">
+      <div className="att-filters dashboard-filter-bar">
         <DatePicker
           picker="month"
           value={month}
           onChange={handleMonthPick}
           format="MM/YYYY"
           allowClear={false}
-          style={{ width: 160 }}
+          style={{ width: "100%" }}
           placeholder="Chọn tháng"
         />
         <Select
           value={statusFilter}
           onChange={handleStatusChange}
           options={STATUS_OPTIONS}
-          style={{ width: 200 }}
+          style={{ width: "100%" }}
           placeholder="Trạng thái"
         />
       </div>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Card,
-  Table,
   Button,
   Space,
   message,
@@ -31,6 +30,7 @@ import {
   setSalaryRate,
 } from "@/services/salaryRate.service";
 import { getAllUsers } from "@/services/user.service";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -317,12 +317,18 @@ const SalaryRateManagement = () => {
 
       {/* Table */}
       <Card>
-        <Table
+        <ResponsiveDataTable
           columns={columns}
           dataSource={salaryRates}
           rowKey="_id"
           loading={loading}
           scroll={{ x: 1400 }}
+          mobileFields={[
+            "staffName",
+            "hourlyRate",
+            "overtimeMultiplier",
+            "action",
+          ]}
           pagination={{
             pageSize: 10,
             showTotal: (total) => `Tổng ${total} cấu hình`,

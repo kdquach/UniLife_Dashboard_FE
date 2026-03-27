@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Card,
-  Table,
   Button,
   Space,
   Tag,
@@ -33,6 +32,7 @@ import {
   deletePayroll,
 } from "@/services/payroll.service";
 import GeneratePayrollDialog from "@/components/payroll/GeneratePayrollDialog";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
@@ -324,8 +324,8 @@ const PayrollList = () => {
 
       {/* Filters */}
       <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col span={6}>
+        <div className="dashboard-filter-bar">
+          <div className="dashboard-filter-item">
             <Select
               placeholder="Tháng"
               value={filters.month || undefined}
@@ -338,9 +338,9 @@ const PayrollList = () => {
                 </Option>
               ))}
             </Select>
-          </Col>
+          </div>
 
-          <Col span={4}>
+          <div className="dashboard-filter-item">
             <Select
               placeholder="Năm"
               value={filters.year || undefined}
@@ -353,9 +353,9 @@ const PayrollList = () => {
                 </Option>
               ))}
             </Select>
-          </Col>
+          </div>
 
-          <Col span={6}>
+          <div className="dashboard-filter-item">
             <Select
               placeholder="Trạng thái"
               value={filters.status || undefined}
@@ -368,9 +368,9 @@ const PayrollList = () => {
               <Option value="approved">Đã duyệt</Option>
               <Option value="paid">Đã thanh toán</Option>
             </Select>
-          </Col>
+          </div>
 
-          <Col span={4}>
+          <div className="dashboard-filter-actions">
             <Button
               type="primary"
               icon={<ReloadOutlined />}
@@ -378,8 +378,8 @@ const PayrollList = () => {
             >
               Làm mới
             </Button>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </Card>
 
       {/* Table */}
@@ -410,7 +410,7 @@ const PayrollList = () => {
             </Button>
           </Empty>
         ) : (
-          <Table
+          <ResponsiveDataTable
             columns={columns}
             dataSource={payrolls}
             rowKey="_id"
@@ -418,6 +418,12 @@ const PayrollList = () => {
               pageSize: 10,
               showTotal: (total) => `Tổng ${total} kỳ lương`,
             }}
+            mobileFields={[
+              "period",
+              "status",
+              "totalAmount",
+              "actions",
+            ]}
           />
         )}
       </Card>

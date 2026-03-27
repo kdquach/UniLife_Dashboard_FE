@@ -9,12 +9,12 @@ import {
   Empty,
   message,
   Tabs,
-  Table,
   Select,
   Badge,
 } from "antd";
 import dayjs from "dayjs";
 import GIcon from "@/components/GIcon";
+import ResponsiveDataTable from "@/components/ResponsiveDataTable";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   getCanteenById,
@@ -512,10 +512,11 @@ export default function CanteenManagement() {
                       description="Không có căng tin đang hoạt động"
                     />
                   ) : (
-                    <Table
+                    <ResponsiveDataTable
                       rowKey="_id"
                       columns={adminActiveColumns}
                       dataSource={adminActiveCanteens}
+                      mobileFields={["name", "status", "campus"]}
                       pagination={false}
                     />
                   )}
@@ -554,10 +555,15 @@ export default function CanteenManagement() {
                       description="Không có căng tin chờ duyệt"
                     />
                   ) : (
-                    <Table
+                    <ResponsiveDataTable
                       rowKey="_id"
                       columns={adminPendingColumns}
                       dataSource={adminPendingCanteens}
+                      mobileFields={[
+                        "name",
+                        "campus",
+                        "actions",
+                      ]}
                       pagination={false}
                     />
                   )}
@@ -637,10 +643,16 @@ export default function CanteenManagement() {
                       description="Bạn chưa có căng tin nào"
                     />
                   ) : (
-                    <Table
+                    <ResponsiveDataTable
                       rowKey="_id"
                       columns={managerColumns}
                       dataSource={canteens}
+                      mobileFields={[
+                        "name",
+                        "status",
+                        "campus",
+                        "actions",
+                      ]}
                       pagination={false}
                       style={{ marginBottom: 16 }}
                     />
