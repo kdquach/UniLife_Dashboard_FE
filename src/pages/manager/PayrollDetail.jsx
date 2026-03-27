@@ -22,6 +22,7 @@ import {
   CheckCircleOutlined,
   PayCircleOutlined,
   DeleteOutlined,
+  FileExcelOutlined,
   DollarOutlined,
   TeamOutlined,
   ClockCircleOutlined,
@@ -32,6 +33,7 @@ import {
   approvePayroll,
   confirmPayment,
   deletePayroll,
+  exportPayrollExcel,
 } from "@/services/payroll.service";
 import { updateSalary } from "@/services/salary.service";
 import AdjustSalaryDialog from "@/components/payroll/AdjustSalaryDialog";
@@ -45,6 +47,7 @@ const PayrollDetail = () => {
   const [payroll, setPayroll] = useState(null);
   const [salaries, setSalaries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [openAdjustDialog, setOpenAdjustDialog] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState(null);
 
@@ -94,6 +97,34 @@ const PayrollDetail = () => {
       navigate("/manager/payroll");
     } catch (error) {
       message.error(error.response?.data?.message || "Lỗi khi xóa");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const response = await exportPayrollExcel(id);
+
+      const contentDisposition = response.headers["content-disposition"] || "";
+      const matchedFileName = contentDisposition.match(/filename=([^;]+)/i);
+      const fileName = matchedFileName
+        ? matchedFileName[1].replace(/"/g, "").trim()
+        : `payroll-${dayjs(payroll?.periodStart).format("MM-YYYY")}.xlsx`;
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      message.success("Đã xuất file Excel bảng lương");
+    } catch (error) {
+      message.error(error.response?.data?.message || "Lỗi khi xuất file Excel");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -294,6 +325,15 @@ const PayrollDetail = () => {
         </Space>
 
         <Space>
+          <Button
+            icon={<FileExcelOutlined />}
+            onClick={handleExportExcel}
+            loading={exporting}
+            size="large"
+          >
+            Xuất Excel
+          </Button>
+
           {payroll.status === "calculated" && (
             <Popconfirm
               title="Xác nhận duyệt kỳ lương này?"

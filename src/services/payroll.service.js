@@ -104,3 +104,15 @@ export const getPayrollStats = async (params = {}) => {
   const response = await api.get("/payrolls/stats", { params });
   return response.data;
 };
+
+/**
+ * Xuất file Excel của một kỳ lương
+ * @param {string} id - Payroll ID
+ * @returns {Promise} Axios response chứa Blob
+ */
+export const exportPayrollExcel = async (id) => {
+  const response = await api.get(`/payrolls/${id}/export-excel`, {
+    responseType: "blob",
+  });
+  return response;
+};
