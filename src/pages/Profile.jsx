@@ -15,15 +15,24 @@ import {
   Upload,
 } from "antd";
 import { useProfile } from "@/hooks/useProfile";
-import { changePassword } from "@/services/auth.service";
+import { changePassword, login as loginService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import GIcon from "@/components/GIcon";
+import { translateError } from "@/utils/errorTranslator";
 
 const { Title, Text } = Typography;
 
+// Helper to extract user info from potential nested structure
+const getSafeUser = (u) => {
+  if (!u) return null;
+  if (u.user && typeof u.user === "object") return getSafeUser(u.user);
+  return u;
+};
+
 export default function ProfilePage() {
-  const { profile, loading, error, fetchMe, updateMe, uploadAvatar } = useProfile();
-  const { user, updateUser } = useAuthStore();
+  const { profile, loading, error, fetchMe, updateMe, uploadAvatar } =
+    useProfile();
+  const { user, updateUser, setAuth } = useAuthStore();
 
   const [messageApi, contextHolder] = message.useMessage();
   const [editing, setEditing] = useState(false);
@@ -31,37 +40,44 @@ export default function ProfilePage() {
   const [passwordForm] = Form.useForm();
 
   const isPending = profile?.status === "pending" || user?.status === "pending";
-  const forceChangePassword = Boolean(profile?.forceChangePassword || user?.forceChangePassword || isPending);
+  const forceChangePassword = Boolean(
+    profile?.forceChangePassword || user?.forceChangePassword || isPending,
+  );
 
   useEffect(() => {
     fetchMe().catch(() => {});
   }, [fetchMe]);
 
   useEffect(() => {
-    if (!profile) return;
+    const dataSource = getSafeUser(profile || user);
+    if (!dataSource || !infoForm) return;
     infoForm.setFieldsValue({
-      fullName: profile.fullName || "",
-      phone: profile.phone || "",
-      email: profile.email || "",
+      fullName: dataSource.fullName || "",
+      phone: dataSource.phone || "",
+      email: dataSource.email || "",
     });
-  }, [profile, infoForm]);
+  }, [profile, user, infoForm]);
 
   const completion = useMemo(() => {
+    const dataSource = getSafeUser(profile || user);
     const items = [
       { label: "Thiết lập tài khoản", weight: 20, done: true },
-      { label: "Ảnh đại diện", weight: 20, done: !!profile?.avatar },
+      { label: "Ảnh đại diện", weight: 20, done: !!dataSource?.avatar },
       {
         label: "Thông tin cá nhân",
         weight: 60,
-        done: !!profile?.fullName && !!profile?.phone,
+        done: !!dataSource?.fullName && !!dataSource?.phone,
       },
     ];
 
     return {
       items,
-      percent: items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0),
+      percent: items.reduce(
+        (sum, item) => sum + (item.done ? item.weight : 0),
+        0,
+      ),
     };
-  }, [profile]);
+  }, [profile, user]);
 
   const handleAvatarChange = async ({ file }) => {
     const rawFile = file?.originFileObj || file;
@@ -84,7 +100,7 @@ export default function ProfilePage() {
       messageApi.success("Cập nhật ảnh đại diện thành công");
     } catch (err) {
       messageApi.error(
-        err?.response?.data?.message || err?.message || "Cập nhật thất bại",
+        translateError(err?.response?.data?.message || err?.message) || "Cập nhật thất bại",
       );
     }
   };
@@ -118,10 +134,29 @@ export default function ProfilePage() {
       }
 
       await changePassword({ currentPassword, newPassword, confirmPassword });
-      const isPending = user?.status === "pending" || profile?.status === "pending" || user?.forceChangePassword || profile?.forceChangePassword;
+
+      // Automatically re-login to refresh the session token
+      try {
+        const loginData = await loginService({
+          email: user.email,
+          password: newPassword,
+        });
+        if (loginData.token && loginData.user) {
+          setAuth(loginData.user, loginData.token);
+        }
+      } catch (loginErr) {
+        console.error("Auto-login failed:", loginErr);
+      }
+
+      const isPending =
+        user?.status === "pending" ||
+        profile?.status === "pending" ||
+        user?.forceChangePassword ||
+        profile?.forceChangePassword;
       if (isPending) {
         const updatedProfile = {
-          ...(profile || user || {}),
+          ...(user || {}), // Preserve existing role/info
+          ...(profile || {}), // Apply fresh profile info
           forceChangePassword: false,
           status: "active",
         };
@@ -129,11 +164,12 @@ export default function ProfilePage() {
       }
       messageApi.success("Đổi mật khẩu thành công");
       passwordForm.resetFields();
-      fetchMe().catch(() => {});
+      setTimeout(() => fetchMe().catch(() => {}), 500);
     } catch (err) {
       if (err?.errorFields) return;
       messageApi.error(
-        err?.response?.data?.message || err?.message || "Đổi mật khẩu thất bại",
+        translateError(err?.response?.data?.message || err?.message) ||
+          "Đổi mật khẩu thất bại",
       );
     }
   };
@@ -145,7 +181,7 @@ export default function ProfilePage() {
         <Title level={4} style={{ marginBottom: 8 }}>
           Không tải được hồ sơ
         </Title>
-        <Text type="secondary">{error}</Text>
+        <Text type="secondary">{translateError(error)}</Text>
         <div style={{ marginTop: 16 }}>
           <Button type="primary" onClick={fetchMe}>
             Thử lại
@@ -182,7 +218,12 @@ export default function ProfilePage() {
                 <Form.Item
                   label="Mật khẩu hiện tại"
                   name="currentPassword"
-                  rules={[{ required: true, message: "Vui lòng nhập mật khẩu hiện tại" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập mật khẩu hiện tại",
+                    },
+                  ]}
                 >
                   <Input.Password placeholder="Nhập mật khẩu hiện tại" />
                 </Form.Item>
@@ -199,14 +240,20 @@ export default function ProfilePage() {
                 <Form.Item
                   label="Xác nhận mật khẩu"
                   name="confirmPassword"
-                  rules={[{ required: true, message: "Vui lòng xác nhận mật khẩu" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng xác nhận mật khẩu" },
+                  ]}
                 >
                   <Input.Password placeholder="Nhập lại mật khẩu mới" />
                 </Form.Item>
               </Form>
 
               <Divider style={{ margin: "12px 0" }} />
-              <Button type="primary" onClick={handleChangePassword} loading={loading}>
+              <Button
+                type="primary"
+                onClick={handleChangePassword}
+                loading={loading}
+              >
                 Đổi mật khẩu
               </Button>
             </Card>
@@ -217,7 +264,7 @@ export default function ProfilePage() {
           <Col xs={24} lg={16}>
             <Card
               title="Ảnh đại diện"
-              extra={(
+              extra={
                 <Upload
                   accept="image/*"
                   showUploadList={false}
@@ -226,15 +273,21 @@ export default function ProfilePage() {
                 >
                   <Button icon={<GIcon name="upload" />}>Tải ảnh lên</Button>
                 </Upload>
-              )}
+              }
               loading={loading}
             >
               <Space size="large">
-                <Avatar size={80} src={profile?.avatar} icon={<GIcon name="person" />} />
+                <Avatar
+                  size={80}
+                  src={getSafeUser(profile || user)?.avatar}
+                  icon={<GIcon name="person" />}
+                />
                 <div>
                   <Text strong>Ảnh đại diện</Text>
                   <div>
-                    <Text type="secondary">Khuyến nghị tối thiểu 800×800. Hỗ trợ JPG/PNG</Text>
+                    <Text type="secondary">
+                      Khuyến nghị tối thiểu 800×800. Hỗ trợ JPG/PNG
+                    </Text>
                   </div>
                 </div>
               </Space>
@@ -243,15 +296,22 @@ export default function ProfilePage() {
             <Card
               title="Thông tin cá nhân"
               style={{ marginTop: 24 }}
-              extra={(
-                <Button type="text" onClick={() => setEditing((value) => !value)}>
+              extra={
+                <Button
+                  type="text"
+                  onClick={() => setEditing((value) => !value)}
+                >
                   <GIcon name="edit" style={{ marginRight: 8 }} />
                   {editing ? "Đóng" : "Chỉnh sửa"}
                 </Button>
-              )}
-              loading={loading}
+              }
             >
-              <Form layout="vertical" form={infoForm} disabled={!editing}>
+              <Form
+                layout="vertical"
+                form={infoForm}
+                disabled={!editing}
+                key={forceChangePassword ? "pending" : "active"}
+              >
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
                     <Form.Item
@@ -259,8 +319,14 @@ export default function ProfilePage() {
                       name="fullName"
                       rules={[
                         { required: true, message: "Vui lòng nhập họ và tên" },
-                        { min: 2, message: "Họ và tên phải có ít nhất 2 ký tự" },
-                        { max: 100, message: "Họ và tên không được vượt quá 100 ký tự" },
+                        {
+                          min: 2,
+                          message: "Họ và tên phải có ít nhất 2 ký tự",
+                        },
+                        {
+                          max: 100,
+                          message: "Họ và tên không được vượt quá 100 ký tự",
+                        },
                       ]}
                     >
                       <Input placeholder="Nhập họ và tên" />
@@ -271,10 +337,14 @@ export default function ProfilePage() {
                       label="Số điện thoại"
                       name="phone"
                       rules={[
-                        { required: true, message: "Vui lòng nhập số điện thoại" },
+                        {
+                          required: true,
+                          message: "Vui lòng nhập số điện thoại",
+                        },
                         {
                           pattern: /^0[0-9]{9,10}$/,
-                          message: "Số điện thoại không hợp lệ (10-11 chữ số, bắt đầu từ 0)",
+                          message:
+                            "Số điện thoại không hợp lệ (10-11 chữ số, bắt đầu từ 0)",
                         },
                       ]}
                     >
@@ -291,14 +361,19 @@ export default function ProfilePage() {
 
               {editing && (
                 <Space>
-                  <Button type="primary" onClick={savePersonalInfo} loading={loading}>
+                  <Button
+                    type="primary"
+                    onClick={savePersonalInfo}
+                    loading={loading}
+                  >
                     Lưu
                   </Button>
                   <Button
                     onClick={() => {
+                      const dataSource = profile || user;
                       infoForm.setFieldsValue({
-                        fullName: profile?.fullName || "",
-                        phone: profile?.phone || "",
+                        fullName: dataSource?.fullName || "",
+                        phone: dataSource?.phone || "",
                       });
                       setEditing(false);
                     }}
@@ -314,29 +389,55 @@ export default function ProfilePage() {
             <Card title="Tiến độ hoàn thiện" loading={loading}>
               <div style={{ display: "grid", gap: 16, padding: 8 }}>
                 <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
-                  <div style={{ fontSize: 48, fontWeight: 900, color: "var(--primary)" }}>
+                  <div
+                    style={{
+                      fontSize: 48,
+                      fontWeight: 900,
+                      color: "var(--primary)",
+                    }}
+                  >
                     {completion.percent}%
                   </div>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     Hoàn thành hồ sơ
                   </Text>
                 </div>
-                <div style={{ borderTop: "1px solid rgba(0, 0, 0, 0.06)", paddingTop: 12 }}>
+                <div
+                  style={{
+                    borderTop: "1px solid rgba(0, 0, 0, 0.06)",
+                    paddingTop: 12,
+                  }}
+                >
                   {completion.items.map((item, idx) => (
                     <div
                       key={item.label}
                       style={{
                         display: "grid",
                         gap: 4,
-                        marginBottom: idx < completion.items.length - 1 ? 12 : 0,
+                        marginBottom:
+                          idx < completion.items.length - 1 ? 12 : 0,
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</Text>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: 500 }}>
+                          {item.label}
+                        </Text>
                         <GIcon
-                          name={item.done ? "check_circle" : "radio_button_unchecked"}
+                          name={
+                            item.done
+                              ? "check_circle"
+                              : "radio_button_unchecked"
+                          }
                           style={{
-                            color: item.done ? "var(--primary)" : "rgba(0, 0, 0, 0.25)",
+                            color: item.done
+                              ? "var(--primary)"
+                              : "rgba(0, 0, 0, 0.25)",
                           }}
                         />
                       </div>
@@ -368,7 +469,12 @@ export default function ProfilePage() {
                 <Form.Item
                   label="Mật khẩu hiện tại"
                   name="currentPassword"
-                  rules={[{ required: true, message: "Vui lòng nhập mật khẩu hiện tại" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập mật khẩu hiện tại",
+                    },
+                  ]}
                 >
                   <Input.Password placeholder="Nhập mật khẩu hiện tại" />
                 </Form.Item>
@@ -385,14 +491,20 @@ export default function ProfilePage() {
                 <Form.Item
                   label="Xác nhận mật khẩu"
                   name="confirmPassword"
-                  rules={[{ required: true, message: "Vui lòng xác nhận mật khẩu" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng xác nhận mật khẩu" },
+                  ]}
                 >
                   <Input.Password placeholder="Nhập lại mật khẩu mới" />
                 </Form.Item>
               </Form>
 
               <Divider style={{ margin: "12px 0" }} />
-              <Button type="primary" onClick={handleChangePassword} loading={loading}>
+              <Button
+                type="primary"
+                onClick={handleChangePassword}
+                loading={loading}
+              >
                 Đổi mật khẩu
               </Button>
             </Card>

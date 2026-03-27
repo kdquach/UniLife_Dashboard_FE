@@ -26,8 +26,8 @@ import {
 } from "@/config/constants";
 import { useSystemUserManagement } from "@/hooks/useSystemUserManagement";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getAllCanteens } from "@/services/canteen.service";
-import { getAllCampuses } from "@/services/campus.service";
+
+
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -46,7 +46,6 @@ const STATUS_FILTER_OPTIONS = [
 const ROLE_FILTER_OPTIONS = [
   { value: "all", label: "Tất cả vai trò" },
   { value: "admin", label: "Quản trị viên" },
-  { value: "canteen_owner", label: "Chủ căng tin" },
   { value: "manager", label: "Quản lý" },
   { value: "staff", label: "Nhân viên" },
 ];
@@ -72,13 +71,7 @@ const ROLE_LABEL_MAP = {
   staff: "Nhân viên",
 };
 
-const ROLE_HIERARCHY = [
-  "customer",
-  "staff",
-  "manager",
-  "canteen_owner",
-  "admin",
-];
+const ROLE_HIERARCHY = ["customer", "staff", "manager", "admin"];
 
 /**
  * Build list of roles that the current user can CREATE.
@@ -154,8 +147,8 @@ export default function SystemUserManagement() {
   const [downgradeRoleForm] = Form.useForm();
 
   // Canteen & campus options for create form
-  const [canteenOptions, setCanteenOptions] = useState([]);
-  const [campusOptions, setCampusOptions] = useState([]);
+
+
 
   const {
     contextHolder,
@@ -186,28 +179,9 @@ export default function SystemUserManagement() {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [canteenRes, campusRes] = await Promise.all([
-          getAllCanteens({ limit: 200 }),
-          getAllCampuses({ limit: 200 }),
-        ]);
-        
-        const canteenList = canteenRes?.data?.canteens || canteenRes?.data || canteenRes || [];
-        const safeCanteens = Array.isArray(canteenList) ? canteenList : [];
-        setCanteenOptions(
-          safeCanteens.map((c) => ({
-            value: c._id,
-            label: c.name,
-          })),
-        );
+        /* Removed canteen options loading */
 
-        const campusList = campusRes?.data?.campuses || campusRes?.data || campusRes || [];
-        const safeCampuses = Array.isArray(campusList) ? campusList : [];
-        setCampusOptions(
-          safeCampuses.map((c) => ({
-            value: c._id,
-            label: c.name,
-          })),
-        );
+        /* Removed campus options loading */
       } catch (err) {
         console.error("Failed to load options", err);
       }
@@ -500,12 +474,7 @@ export default function SystemUserManagement() {
           </Tag>
         ),
       },
-      {
-        title: "Căng tin",
-        key: "canteen",
-        ellipsis: true,
-        render: (_, record) => record.canteenId?.name || "—",
-      },
+
       {
         title: "Ngày tạo",
         dataIndex: "createdAt",
@@ -670,12 +639,8 @@ export default function SystemUserManagement() {
               {STATUS_LABELS[detailModal.data?.status] || "—"}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Căng tin">
-            {detailModal.data?.canteenId?.name || "—"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Cơ sở">
-            {detailModal.data?.campusId?.name || "—"}
-          </Descriptions.Item>
+
+
           <Descriptions.Item label="Ngày tạo">
             {detailModal.data?.createdAt
               ? dayjs(detailModal.data.createdAt).format(DATETIME_FORMAT)
@@ -761,56 +726,9 @@ export default function SystemUserManagement() {
             />
           </Form.Item>
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.role !== currentValues.role
-            }
-          >
-            {({ getFieldValue }) => {
-              const selectedRole = getFieldValue("role");
-              const isCanteenRequired =
-                currentRole === "manager" ||
-                selectedRole === "staff" ||
-                selectedRole === "manager" ||
-                selectedRole === "canteen_owner";
 
-              return (
-                <Form.Item
-                  name="canteenId"
-                  label="Căng tin"
-                  rules={[
-                    {
-                      required: isCanteenRequired,
-                      message: "Vui lòng chọn căng tin",
-                    },
-                  ]}
-                >
-                  <Select
-                    options={canteenOptions}
-                    placeholder={
-                      isCanteenRequired
-                        ? "Chọn căng tin"
-                        : "Chọn căng tin (tuỳ chọn)"
-                    }
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                  />
-                </Form.Item>
-              );
-            }}
-          </Form.Item>
 
-          <Form.Item name="campusId" label="Cơ sở">
-            <Select
-              options={campusOptions}
-              placeholder="Chọn cơ sở (tuỳ chọn)"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-            />
-          </Form.Item>
+
         </Form>
       </Modal>
 

@@ -17,6 +17,7 @@ import {
 } from "antd";
 import { getActiveProductCategories } from "@/services/productCategory.service";
 import { getProductsByCanteen } from "@/services/product.service";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -134,7 +135,21 @@ export default function VoucherFormModal({
       }
 
       onSubmit(payload);
+    }).catch(info => {
+      console.log('Validate Failed:', info);
     });
+  };
+
+  const disabledDate = (current) => {
+    // Nếu đang chế độ tạo mới, chỉ cho phép chọn từ hôm nay trở đi
+    if (!isEdit && current && current < dayjs().startOf("day")) {
+      return true;
+    }
+    // Nếu đang chỉnh sửa bản Draft/Upcoming, vẫn áp dụng rule không quá khứ
+    if (isEdit && (voucherState === "Draft" || voucherState === "Upcoming") && current && current < dayjs().startOf("day")) {
+       return true;
+    }
+    return false;
   };
 
   const handleGenCode = async () => {
@@ -452,13 +467,29 @@ export default function VoucherFormModal({
             <Form.Item
               name="dateRange"
               label="Thời gian diễn ra"
-              rules={[{ required: true }]}
+              rules={[
+                { required: true, message: "Vui lòng chọn thời gian diễn ra" },
+                {
+                  validator: async (_, value) => {
+                    if (value && value[0] && value[1]) {
+                      if (value[1].isBefore(value[0])) {
+                        throw new Error("Ngày kết thúc phải sau ngày bắt đầu");
+                      }
+                      // Nếu là tạo mới, check ngày bắt đầu không ở quá khứ
+                      if (!isEdit && value[0].isBefore(dayjs().subtract(1, 'minute'))) {
+                        // throw new Error("Thời gian bắt đầu không được ở quá khứ");
+                      }
+                    }
+                  }
+                }
+              ]}
             >
               <DatePicker.RangePicker
                 style={{ width: "100%" }}
                 showTime
                 format="DD/MM/YYYY HH:mm"
                 disabled={[!canEditBase, false]} // Được sửa endDatetime khi Active
+                disabledDate={disabledDate}
               />
             </Form.Item>
           </Col>
@@ -467,6 +498,19 @@ export default function VoucherFormModal({
               name="timeRange"
               label="Khung giờ (trong ngày)"
               tooltip="Chỉ áp dụng trong khung giờ này hằng ngày"
+              rules={[
+                {
+                  validator: async (_, value) => {
+                    if (value && value[0] && value[1]) {
+                      const from = value[0].format("HH:mm");
+                      const to = value[1].format("HH:mm");
+                      if (from === to) {
+                        throw new Error("Giờ kết thúc phải khác giờ bắt đầu");
+                      }
+                    }
+                  }
+                }
+              ]}
             >
               <TimePicker.RangePicker
                 format="HH:mm"

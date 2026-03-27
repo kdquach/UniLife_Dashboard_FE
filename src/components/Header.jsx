@@ -91,9 +91,9 @@ export default function Header({ collapsed, onToggle }) {
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Space style={{ cursor: "pointer" }}>
-            <Avatar icon={<GIcon name="person" />} src={user?.avatar} />
+            <Avatar icon={<GIcon name="person" />} src={user?.user?.avatar || user?.avatar} />
             <span style={{ fontWeight: 500 }}>
-              {user?.fullName || user?.name || "Admin"}
+              {user?.user?.fullName || user?.fullName || user?.user?.name || user?.name || "Admin"}
             </span>
           </Space>
         </Dropdown>

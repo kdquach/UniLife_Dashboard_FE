@@ -65,8 +65,6 @@ function ProtectedRoute({ children }) {
 
   const isPending = user?.status === 'pending' || user?.forceChangePassword;
   if (
-    user?.role === 'staff' &&
-    user?.forceChangePassword &&
     isPending &&
     !location.pathname.startsWith('/profile')
   ) {
