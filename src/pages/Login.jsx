@@ -46,7 +46,18 @@ export default function LoginPage() {
 
       navigate("/");
     } catch (err) {
-      message.error(err?.response?.data?.message || "Đăng nhập thất bại!");
+      const msg = err?.response?.data?.message || "";
+      if (
+        err?.response?.status === 403 ||
+        msg.toLowerCase().includes("banned") ||
+        msg.toLowerCase().includes("disabled") ||
+        msg.toLowerCase().includes("vô hiệu hóa") ||
+        msg.toLowerCase().includes("khóa")
+      ) {
+        message.error("Tài khoản của bạn đã bị khóa vui lòng liên hệ Admin");
+      } else {
+        message.error(msg || "Đăng nhập thất bại!");
+      }
     }
   };
 

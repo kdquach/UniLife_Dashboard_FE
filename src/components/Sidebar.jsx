@@ -11,8 +11,7 @@ export default function Sidebar({ collapsed }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
-
-  const role = user?.role;
+  const role = user?.user?.role || user?.role;
 
   const staffMenuItems = [
     {
@@ -264,7 +263,7 @@ export default function Sidebar({ collapsed }) {
     admin: adminMenuItems,
   };
 
-  const menuItems = menuByRole[role] || adminMenuItems;
+  const menuItems = (role && menuByRole[role]) || [];
 
   // Hàm tìm menu item theo key (support nested children)
   const findMenuItemByKey = (items, targetKey) => {

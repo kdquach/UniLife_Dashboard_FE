@@ -216,31 +216,38 @@
 }
 
 .co-card--pending {
-  border-left: 4px solid #f97316;
+  border-left: 6px solid #f97316;
 }
-
 .co-card--confirmed {
-  border-left: 4px solid #3b82f6;
+  border-left: 6px solid #2563eb;
 }
-
 .co-card--preparing {
-  border-left: 4px solid #f59e0b;
+  border-left: 6px solid #d97706;
 }
-
 .co-card--ready {
-  border-left: 4px solid #22c55e;
+  border-left: 6px solid #0d9488;
 }
-
 .co-card--completed {
-  border-left: 4px solid #0ea5e9;
+  border-left: 6px solid #0284c7;
 }
-
 .co-card--received {
-  border-left: 4px solid #22c55e;
+  border-left: 6px solid #059669;
 }
+.co-card--pending .co-btn-primary { background: #f97316; }
+.co-card--pending .co-btn-primary:hover { background: #ea580c; }
+.co-card--confirmed .co-btn-primary { background: #2563eb; }
+.co-card--confirmed .co-btn-primary:hover { background: #1d4ed8; }
+.co-card--preparing .co-btn-primary { background: #d97706; }
+.co-card--preparing .co-btn-primary:hover { background: #b45309; }
+.co-card--ready .co-btn-primary { background: #0d9488; }
+.co-card--ready .co-btn-primary:hover { background: #0f766e; }
+.co-card--completed .co-btn-primary { background: #0284c7; }
+.co-card--completed .co-btn-primary:hover { background: #0369a1; }
+.co-card--received .co-btn-primary { background: #059669; }
+.co-card--received .co-btn-primary:hover { background: #047857; }
 
 .co-card--cancelled {
-  border-left: 4px solid #ef4444;
+  border-left: 6px solid #dc2626;
   opacity: 0.75;
 }
 
@@ -304,7 +311,10 @@
 .co-card__actions {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #f3f4f6;
+  align-items: center;
 }
 
 /* ---------- Status Badge ---------- */
@@ -327,51 +337,45 @@
   flex-shrink: 0;
 }
 
-.co-badge--ready {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
-}
-
-.co-badge--completed {
-  background: #f0f9ff;
-  color: #0369a1;
-  border: 1px solid #7dd3fc;
-}
-
-.co-badge--received {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
-}
-
-.co-badge--cancelled {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-
 .co-badge--pending {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #ffedd5;
 }
-
 .co-badge--confirmed {
   background: #eff6ff;
   color: #1e40af;
-  border: 1px solid #93c5fd;
+  border: 1px solid #dbeafe;
 }
-
 .co-badge--preparing {
-  background: #fff7ed;
-  color: #9a3412;
-  border: 1px solid #fdba74;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+.co-badge--ready {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #ccfbf1;
+}
+.co-badge--completed {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #e0f2fe;
+}
+.co-badge--received {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #d1fae5;
+}
+.co-badge--cancelled {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
 }
 
 /* ---------- Buttons ---------- */
 .co-btn-primary {
-  background: #22c55e;
+  background: #2563eb;
   color: #fff;
   padding: 8px 18px;
   border-radius: 8px;
@@ -388,7 +392,7 @@
 }
 
 .co-btn-primary:hover:not(:disabled) {
-  background: #16a34a;
+  background: #1d4ed8;
 }
 
 .co-btn-primary:active:not(:disabled) {
@@ -396,7 +400,7 @@
 }
 
 .co-btn-primary:disabled {
-  background: #86efac;
+  background: #93c5fd;
   cursor: not-allowed;
 }
 
@@ -529,18 +533,32 @@
   align-items: flex-start;
 }
 
+.co-dm-hero--pending {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border-bottom-color: #fdba74;
+}
+.co-dm-hero--confirmed {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-bottom-color: #93c5fd;
+}
+.co-dm-hero--preparing {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-bottom-color: #fcd34d;
+}
+.co-dm-hero--ready {
+  background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+  border-bottom-color: #5eead4;
+}
 .co-dm-hero--completed {
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   border-bottom-color: #7dd3fc;
 }
-
 .co-dm-hero--received {
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   border-bottom-color: #6ee7b7;
 }
-
 .co-dm-hero--cancelled {
-  background: linear-gradient(135deg, #fef2f2, #fff1f2);
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
   border-bottom-color: #fecaca;
 }
 
@@ -556,20 +574,26 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
+.co-dm-hero__icon--pending {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+.co-dm-hero__icon--confirmed {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+.co-dm-hero__icon--preparing {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
 .co-dm-hero__icon--ready {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #0d9488, #0f766e);
 }
-
 .co-dm-hero__icon--completed {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: linear-gradient(135deg, #0284c7, #0369a1);
 }
-
 .co-dm-hero__icon--received {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #059669, #047857);
 }
-
 .co-dm-hero__icon--cancelled {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
 }
 
 .co-dm-hero__content {

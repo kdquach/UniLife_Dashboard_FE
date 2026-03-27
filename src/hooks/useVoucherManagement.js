@@ -13,6 +13,7 @@ import {
   archiveVoucher,
   cloneVoucher,
 } from "@/services/voucher.service";
+import { translateMessage } from "@/utils/errorTranslator";
 
 export const useVoucherManagement = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -59,7 +60,7 @@ export const useVoucherManagement = () => {
         }
       } catch (error) {
         messageApi.error(
-          error?.response?.data?.message || "Không thể tải danh sách voucher",
+          translateMessage(error?.response?.data?.message) || "Không thể tải danh sách voucher",
         );
         console.error("Lỗi khi tải voucher:", error);
       } finally {
@@ -89,7 +90,7 @@ export const useVoucherManagement = () => {
       } catch (error) {
         console.error("Lỗi khi tải chi tiết voucher:", error);
         messageApi.error(
-          error?.response?.data?.message || "Không thể tải chi tiết voucher",
+          translateMessage(error?.response?.data?.message) || "Không thể tải chi tiết voucher",
         );
         return null;
       }
@@ -107,7 +108,7 @@ export const useVoucherManagement = () => {
         return true;
       } catch (error) {
         messageApi.error(
-          error?.response?.data?.message || "Lỗi khi tạo voucher",
+          translateMessage(error?.response?.data?.message) || "Lỗi khi tạo voucher",
         );
         return false;
       }
@@ -125,7 +126,7 @@ export const useVoucherManagement = () => {
         return true;
       } catch (error) {
         messageApi.error(
-          error?.response?.data?.message || "Lỗi khi cập nhật voucher",
+          translateMessage(error?.response?.data?.message) || "Lỗi khi cập nhật voucher",
         );
         return false;
       }
@@ -194,7 +195,7 @@ export const useVoucherManagement = () => {
             fetchList(pagination.current, pagination.pageSize);
           } catch (error) {
             messageApi.error(
-              error?.response?.data?.message ||
+              translateMessage(error?.response?.data?.message) ||
                 `Lỗi khi ${selectedAction.name.toLowerCase()} voucher`,
             );
           }
@@ -224,14 +225,14 @@ export const useVoucherManagement = () => {
         const clonedVoucher = response?.data?.voucher;
         if (clonedVoucher) {
           messageApi.success(
-            response?.message ||
+            translateMessage(response?.message) ||
               "Nhân bản thành công. Vui lòng cập nhật các trường bắt buộc.",
           );
           return clonedVoucher;
         }
       } catch (error) {
         messageApi.error(
-          error?.response?.data?.message || "Lỗi khi nhân bản voucher",
+          translateMessage(error?.response?.data?.message) || "Lỗi khi nhân bản voucher",
         );
         return null;
       }

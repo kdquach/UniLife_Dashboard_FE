@@ -6,6 +6,7 @@ import {
   getRevenue,
 } from "@/services/dashboard.service";
 import { validateDateParams } from "@/utils/dashboard.utils";
+import { translateError } from "@/utils/errorTranslator";
 
 const TAB_KEYS = {
   ORDER_METRICS: "order-metrics",
@@ -106,7 +107,7 @@ export default function useDashboard() {
           err?.message ||
           "Không thể tải dữ liệu";
         setError((prev) => ({ ...prev, [tabKey]: msg }));
-        toast.error(msg);
+        toast.error(translateError(msg));
       } finally {
         setLoading((prev) => ({ ...prev, [tabKey]: false }));
       }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { message as antdMessage, Modal, Pagination } from "antd";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
@@ -9,7 +10,6 @@ import {
   getOrders,
   getOrderDetail,
   updateOrderStatus,
-  completeOrderById,
 } from "@/services/order.service";
 import { useSocket } from "@/hooks/useSocket";
 import "@/styles/canteenOrders.css";
@@ -38,14 +38,14 @@ const TABS = [
   },
   {
     key: "ready",
-    label: "Đã chuẩn bị",
-    icon: "hourglass_top",
+    label: "Đã chế biến xong",
+    icon: "restaurant_menu",
     sort: "preparedAt",
   },
   {
     key: "completed",
-    label: "Chờ nhận",
-    icon: "qr_code",
+    label: "Sẵn sàng nhận món",
+    icon: "notifications_active",
     sort: "-completedAt",
   },
   {
@@ -66,9 +66,9 @@ const STATUS_LABEL = {
   pending: "Chờ xác nhận",
   confirmed: "Đã xác nhận",
   preparing: "Đang chuẩn bị",
-  ready: "Đã chuẩn bị",
-  completed: "Chờ nhận",
-  received: "Đã nhận",
+  ready: "Đã chế biến xong",
+  completed: "Sẵn sàng nhận món",
+  received: "Đã nhận hàng",
   cancelled: "Đã hủy",
 };
 
@@ -98,13 +98,15 @@ function summarizeItems(items) {
   return items.map((i) => `${i.productName} x${i.quantity}`).join(", ");
 }
 
-/** Get customer display name — handles fullName, name, or email fallback */
-function getCustomerName(user) {
-  if (!user) return "Khách hàng";
-  return user.fullName || user.name || user.email || "Khách hàng";
+/** Get display name — handles fullName, name, or email fallback with customizable default */
+function getDisplayName(user, fallback = "Người dùng") {
+  if (!user) return fallback;
+  if (typeof user === "string") return fallback; // Handle unpopulated ID strings
+  return user.fullName || user.name || user.email || fallback;
 }
 
 export default function PendingPickupOrders() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pending");
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState({
@@ -221,13 +223,8 @@ export default function PendingPickupOrders() {
         setStatusUpdating(true);
 
         try {
-          let res;
-          if (nextStatus === "completed") {
-            // Prefer the dedicated complete endpoint to record scannedBy/scannedAt
-            res = await completeOrderById(order._id);
-          } else {
-            res = await updateOrderStatus(order._id, nextStatus);
-          }
+          // Standard linear status update for all stages up to completed
+          const res = await updateOrderStatus(order._id, nextStatus);
 
           const updatedOrder = res?.data?.order || res?.data || null;
           if (!updatedOrder?._id) {
@@ -422,7 +419,7 @@ export default function PendingPickupOrders() {
 
                 <div className="co-card__customer">
                   <GIcon name="person" />
-                  {getCustomerName(order.userId)}
+                  {getDisplayName(order.userId, "Khách hàng")}
                 </div>
 
                 <div className="co-card__items">
@@ -439,19 +436,117 @@ export default function PendingPickupOrders() {
                   </span>
                 </div>
 
-                {(order.status === "ready" || order.status === "pending" || order.status === "confirmed") && (
-                  <div className="co-card__actions" style={{ justifyContent: "flex-end" }}>
-                    {(order.status === "pending" || order.status === "confirmed") && (
+                {order.status !== "received" &&
+                  order.status !== "cancelled" &&
+                  order.status !== "completed" && (
+                    <div className="co-card__actions">
+                      {order.status === "pending" && (
+                        <>
+                          <button
+                            className="co-btn-danger"
+                            disabled={statusUpdating}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleChangeStatus(order, "cancelled");
+                            }}
+                          >
+                            <GIcon name="cancel" />
+                            Hủy
+                          </button>
+                          <button
+                            className="co-btn-primary"
+                            disabled={statusUpdating}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleChangeStatus(order, "confirmed");
+                            }}
+                          >
+                            <GIcon name="check_circle" />
+                            Xác nhận
+                          </button>
+                        </>
+                      )}
+                      {order.status === "confirmed" && (
+                        <>
+                          <button
+                            className="co-btn-danger"
+                            disabled={statusUpdating}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleChangeStatus(order, "cancelled");
+                            }}
+                          >
+                            <GIcon name="cancel" />
+                            Hủy
+                          </button>
+                          <button
+                            className="co-btn-primary"
+                            disabled={statusUpdating}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleChangeStatus(order, "preparing");
+                            }}
+                          >
+                            <GIcon name="restaurant" />
+                            Bắt đầu nấu
+                          </button>
+                        </>
+                      )}
+                      {order.status === "preparing" && (
+                        <button
+                          className="co-btn-primary"
+                          disabled={statusUpdating}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleChangeStatus(order, "ready");
+                          }}
+                        >
+                          <GIcon name="check_circle" />
+                          Chế biến xong
+                        </button>
+                      )}
+                      {order.status === "ready" && (
+                        <button
+                          className="co-btn-primary"
+                          disabled={statusUpdating}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleChangeStatus(order, "completed");
+                          }}
+                        >
+                          <GIcon name="notifications_active" />
+                          Sẵn sàng
+                        </button>
+                      )}
                       <button
-                        className="co-btn-danger"
-                        disabled={statusUpdating}
+                        className="co-btn-outline"
+                        style={{ marginLeft: "auto" }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleChangeStatus(order, "cancelled");
+                          openDetail(order._id);
                         }}
                       >
-                        <GIcon name="cancel" />
-                        Hủy đơn
+                        <GIcon name="visibility" />
+                      </button>
+                    </div>
+                  )}
+                {(order.status === "received" ||
+                  order.status === "cancelled" ||
+                  order.status === "completed") && (
+                  <div
+                    className="co-card__actions"
+                    style={{ justifyContent: "flex-end" }}
+                  >
+                    {order.status === "completed" && (
+                      <button
+                        className="co-btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/staff/qr-scan");
+                        }}
+                      >
+                        <GIcon name="qr_code_scanner" />
+                        Nhập hoặc quét QR
                       </button>
                     )}
                     <button
@@ -523,31 +618,49 @@ export default function PendingPickupOrders() {
    ====================================== */
 function OrderDetail({ order, onClose }) {
   const heroClass =
-    order.status === "completed"
-      ? "co-dm-hero--completed"
-      : order.status === "received"
-        ? "co-dm-hero--received"
-        : order.status === "cancelled"
-          ? "co-dm-hero--cancelled"
-          : "";
+    order.status === "pending"
+      ? "co-dm-hero--pending"
+      : order.status === "confirmed"
+        ? "co-dm-hero--confirmed"
+        : order.status === "preparing"
+          ? "co-dm-hero--preparing"
+          : order.status === "ready"
+            ? "co-dm-hero--ready"
+            : order.status === "completed"
+              ? "co-dm-hero--completed"
+              : order.status === "received"
+                ? "co-dm-hero--received"
+                : order.status === "cancelled"
+                  ? "co-dm-hero--cancelled"
+                  : "";
 
   const iconClass =
-    order.status === "completed"
-      ? "co-dm-hero__icon--completed"
-      : order.status === "received"
-        ? "co-dm-hero__icon--received"
-        : order.status === "cancelled"
-          ? "co-dm-hero__icon--cancelled"
-          : "co-dm-hero__icon--ready";
+    order.status === "pending"
+      ? "co-dm-hero__icon--pending"
+      : order.status === "confirmed"
+        ? "co-dm-hero__icon--confirmed"
+        : order.status === "preparing"
+          ? "co-dm-hero__icon--preparing"
+          : order.status === "ready"
+            ? "co-dm-hero__icon--ready"
+            : order.status === "completed"
+              ? "co-dm-hero__icon--completed"
+              : order.status === "received"
+                ? "co-dm-hero__icon--received"
+                : order.status === "cancelled"
+                  ? "co-dm-hero__icon--cancelled"
+                  : "co-dm-hero__icon--pending";
 
   const iconName =
     order.status === "received"
       ? "task_alt"
       : order.status === "completed"
-        ? "qr_code"
-        : order.status === "cancelled"
-          ? "cancel"
-          : "pending_actions";
+        ? "notifications_active"
+        : order.status === "ready"
+          ? "restaurant_menu"
+          : order.status === "cancelled"
+            ? "cancel"
+            : "pending_actions";
 
   return (
     <div className="co-dm">
@@ -577,7 +690,7 @@ function OrderDetail({ order, onClose }) {
         <div className="co-dm-info-row">
           <span className="co-dm-info-row__label">Họ tên</span>
           <span className="co-dm-info-row__value">
-            {getCustomerName(order.userId)}
+            {getDisplayName(order.userId, "Khách hàng")}
           </span>
         </div>
         <div className="co-dm-info-row">
@@ -641,8 +754,6 @@ function OrderDetail({ order, onClose }) {
         </div>
       </div>
 
-
-
       {/* Timestamps */}
       <div className="co-dm-section">
         <div className="co-dm-section__title">Thời gian</div>
@@ -662,7 +773,7 @@ function OrderDetail({ order, onClose }) {
         )}
         {order.completedAt && (
           <div className="co-dm-info-row">
-            <span className="co-dm-info-row__label">Hoàn thành</span>
+            <span className="co-dm-info-row__label">Sẵn sàng giao</span>
             <span className="co-dm-info-row__value">
               {dayjs(order.completedAt).format("HH:mm DD/MM/YYYY")}
             </span>
@@ -709,15 +820,17 @@ function OrderDetail({ order, onClose }) {
                 <span className="co-dm-info-row__value">
                   {order.pickupQRCode.expireAt
                     ? dayjs(order.pickupQRCode.expireAt).format(
-                      "HH:mm DD/MM/YYYY",
-                    )
+                        "HH:mm DD/MM/YYYY",
+                      )
                     : "—"}
                 </span>
               </div>
               {order.pickupQRCode.scannedBy && (
                 <div className="co-dm-info-row">
-                  <span className="co-dm-info-row__label">Đã quét bởi</span>
-                  <span className="co-dm-info-row__value">Staff</span>
+                  <span className="co-dm-info-row__label">Đã duyệt bởi</span>
+                  <span className="co-dm-info-row__value">
+                    {getDisplayName(order.pickupQRCode.scannedBy, "Nhân viên")}
+                  </span>
                 </div>
               )}
               {order.pickupQRCode.scannedAt && (
