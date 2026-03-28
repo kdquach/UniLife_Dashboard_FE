@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, message, Space } from "antd";
+import { Modal, Space, message } from "antd";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/store/useAuthStore";
 import ScheduleGrid from "@/components/schedule/ScheduleGrid";
@@ -239,6 +239,7 @@ export default function ManagerSchedulePage() {
 
   const [staffSearch, setStaffSearch] = useState("");
   const [staffList, setStaffList] = useState([]);
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   const weekStart = useMemo(() => currentWeek.startOf("day"), [currentWeek]);
   const weekEnd = useMemo(() => weekStart.add(6, "day"), [weekStart]);
@@ -252,6 +253,9 @@ export default function ManagerSchedulePage() {
   }, [shiftsRaw]);
 
   const weekLabel = `${weekStart.format("DD/MM")} - ${weekEnd.format("DD/MM/YYYY")}`;
+  const editableStartDate = useMemo(() => dayjs().startOf("day").add(2, "day"), []);
+
+  const isDateLocked = (dateKey) => dayjs(dateKey).isBefore(editableStartDate, "day");
 
   const panelStaffItems = useMemo(
     () =>
@@ -348,7 +352,7 @@ export default function ManagerSchedulePage() {
       setLoading(true);
       await Promise.all([loadWeekData(), loadStaff(staffSearch)]);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không tải được dữ liệu phân ca");
+      messageApi.error(error?.response?.data?.message || "Không tải được dữ liệu phân ca");
     } finally {
       setLoading(false);
     }
@@ -362,16 +366,20 @@ export default function ManagerSchedulePage() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       loadStaff(staffSearch).catch((error) => {
-        message.error(error?.response?.data?.message || "Không tải được danh sách nhân viên");
+        messageApi.error(error?.response?.data?.message || "Không tải được danh sách nhân viên");
       });
     }, 250);
 
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staffSearch]);
+  }, [staffSearch, messageApi]);
 
   const handleRemove = (staff, dateKey, shiftId) => {
     if (mode !== "draft") return;
+    if (isDateLocked(dateKey)) {
+      messageApi.warning("Chỉ được chỉnh sửa lịch từ ngày hiện tại + 2 ngày trở đi");
+      return;
+    }
 
     const assignmentId = String(staff.assignmentId || "");
     if (!assignmentId) return;
@@ -399,6 +407,14 @@ export default function ManagerSchedulePage() {
   const handleGridDragEnd = ({ staff, from, to }) => {
     if (mode !== "draft") return;
     if (!to?.dateKey || !to?.shiftId) return;
+
+    const lockedTargetDate = isDateLocked(to.dateKey);
+    const lockedSourceDate = from?.type === "cell-badge" && isDateLocked(from?.dateKey);
+
+    if (lockedTargetDate || lockedSourceDate) {
+      messageApi.warning("Chỉ được chỉnh sửa lịch từ ngày hiện tại + 2 ngày trở đi");
+      return;
+    }
 
     if (from.type === "cell-badge" && from.dateKey === to.dateKey && from.shiftId === to.shiftId) {
       return;
@@ -486,7 +502,7 @@ export default function ManagerSchedulePage() {
     const assignmentPayload = flattenNormalized(assignmentsByIdRef.current);
 
     if (!assignmentPayload.length) {
-      if (!silent) message.info("Không có thay đổi để lưu");
+      if (!silent) messageApi.info("Không có thay đổi để lưu");
       return null;
     }
 
@@ -508,11 +524,11 @@ export default function ManagerSchedulePage() {
 
       if (!silent) {
         if (ignoredAssignments > 0) {
-          message.warning(
+          messageApi.warning(
             `Lưu nháp thành công: ${savedAssignments} phân công hợp lệ, ${ignoredAssignments} phân công đã qua hoặc đã bắt đầu được bỏ qua.`,
           );
         } else {
-          message.success(`Lưu nháp thành công (${savedAssignments} phân công)`);
+          messageApi.success(`Lưu nháp thành công (${savedAssignments} phân công)`);
         }
       }
 
@@ -522,7 +538,7 @@ export default function ManagerSchedulePage() {
         ignoredAssignments,
       };
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể lưu nháp");
+      messageApi.error(error?.response?.data?.message || "Không thể lưu nháp");
       throw error;
     } finally {
       setSavingDraft(false);
@@ -536,9 +552,9 @@ export default function ManagerSchedulePage() {
       setHasDraftData(false);
       setMode("published");
       await refreshAll();
-      message.success("Đã hủy chỉnh sửa nháp");
+      messageApi.success("Đã hủy chỉnh sửa nháp");
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể hủy nháp");
+      messageApi.error(error?.response?.data?.message || "Không thể hủy nháp");
     } finally {
       setCancelingDraft(false);
     }
@@ -554,7 +570,7 @@ export default function ManagerSchedulePage() {
         draftId = saveResult?.schedule?._id || draftId;
 
         if (Number(saveResult?.ignoredAssignments || 0) > 0) {
-          message.info(
+          messageApi.info(
             `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
           );
         }
@@ -565,7 +581,7 @@ export default function ManagerSchedulePage() {
         draftId = saveResult?.schedule?._id || null;
 
         if (Number(saveResult?.ignoredAssignments || 0) > 0) {
-          message.info(
+          messageApi.info(
             `Hệ thống đã tự bỏ qua ${saveResult.ignoredAssignments} phân công không còn hợp lệ trước khi phát hành.`,
           );
         }
@@ -579,9 +595,9 @@ export default function ManagerSchedulePage() {
       setHasDraftData(false);
       setMode("published");
       await refreshAll();
-      message.success("Phát hành lịch tuần thành công. Nhân sự sẽ nhận thông báo lịch mới.");
+      messageApi.success("Phát hành lịch tuần thành công. Nhân sự sẽ nhận thông báo lịch mới.");
     } catch (error) {
-      message.error(error?.response?.data?.message || "Không thể phát hành lịch");
+      messageApi.error(error?.response?.data?.message || "Không thể phát hành lịch");
     } finally {
       setPublishing(false);
     }
@@ -620,7 +636,8 @@ export default function ManagerSchedulePage() {
 
   return (
     <div className="schedule-page">
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      {messageContextHolder}
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <ScheduleHeader
           title="Lập lịch làm việc"
           weekLabel={weekLabel}

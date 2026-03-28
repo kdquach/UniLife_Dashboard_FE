@@ -89,7 +89,7 @@ export default function NotificationCenter() {
         newIncoming.slice(0, 3).forEach((item) => {
           api.info({
             key: `notif-${item.id}`,
-            message: item.title || "Thông báo mới",
+            title: item.title || "Thông báo mới",
             description: item.content || "Bạn có một thông báo mới",
             placement: "bottomRight",
             duration: 4.5,
@@ -176,7 +176,7 @@ export default function NotificationCenter() {
 
       api.info({
         key: `notif-${nextItem.id}`,
-        message: nextItem.title || "Thông báo mới",
+        title: nextItem.title || "Thông báo mới",
         description: nextItem.content || "Bạn có một thông báo mới",
         placement: "bottomRight",
         duration: 4.5,
