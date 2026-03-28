@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
+  Col,
   Descriptions,
   Dropdown,
   Form,
   Input,
   Modal,
+  Row,
   Select,
   Space,
   Tag,
@@ -220,7 +222,7 @@ export default function StaffManagementPage() {
           </Button>
         )}
       >
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={12} style={{ width: "100%" }}>
           <div className="dashboard-filter-bar">
             <div className="dashboard-filter-item dashboard-filter-item--grow">
               <Input
